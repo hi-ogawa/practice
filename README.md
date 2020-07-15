@@ -8,5 +8,5 @@ black **/*.py
 
 # Lint *.js
 npm install
-npx eslint '**/*.js' --fix
+npx eslint '**/*.js' --fix --format unix
 ```
