@@ -10,7 +10,8 @@
     },
     "extends": ["eslint:recommended", "google"],
     "rules": {
-      "max-len": [ "error", { "ignoreComments": true } ]
+      "max-len": [ "error", { "ignoreComments": true } ],
+      "camelcase": 0
     }
   }
 }
