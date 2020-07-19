@@ -38,6 +38,51 @@ const factorize = (n) => {
   return factors;
 };
 
+// cf. factorize.js
+const factorizeInplace = (n, /* out */ ls_base, ls_exp) => { // eslint-disable-line
+  let ptr = 0;
+  let q = n;
+
+  // Separately take care 2 | q
+  if (q % 2 === 0) {
+    let e = 0;
+    const p = 2;
+    while (q % p === 0) {
+      q /= p;
+      e++;
+    }
+    ls_base[ptr] = p;
+    ls_exp[ptr] = e;
+    ptr++;
+  }
+
+  // Odd factors
+  for (let p = 3; ; p += 2) {
+    if ((p * p) > q) {
+      break;
+    }
+    if (q % p === 0) {
+      let e = 0;
+      while (q % p === 0) {
+        q /= p;
+        e++;
+      }
+      ls_base[ptr] = p;
+      ls_exp[ptr] = e;
+      ptr++;
+    }
+  }
+
+  // Left over
+  if (q > 1) {
+    ls_base[ptr] = q;
+    ls_exp[ptr] = 1;
+    ptr++;
+  }
+
+  return ptr;
+};
+
 const main = (n) => {
   console.log(factorize(n));
 };
