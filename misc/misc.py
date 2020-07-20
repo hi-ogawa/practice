@@ -161,12 +161,6 @@ def sqrt_digits_generator(n, b=10, debug=0):
     yield next(ggen_digits)  # Pop integral part
 
     for i, (_, e, d) in enumerate(gen_convergents):
-        # For simplicity, we use only even parts,
-        # which we know are increasing
-        #   E(2k)/D(2k) <= E(2k+2)/D(2k+2) <= sqrt(n)
-        if i % 2 == 0:
-            continue
-
         # By multipling "b ** kk", we fast-skip first "kk" digits
         # since we know "ee/dd" ~ "e/d".
         e *= b ** kk
@@ -180,7 +174,6 @@ def sqrt_digits_generator(n, b=10, debug=0):
                 continue
 
             # Found conflicting digit
-            # (it should be xx < x since E(2k)/D(2k) <= E(2k+2)/D(2k+2))
             kk += k
             ggen_digits = itertools.chain([x], gen_digits)  # Fake "x" was look-ahead
             break
