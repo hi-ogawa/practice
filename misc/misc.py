@@ -125,11 +125,51 @@ def sqrt_continued_fraction(n, k, debug=0):
 
 def rational_to_digits_generator(p, q, b=10, debug=0):
     # p / q in base b
+
+    #
+    # In general, for x ∈ [0, 1), we can obtain b-digits by:
+    #   d0 = 0,       x0 = x
+    #   d1 = ⌊b.x0⌋,  x1 = {b.x0} ∈ [0, 1)
+    #   d2 = ⌊b.x1⌋,  x2 = {b.x1} ∈ [0, 1)
+    #   ...
+    #
+    # For rational case x = p/q, this translates to
+    #   d0 = 0           x0 = p/q = p0/q
+    #   d1 = b.p0 // q,  x1 = (b.p0 % q) / q = p1/q
+    #   d2 = b.p1 // q,  x2 = (b.p1 % q) / q = p2/q
+    #   ...
+    # So, we can only keep (p_i)_i, which is what the loop below does.
+    #
+    # PROP.
+    #   If b, p ∈ Zq* (units of cyclic group i.e. gcd(b, p) = gcd(p, q) = 1),
+    #   then digits repeats since {p, bp, bbp, ...} = p<b> ⊆ Zq.
+    #   Especially when p = 1, it becomes <b>.
+    #   So, repeat period is at most |<b>| <= |Zq*| = Φ(q).
+    #
+    # NOTE
+    #   1. If gcd(b, q) ≠ 1 (i.e b ∉ Zq*), then we can reduce bp/q = p'/q'
+    #      and we can do the same discussion as above.
+    #      TODO: not really... need to consider gcd(b^k, q). (e.g. 10/4 ~> 2/4 = 1/2 ~> 10/2)
+    #   2. Digits repeatance might not be necessary equivalent to repeatance of <b> ??
+    #      Just "by a chane", haviding b p // q = b p' // q even if p != p' ??
+    #      TODO: find such counter example
+    #
     d0, p = divmod(p, q)
-    yield d0
+    yield d0  # TODO: This assumes b=10
+    if debug:
+        p0 = p
+        print(d0, p0, "@")
     while True:
         d, p = divmod(p * b, q)
+        if debug:
+            print(d, p, "@" if p == p0 else "")
         yield d
+
+
+def experiment_rational_to_digits(p, q, k, b=10):
+    gen = rational_to_digits_generator(p, q, b=b, debug=1)
+    for i in range(k):
+        next(gen)
 
 
 def rational_to_digits(p, q, k, b=10, debug=0):
