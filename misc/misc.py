@@ -3,6 +3,8 @@
 # python misc/misc.py sqrt_digits 2 1000
 # python misc/misc.py rational_to_digits 1 7 32
 # python misc/misc.py solve_root 2 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 1 # noqa
+# python misc/misc.py sqrt_continued_fraction_periodic 18181 1
+# python misc/misc.py solve_pell 18181
 #
 
 #
@@ -77,6 +79,7 @@ def mul_mv(m1, v2):
     return [a * aa + b * bb, c * aa + d * bb]
 
 
+# [ Brute force ]
 def sqrt_continued_fraction_generator(n, debug=0):
     import itertools
 
@@ -113,6 +116,147 @@ def sqrt_continued_fraction_generator(n, debug=0):
         yield a, m[0], m[2]
         if m[0] ** 2 == n * m[2] ** 2:
             break
+
+
+# Based on Mobius transform fixed point (cf. Marius Beceanu)
+def sqrt_continued_fraction_periodic(N, debug=0):
+    #
+    # CF recurrence is defined by
+    #   x = √N > 0
+    #   x_0 = x
+    #   a_k = ⌊x_k⌋ > 0
+    #   x_k+1 = 1 / (x_k - a_k) = 1 / {x_k} > 1
+    #
+    # Then, we can write (NOTE: the matrix indicates Mobius transform)
+    #   x = | a_0  1 | ... | a_k-1  1 |  = | e' e | x_k  (NOTE: e'/d' and e/d is convergents)
+    #       | 1    0 |     | 1      0 |    | d' d |
+    #
+    # By inverting, we have
+    #   x_k = |  d   -e  |^{-1} x
+    #         | -d'  e' |
+    #       = ... (magical transform due to x^2 = N) ...
+    #       = | 1   μ_k | x  (for some μ_k, λ_k > 0 (proved so))
+    #         | 0   λ_k |
+    #       = (x + μ_k) / λ_k
+    #
+    # Looking for recurrence of μ_k, η_k,
+    #   x_k+1 = | 0    1 | x_k = | 0    1 | | 1   μ_k | x
+    #           | 1 -a_k |       | 1 -a_k | | 0   λ_k |
+    #         = ... (Again magical transform ) ...
+    #         = | 1   a_k.λ_k - η_k                | x
+    #           | 0  (N - (a_k.λ_k - η_k)^2) / λ_k |
+    # So,
+    #   η_k+1 = a_k.λ_k - η_k
+    #   λ_k+1 = (N - η_k+1^2) / λ_k
+    #   a_k+1 = ⌊x_k+1⌋ = ⌊(⌊x⌋ + μ_k+1) / λ_k+1⌋ = (a_0 + μ_k+1) // λ_k+1 (∵ λ_k > 0)
+    #
+    # Here μ_k and λ_k are bounded (proved so), so by pigeonhole principle, same pair
+    # are bound to appear, which gives periodic CF.
+    #
+    # Going further, we can prove remarkable fact that, by defining
+    #   y_k = |0 1| | 1  - μ_k | x = λ_k / (x - μ_k)
+    #         |1 0| |      λ_k |
+    # We have,
+    #   y_1 = y_p+1 = [a_p, a_p-1, ..., a_2, a_1] : periodic CF
+    #   x_1 = x_p+1 = [a_1, a_2, ... a_p-1, a_p] : periodic CF
+    #   a_p = 2 a_0
+    #   y_p = x_1  ==>  [a_p-1, .., a_1, a_p] = [a_1, a_2, ... a_p-1, a_p] (i.e. symmetric each other)
+    #
+
+    # Initialize (a0, eta0, lam0)
+    a0 = solve_root(2, N)  # max {a | a^2 < N}
+    if a0 ** 2 == N:
+        raise RuntimeError(
+            f"[sqrt_continued_fraction_periodic] Not square free N = {N} = {a0}^2"
+        )
+    a = a0
+    eta = 0
+    lam = 1
+    result = [a]
+
+    # To identify period, we hold eta1 and lam1
+    eta = a * lam - eta
+    lam = (N - eta ** 2) // lam
+    a = (a0 + eta) // lam
+    result += [a]
+    eta1, lam1 = eta, lam
+    if debug:
+        print("a0:", a0, "eta1:", eta1, "lam1:", lam1)
+
+    # Iterate until (eta, lam) = (eta1, lam1) (NOTE: proved bound ⌊x⌋.(⌊x⌋ + 1))
+    for i in range(a0 * (a0 + 1)):
+        eta = a * lam - eta
+        lam = (N - eta ** 2) // lam
+        a = (a0 + eta) // lam
+        if eta == eta1 and lam == lam1:
+            break
+        result += [a]
+    else:
+        raise RuntimeError(
+            f"[sqrt_continued_fraction_periodic] Bug in theory? or code?"
+        )
+
+    if debug:
+        print("period:", len(result) - 1)
+
+    return result
+
+
+def solve_pell(n, debug=0):
+    #
+    # From analysis in `sqrt_continued_fraction_periodic`, we have
+    #   x = | a0 1 | x1 = A0 x1
+    #       | 1  0 |
+    #   x1 = | a1 1 | .. | ap 1 | x1 = (A1..Ap) x1
+    #        | 1  0 |    | 1  0 |
+    #   x = A0 (A1..Ap) A0^-1 x
+    #
+    # Here by construction, we have
+    #   det(A0 (A1..Ap) A0^-1) = (-1)^p
+    #
+    # Also, from symmetric property and ap = 2a0, we have
+    #   S = A1..Ap-1 : symmetric
+    #   A0 (A1..Ap) A0^-1
+    #     = A0 S Ap A0^-1
+    #     = | a0 1 | S | 2a0 1 | |     1 |
+    #       | 1  0 |   | 1   0 | | 1 -a0 |
+    #     = | a0 1 | S | 1 a0 |
+    #       | 1  0 |   |   1  |
+    #     = | u  t |  (for some u, v, t where diagonal coincides due to S symmetric)
+    #       | v  u |
+    #
+    # Here noting that,
+    #   x =  | u  t | x
+    #        | v  u |
+    #   <=> x (v x + u) = (u x + t)
+    #   <=> v x^2 = t
+    #
+    # then, we finally obtain,
+    #   x = | p  Nq | x
+    #       | q  p  |
+    #   and
+    #   (-1)^p = det | p  Nq | = p^2 - N q^2  (Pell's equation (negative if odd periodic))
+    #                | q  p  |
+    #
+    # From negative solution, positive one is easy to construct by Chakravala self multiplication.
+    #
+    # TODO: Prove "Pell equation => Periodic CF" with minimality, positive/negative etc...
+    #
+    a0, *aps = sqrt_continued_fraction_periodic(n, debug=debug)
+    A0 = [a0, 1, 1, 0]
+    A0_inv = [0, 1, 1, -a0]
+    A = A0
+    for a in aps:
+        A = mul_mm(A, [a, 1, 1, 0])
+    A = mul_mm(A, A0_inv)
+    if debug:
+        print("A:", A)
+    u, v = A[0], A[2]
+    k = -1 if len(aps) % 2 else 1
+    assert A[0] == A[3]
+    assert A[1] == A[2] * n
+    assert A[0] ** 2 - n * A[2] ** 2 == k
+    return u, v, k
 
 
 def sqrt_continued_fraction(n, k, debug=0):
