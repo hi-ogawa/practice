@@ -424,6 +424,12 @@ class QQ:
         p, q = reduce_common_factors(p, q)
         return QQ(p, q)
 
+    def __sub__(x, y):
+        p = x.p * y.q - x.q * y.p
+        q = x.q * y.q
+        p, q = reduce_common_factors(p, q)
+        return QQ(p, q)
+
     def __mul__(x, y):
         p = x.p * y.p
         q = x.q * y.q
