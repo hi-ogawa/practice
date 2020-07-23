@@ -403,6 +403,40 @@ def solve_root(p, b, debug=0):
     return a
 
 
+def reduce_common_factors(n0, m0):
+    n, m = abs(n0), abs(m0)
+    n, m = [max(n, m), min(n, m)]
+    while m != 0:
+        n, m = m, n % m
+    return n0 // n, m0 // n
+
+
+class QQ:
+    def __init__(self, p, q=1):
+        self.p, self.q = p, q
+
+    def __repr__(x):
+        return f"QQ({x.p}/{x.q})"
+
+    def __add__(x, y):
+        p = x.p * y.q + x.q * y.p
+        q = x.q * y.q
+        p, q = reduce_common_factors(p, q)
+        return QQ(p, q)
+
+    def __mul__(x, y):
+        p = x.p * y.p
+        q = x.q * y.q
+        p, q = reduce_common_factors(p, q)
+        return QQ(p, q)
+
+    def __truediv__(x, y):
+        p = x.p * y.q
+        q = x.q * y.p
+        p, q = reduce_common_factors(p, q)
+        return QQ(p, q)
+
+
 def experiment_generalized_continued_fraction(k, debug=0):
     #
     # From Euler's product identity,
@@ -419,38 +453,6 @@ def experiment_generalized_continued_fraction(k, debug=0):
     #   1/(e-1) = [0,  1, 1, 2,  1, 1, 4,  1, 1, 6, ..., 1, 1, 2n, ...]
     #
 
-    def reduce_common_factors(n0, m0):
-        n, m = abs(n0), abs(m0)
-        n, m = [max(n, m), min(n, m)]
-        while m != 0:
-            n, m = m, n % m
-        return n0 // n, m0 // n
-
-    class QQ:
-        def __init__(self, p, q=1):
-            self.p, self.q = p, q
-
-        def __repr__(x):
-            return f"QQ({x.p}/{x.q})"
-
-        def __add__(x, y):
-            p = x.p * y.q + x.q * y.p
-            q = x.q * y.q
-            p, q = reduce_common_factors(p, q)
-            return QQ(p, q)
-
-        def __mul__(x, y):
-            p = x.p * y.p
-            q = x.q * y.q
-            p, q = reduce_common_factors(p, q)
-            return QQ(p, q)
-
-        def __truediv__(x, y):
-            p = x.p * y.q
-            q = x.q * y.p
-            p, q = reduce_common_factors(p, q)
-            return QQ(p, q)
-
     # Accumulate mobius transform (aka. convergents)
     m = [QQ(1), QQ(0), QQ(0), QQ(1)]
 
@@ -462,9 +464,64 @@ def experiment_generalized_continued_fraction(k, debug=0):
         b = QQ(1, n + 1)
         m = mul_mm(m, [a, b, QQ(1), QQ(0)])
 
-    x = m[0] / m[2] # 1 / (e - 1)
-    y = QQ(1) / x + QQ(1) # e
+    x = m[0] / m[2]  # 1 / (e - 1)
+    y = QQ(1) / x + QQ(1)  # e
     return y.p / y.q, y
+
+
+# Newton's divided difference
+def poly_interpolation(ls, debug=0):
+    #
+    # Given n points [(x1, y1), (x2, y2), .., (xn, yn)], we find polynomials { p[i,j] | i, j },
+    # where "j-i"-degree poly p[i, j] interpolates "j-i+1" points [(xi, yi), .., (xj, yj)].
+    #
+    # From the uniqueness property of interpolation polynomial, we have a, b s.t.
+    #   p[i, j+1] = p[i, j] + a.(x-xi)..(x-xj)
+    #   p[i, j+1] = p[i+1, j+1] + b.(x-x_i+1)..(x-x_j+1)
+    # Here, comparing the coefficient of largest monimial x^p, we actually find that a = b,
+    # and thus, we write a = b = c[i, j+1].
+    #
+    # Then, we can find remarkable recursive relation (aka. divided difference)
+    # for { c[i, j] | i, j } as follows,
+    #   c[i, i] = yi
+    #   c[i, j] = (c[i+1, j] - c[i, j-1]) / (x_j - x_i)
+    #
+
+    n = len(ls)
+    c = [[0 for _ in range(n)] for _ in range(n)]
+
+    # Base case
+    for i in range(n):
+        c[0][i] = ls[i][1]
+
+    # Recursive case
+    for i in range(1, n):
+        for j in range(n - i):
+            dc = c[i - 1][j + 1] - c[i - 1][j]
+            dx = ls[j + i][0] - ls[j][0]
+            c[i][j] = dc / dx
+
+    return c
+
+
+def test_poly_interpolation():
+    x1, x2, x3, x4 = 1, 2, 3, 4
+    y1, y2, y3, y4 = 1, -1, 1, -1
+    ls = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+    c = poly_interpolation(ls)
+    c1, c2, c3, c4 = c[0][0], c[1][0], c[2][0], c[3][0]
+
+    def f(x):
+        # Horner scheme
+        return c1 + (x - x1) * (c2 + (x - x2) * (c3 + (x - x3) * c4))
+
+    print("c:", c)
+    print("f(x):", f(x1), f(x2), f(x3), f(x4))
+
+    import math
+
+    for x, y in ls:
+        assert math.isclose(f(x), y)
 
 
 if __name__ == "__main__":
