@@ -5,6 +5,7 @@
 # python misc/misc.py solve_root 2 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 1 # noqa
 # python misc/misc.py sqrt_continued_fraction_periodic 18181 1
 # python misc/misc.py solve_pell 18181
+# python misc/misc.py experiment_generalized_continued_fraction 20
 #
 
 #
@@ -400,6 +401,70 @@ def solve_root(p, b, debug=0):
         if a ** p <= b:  # a \in (<root> - 1, <root>] due to "division rounding" # noqa
             break
     return a
+
+
+def experiment_generalized_continued_fraction(k, debug=0):
+    #
+    # From Euler's product identity,
+    #   e^z = [0, {1, 1}, {-z/1, z/1 + 1}, {-z/2, z/2 + 1}, ...]
+    #
+    # Thus
+    #   e^-z = [0, {1, 1}, {z/1, (1-z)/1}, {z/2, (2-z)/2}, ...]
+    #   1/e = [0, {1, 1}, {1/1, 0}, {1/2, 1/2}, {1/3, 2/3}, {1/4, 3/4}, ...]
+    #   e = [1, {1, 0}, {1/2, 1/2}, {1/3, 2/3}, {1/4, 3/4}, ..]
+    #   1/(e-1) = [0, {1/2, 1/2}, {1/3, 2/3}, {1/4, 3/4}, ...]
+    #
+    # The famous Euler's formula (which I cannot prove yet) is this
+    #   e = [2,  1, 2, 1,  1, 4, 1,  1, 6, 1, ..., 1, 2n, 1, ...]
+    #   1/(e-1) = [0,  1, 1, 2,  1, 1, 4,  1, 1, 6, ..., 1, 1, 2n, ...]
+    #
+
+    def reduce_common_factors(n0, m0):
+        n, m = abs(n0), abs(m0)
+        n, m = [max(n, m), min(n, m)]
+        while m != 0:
+            n, m = m, n % m
+        return n0 // n, m0 // n
+
+    class QQ:
+        def __init__(self, p, q=1):
+            self.p, self.q = p, q
+
+        def __repr__(x):
+            return f"QQ({x.p}/{x.q})"
+
+        def __add__(x, y):
+            p = x.p * y.q + x.q * y.p
+            q = x.q * y.q
+            p, q = reduce_common_factors(p, q)
+            return QQ(p, q)
+
+        def __mul__(x, y):
+            p = x.p * y.p
+            q = x.q * y.q
+            p, q = reduce_common_factors(p, q)
+            return QQ(p, q)
+
+        def __truediv__(x, y):
+            p = x.p * y.q
+            q = x.q * y.p
+            p, q = reduce_common_factors(p, q)
+            return QQ(p, q)
+
+    # Accumulate mobius transform (aka. convergents)
+    m = [QQ(1), QQ(0), QQ(0), QQ(1)]
+
+    for n in range(1, k):
+        # Each step is Mobius transform
+        #   x_n = a_n + b_n+1 / x_n+1 = | a_n  b_n+1 | x_n+1
+        #                               | 1          |
+        a = QQ(n - 1, n)
+        b = QQ(1, n + 1)
+        m = mul_mm(m, [a, b, QQ(1), QQ(0)])
+
+    x = m[0] / m[2] # 1 / (e - 1)
+    y = QQ(1) / x + QQ(1) # e
+    return y.p / y.q, y
 
 
 if __name__ == "__main__":
