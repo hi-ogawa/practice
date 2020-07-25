@@ -17,7 +17,7 @@ const makeTotient = (n) => {
 
   // 0, 1: not prime
   a[0] = 0;
-  a[1] = 0;
+  a[1] = 1;
 
   // 2: prime
   for (let i = 4; i < n; i += 2) {

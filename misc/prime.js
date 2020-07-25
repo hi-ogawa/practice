@@ -2,7 +2,7 @@
 // node misc/prime.js 1000000
 //
 
-const sieve = (n) => {
+const makeSieve = (n) => {
   const a = new Uint8Array(n);
   a.fill(1);
   a[0] = 0;
@@ -27,18 +27,18 @@ const sieve = (n) => {
   return a;
 };
 
-const sievePrint = (a, log) => {
+const printSieve = (a) => {
   let c = 0;
   for (let i = 0; i < a.length; i++) {
     if (a[i] == 1) {
       c += 1;
-      log(`${c}: ${i}`);
+      console.log(`${c}: ${i}`);
     }
   }
 };
 
 const main = (n) => {
-  sievePrint(sieve(n), console.log);
+  printSieve(makeSieve(n));
 };
 
 main(...process.argv.slice(2));
