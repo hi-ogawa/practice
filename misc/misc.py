@@ -6,6 +6,7 @@
 # python misc/misc.py sqrt_continued_fraction_periodic 18181 1
 # python misc/misc.py solve_pell 18181
 # python misc/misc.py experiment_generalized_continued_fraction 20
+# python misc/misc.py quadratic_residue 32
 #
 
 #
@@ -233,11 +234,11 @@ def solve_pell(n, debug=0):
     #   <=> v x^2 = t
     #
     # then, we finally obtain,
-    #   x = | p  Nq | x
-    #       | q  p  |
+    #   x = | u  Nv | x
+    #       | v  u  |
     #   and
-    #   (-1)^p = det | p  Nq | = p^2 - N q^2  (Pell's equation (negative if odd periodic))
-    #                | q  p  |
+    #   (-1)^p = det | u  Nv | = u^2 - N v^2  (Pell's equation (negative if odd periodic))
+    #                | v  u  |
     #
     # From negative solution, positive one is easy to construct by Chakravala self multiplication.
     #
@@ -528,6 +529,36 @@ def test_poly_interpolation():
 
     for x, y in ls:
         assert math.isclose(f(x), y)
+
+
+def make_sieve(n):
+    sieve = [1] * n
+    sieve[0] = 0
+    sieve[1] = 0
+    sieve[2] = 1
+    for i in range(n // 2):
+        sieve[2 * i] = 0
+    for i in range(3, n, 2):
+        if i * i > n:
+            break
+        if sieve[i] == 0:
+            continue
+        im = i * i
+        while im < n:
+            sieve[im] = 0
+            im += i
+    return sieve
+
+
+def quadratic_residue(n0):
+    sieve = make_sieve(n0)
+    for p in range(n0):
+        if sieve[p] == 0:
+            continue
+        ls = [-1] * p
+        for q in range(1, p):
+            ls[(q ** 2) % p] = 1
+        print(f"{p:>3}:", *[[0, "+", "-"][x] for x in ls[1:]])
 
 
 if __name__ == "__main__":
