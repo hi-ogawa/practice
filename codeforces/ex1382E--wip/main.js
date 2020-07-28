@@ -1,63 +1,67 @@
-//
-// Find (c_i) s.t.
-//   \sum_i c_i = z
-//   2 <= c_i <= w_i
-//
-const find_subset = (ws, z) => {
-  const n = ws.length + 1;
-  const m = z + 1;
-  const dp = new Uint8Array(n * m);
-  const _ = (i, j) => i * m + j;
+// AFTER EDITORIAL
 
-  dp[_(0, 0)] = 1;
-  for (let i = 0; i < ws.length; i++) {
-    for (let j = 0; j <= z; j++) {
-      if (!dp[_(i, j)]) {
-        continue;
-      }
-      for (let jj = 2; jj <= ws[i]; jj++) {
-        if (j + jj > z) {
-          break;
-        }
-        dp[_(i + 1, j + jj)] = 1;
-      }
-    }
-  }
-  return dp[_(n - 1, z)];
-};
+//
+// TODO: Realize solvable shuffle/replacement after solvability is determined.
+//
 
 const solve = (ls, x, y, debug = 0) => {
-  // Count as multiset (Order of elements is irrelevant for solvability)
-  const k = ls.length + 1;
+  const n = ls.length;
+  const z = y - x; // Amount needs to be shuffled
+  const w = n - y; // Amount needs to be thrown away
+
+  // Count each colors
+  const k = n + 2;
   const ms = new Int32Array(k);
   for (let i = 0; i < ls.length; i++) {
     ms[ls[i]]++;
   }
 
-  // Sort multiset
+  // Sort counts
   const ms_sort = ms.slice().sort();
-  const ms_max = ms_sort[ms_sort.length - 1];
 
-  // Compute mixup-widths
-  let mix_widths = [];
-  let m = 0;
-  for (let i = 0; i < ms_sort.length - 1; i++) {
-    if (ms_sort[i] <= m) {
-      continue;
+  // "transpose" counting histogram
+  const ms_sort_T = [];
+  {
+    let m = 0;
+    for (let i = 0; i < ms_sort.length; i++) {
+      if (ms_sort[i] <= m) {
+        continue;
+      }
+      for (let j = 0; j < ms_sort[i] - m; j++) {
+        ms_sort_T.push(ms_sort.length - i);
+      }
+      m = ms_sort[i];
     }
-    for (let j = 0; j < ms_sort[i] - m; j++) {
-      mix_widths.push(ms_sort.length - i);
-    }
-    m = ms_sort[i];
   }
 
-  // Find "z" mixup of multiset
-  const z = y - x;
+  // Determine correct "x" positions (subtract from color with high multiplicity)
+  const ms_sort_sub_x = ms_sort.slice();
+  {
+    let xx = x;
+    for (let i = ms_sort_T.length - 1; i >= 0; i--) {
+      if (ms_sort_T[i] > xx) {
+        for (let j = ms_sort_T[i]; j > ms_sort_T[i] - xx; j--) {
+          ms_sort_sub_x[k - j]--;
+        }
+        ms_sort_T[i] -= xx;
+        break;
+      }
+      for (let j = ms_sort_T[i]; j > 0; j--) {
+        ms_sort_sub_x[k - j]--;
+      }
+      xx -= ms_sort_T[i];
+      ms_sort_T[i] = 0;
+    }
+  }
 
-  // TODO: restore found mixup
-  const solvable = find_subset(mix_widths, z);
+  // Check if maximum shuffle length exceeds z
+  const f = ms_sort_sub_x[ms_sort_sub_x.length - 1];
+  const nx = n - x;
+  const shuffle_max = Math.min(2 * (nx - f), nx);
+  const solvable = shuffle_max >= z;
 
-  return solvable && [];
+  // TODO: realize such solvable shuffle/replacement
+  return solvable? ['???'] : 0;
 };
 
 const main = async (istr, ostr) => {
@@ -78,10 +82,10 @@ if (require.main === module) {
 }
 
 const test_0 = () => {
-  const x = 3;
-  const y = 4;
-  const ls = [1, 1, 2, 1, 2];
-  solve(ls, x, y);
+  const x = 2;
+  const y = 6;
+  const ls = [1, 1, 3, 2, 1, 1];
+  console.log(solve(ls, x, y));
 };
 
 const test_1 = () => {
