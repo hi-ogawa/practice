@@ -10,7 +10,7 @@ const solve = (s, debug = 0) => {
   const _ = (ls, i, k) => i < k ? ls[i] : 0;
 
   // Convert to numeric
-  s = new TextEncoder().encode(s)
+  s = new TextEncoder().encode(s);
 
   // Suffix indices which we will sort
   const a = new Int32Array(nn);
@@ -19,7 +19,7 @@ const solve = (s, debug = 0) => {
   }
 
   // Prefix score
-  let b = new Int32Array(nn)
+  let b = new Int32Array(nn);
 
   // Initialization (1-prefix)
   a.sort((i, j) => _(s, i, n) - _(s, j, n));
@@ -27,7 +27,7 @@ const solve = (s, debug = 0) => {
     let e = _(s, a[0], n);
     let score = 0;
     for (let i = 0; i < nn; i++) {
-      let e_i = _(s, a[i], n);
+      const e_i = _(s, a[i], n);
       if (e_i !== e) {
         e = e_i;
         score++;
@@ -42,15 +42,15 @@ const solve = (s, debug = 0) => {
 
   // Recursion (m-prefix to 2m-prefix)
   let m = 1;
-  let a_tmp = new Int32Array(nn);
+  const a_tmp = new Int32Array(nn);
   let b_tmp = new Int32Array(nn);
-  let counts = new Int32Array(nn);
-  let counts_cumsum = new Int32Array(nn + 1);
+  const counts = new Int32Array(nn);
+  const counts_cumsum = new Int32Array(nn + 1);
   while (m < n) {
     // 1. Sort 2m-prefix using m-prefix score by counting sort twice
     // 1.1. Counting sort (m, 2m)-fix
     for (let i = 0; i < nn; i++) {
-      let score = _(b, a[i] + m, nn); // a[i] + m
+      const score = _(b, a[i] + m, nn); // a[i] + m
       counts[score]++;
     }
     counts_cumsum[0] = 0;
@@ -59,13 +59,13 @@ const solve = (s, debug = 0) => {
       counts[i] = 0;
     }
     for (let i = 0; i < nn; i++) {
-      let score = _(b, a[i] + m, nn);
+      const score = _(b, a[i] + m, nn);
       a_tmp[counts_cumsum[score]] = a[i]; // a_tmp <-- a
       counts_cumsum[score] += 1;
     }
     // 1.1. Counting sort (0, m)-fix
     for (let i = 0; i < nn; i++) {
-      let score = _(b, a_tmp[i], nn); // a_tmp[i]
+      const score = _(b, a_tmp[i], nn); // a_tmp[i]
       counts[score]++;
     }
     counts_cumsum[0] = 0;
@@ -74,7 +74,7 @@ const solve = (s, debug = 0) => {
       counts[i] = 0;
     }
     for (let i = 0; i < nn; i++) {
-      let score = _(b, a_tmp[i], nn);
+      const score = _(b, a_tmp[i], nn);
       a[counts_cumsum[score]] = a_tmp[i]; // a <-- a_tmp
       counts_cumsum[score] += 1;
     }
@@ -85,8 +85,8 @@ const solve = (s, debug = 0) => {
       let e2 = _(b, a[0] + m, nn);
       let score = 0;
       for (let i = 1; i < nn; i++) {
-        let e1_i = _(b, a[i], nn);
-        let e2_i = _(b, a[i] + m, nn);
+        const e1_i = _(b, a[i], nn);
+        const e2_i = _(b, a[i] + m, nn);
         if (e1_i !== e1 || e2_i !== e2) {
           e1 = e1_i;
           e2 = e2_i;
@@ -110,7 +110,7 @@ const main = async (istr, ostr) => {
   const readline = require('readline');
   const it = readline.createInterface({input: istr})[Symbol.asyncIterator]();
   const getLine = async () => (await it.next()).value;
-  const getMany = async () => (await getLine()).split(' ');
+  const getMany = async () => (await getLine()).split(' '); // eslint-disable-line
 
   const s = await getLine();
   const result = solve(s);
