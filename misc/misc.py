@@ -7,6 +7,7 @@
 # python misc/misc.py solve_pell 18181
 # python misc/misc.py experiment_generalized_continued_fraction 20
 # python misc/misc.py quadratic_residue 32
+# python misc/misc.py permutation_no_fix 5
 #
 
 #
@@ -559,6 +560,52 @@ def quadratic_residue(n0):
         for q in range(1, p):
             ls[(q ** 2) % p] = 1
         print(f"{p:>3}:", *[[0, "+", "-"][x] for x in ls[1:]])
+
+
+def _permutation(n0, n1, ls):
+    if n0 == n1:
+        yield ls
+        return
+    yield from _permutation(n0 + 1, n1, ls)
+    for i in range(n0 + 1, n1):
+        a, b = ls[n0], ls[i]
+        ls[n0], ls[i] = b, a
+        yield from _permutation(n0 + 1, n1, ls)
+        ls[n0], ls[i] = a, b
+
+
+def permutation(n):
+    ls = list(range(1, n + 1))
+    gen = _permutation(0, n, ls)
+    for i, p in enumerate(gen):
+        print(f"{i + 1:>3}:", p)
+
+
+def permutation_no_fix(n):
+    ls = list(range(1, n + 1))
+    gen = _permutation(0, n, ls)
+    i = 0
+    for p in gen:
+        for j, pj in enumerate(p):
+            if j + 1 == pj:
+                break
+        else:
+            i += 1
+            print(f"{i:>3}:", p)
+
+    # Count by inclusion-exclusion principle
+    # with the predicate Qi = {p | p(i) = i}
+    #   ∑_{I ⊂ {1, .., n}} (-1)^|I| |∧_{i ∈ I} Qi|
+    #   = ∑_k binom(n, k) (-1)^k k!
+    #   = ∑_k (-1)^k n!/k!
+    import math
+
+    count = 0
+    for k in range(0, n + 1):
+        s = 1 - 2 * (k % 2)
+        f = math.factorial(n) // math.factorial(k)
+        count += s * f
+    print(f"count:", count)
 
 
 if __name__ == "__main__":
