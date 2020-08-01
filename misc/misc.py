@@ -8,6 +8,7 @@
 # python misc/misc.py experiment_generalized_continued_fraction 20
 # python misc/misc.py quadratic_residue 32
 # python misc/misc.py permutation_no_fix 5
+# python misc/misc.py play_nim
 #
 
 #
@@ -606,6 +607,57 @@ def permutation_no_fix(n):
         f = math.factorial(n) // math.factorial(k)
         count += s * f
     print(f"count:", count)
+
+
+# Demonstrate normal play winning strategy
+def play_nim(seed=0, num_piles=5, lim=17):
+    import random, functools, itertools, math
+
+    # Utils
+    find_first_set = lambda x: math.floor(math.log2(x))
+    to_binary = lambda x, w: "".join(str((x >> i) & 1 or ".") for i in range(w)[::-1])
+    make_nim_sum = lambda ls: functools.reduce(lambda x, y: x ^ y, ls)
+
+    def visualize(piles, width):
+        for i, p in enumerate(piles):
+            print(f"{i}:", to_binary(p, width), f"[{p}]")
+        print(f"#:", to_binary(make_nim_sum(piles), width))
+
+    # Initialize
+    random.seed(seed)
+    piles = [random.randint(1, lim) for _ in range(num_piles)]
+    nim_sum = make_nim_sum(piles)
+    width = find_first_set(max(piles)) + 1
+
+    # Handle only when 1st can wins
+    if nim_sum == 0:
+        return "2nd wins"
+
+    # Play
+    for t in itertools.count():
+        print(f"[t = {t}]")
+        visualize(piles, width)
+
+        if sum(piles) == 0:
+            break
+
+        if t % 2 == 0:
+            # [ 1st winning strategy ]
+            # nim_sum ^ p ^ r = (nim_sum ^ p) ^ (nim_sum ^ p) = 0
+            c = find_first_set(nim_sum)
+            i, p = next(filter(lambda ip: ip[1] & (1 << c), enumerate(piles)))
+            r = nim_sum ^ p  # 0 <= r < p
+            piles[i] = r
+
+        else:
+            # [ 2nd random ]
+            # nim_sum ^ p ^ r == p ^ r != 0
+            i, p = random.choice(list(filter(lambda ip: ip[1] > 0, enumerate(piles))))
+            r = random.randint(0, p - 1)
+            piles[i] = r
+
+        nim_sum = make_nim_sum(piles)
+        print(f"\n--- piles[{i}] = {r} ---\n")
 
 
 if __name__ == "__main__":
