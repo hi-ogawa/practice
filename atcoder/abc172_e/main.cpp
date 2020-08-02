@@ -3,8 +3,8 @@
 //
 
 #include <cstdio>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 using ll = int64_t;
 using namespace std;
@@ -37,7 +37,7 @@ void makeFactorials(ll n, ll modulo, vector<ll>& a, vector<ll>& a_inv) {
 }
 
 ll solve(ll N, ll M, int debug = 0) {
-  ll modulo = 1000'000'000 + 7; // Prime < 2^32
+  ll modulo = 1000'000'000 + 7;  // Prime < 2^32
   auto MUL = [&](ll x, ll y) { return (x * y) % modulo; };
   vector<ll> f;
   vector<ll> f_inv;
