@@ -10,6 +10,7 @@
 # python misc/misc.py permutation_no_fix 5
 # python misc/misc.py play_nim
 #
+#
 
 #
 # CLAIM.
@@ -648,6 +649,7 @@ def play_nim(seed=0, num_piles=5, lim=17):
             i, p = next(filter(lambda ip: ip[1] & (1 << c), enumerate(piles)))
             r = nim_sum ^ p  # 0 <= r < p
             piles[i] = r
+            mark = "1st"
 
         else:
             # [ 2nd random ]
@@ -655,9 +657,46 @@ def play_nim(seed=0, num_piles=5, lim=17):
             i, p = random.choice(list(filter(lambda ip: ip[1] > 0, enumerate(piles))))
             r = random.randint(0, p - 1)
             piles[i] = r
+            mark = "2nd"
 
         nim_sum = make_nim_sum(piles)
-        print(f"\n--- piles[{i}] = {r} ---\n")
+        print(f"\n--- <{mark}> piles[{i}] = {p} ~> {r} ---\n")
+
+
+def repunit(n):
+    if n % 2 == 0 or n % 5 == 0:
+        raise RuntimeError("[repunit] 2 | n or 5 | n")
+    #
+    # Write R(k) = 11...11  = \sum_{i < k} 10^i = (10^k - 1) / 9
+    # Write A(n) = min{k | n | R(k)}
+    #
+    # PROP.
+    #   gcd(n, 10) = 1 <=> ∃k. n | R(k)
+    #
+    #   PROOF
+    #     n | (10^k - 1) / 9
+    #     <=> 10^k = 1 Z_9n
+    #
+    # PROP.
+    #   For gcd(n, 10) = 1,
+    #     A(n) = |<10>|
+    #   where
+    #     <10> = {10, 10^2, ..} cyclic subgroup of Z*_9n
+    #   Thus, since |<10>| | |Zn*|, we especially have,
+    #     A(n) | |Z*_9n| = Φ(9n)  (Euler's totient)
+    #
+    #   PROOF. see previous PROP's PROOF.
+    #
+    n9 = n * 9
+    r = 1
+    d = 10 % n9
+    print(f"1: {r} {d}")
+    for i in range(n9):
+        r = (1 + 10 * r) % n
+        d = (10 * d) % n9
+        print(f"{i + 2}: {r} {d}")
+        if r == 0:
+            break
 
 
 if __name__ == "__main__":
