@@ -13,14 +13,16 @@ def find_tests(file):
     return tests
 
 
-def run_cpp(file, option, check, test_infile, test_outfile):
+def run_cpp(file, option, check, test_infile, test_outfile, no_pch):
+    compiler = "clang++"
+    default_option = "-std=c++17 -O2 -march=native -Wall -Wextra -Wshadow"
     exec_file = "./build/main"
-    default_command = (
-        f"clang++ -std=c++17 -O2 -march=native -Wall -Wextra -Wshadow -o {exec_file}"
-    )
-    command = default_command + " " + file
+    pch_file = "./build/pch.hpp.gch"
+    command = f"{compiler} {default_option} -o {exec_file} {file}"
     if option:
-        command += " " + option
+        command += f" {option}"
+    if not no_pch:
+        command += f" -include-pch {pch_file}"
 
     print(f":: Compiling... [{command}]")
     proc = subprocess.run(command, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -67,6 +69,7 @@ def main():
     parser.add_argument("--check", action="store_true", default=False)
     parser.add_argument("--test-infile", type=str)
     parser.add_argument("--test-outfile", type=str)
+    parser.add_argument("--no-pch", action="store_true", default=False)
     args = parser.parse_args()
     run_cpp(**args.__dict__)
 
