@@ -33,6 +33,9 @@ def run_cpp(file, option, check, test_infile, test_outfile, no_pch):
         return
 
     print(":: Compile success")
+    if proc.stdout:  # Compile warning if any
+        print(proc.stdout.decode())
+
     if test_infile:
         print(f":: Running test ({test_infile})")
         with open(test_infile) as f:
@@ -48,6 +51,10 @@ def run_cpp(file, option, check, test_infile, test_outfile, no_pch):
         print(f":: Running test ({i + 1})")
         proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
         proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"))
+        if proc.returncode != 0:
+            print(f":: returncode: {proc.returncode}")  # e.g. -11 for segfault
+            print(proc_stdout.decode())
+            continue
         proc_outp = proc_stdout.decode()
         if not check:
             print(proc_outp)
