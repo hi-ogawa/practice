@@ -1,3 +1,5 @@
+// VC, AC
+
 #include <bits/stdc++.h>
 
 #define ALL(X) (X).begin(), (X).end()
