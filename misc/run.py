@@ -16,7 +16,14 @@ def find_inline_tests(file):
 def test_cpp(exec_file, name, inp, outp, check):
     print(f":: Running test ({name})")
     proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
-    proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"))
+    # TODO: print before process exits (so that we can debug infinite loop etc...)
+    try:
+        proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"), timeout=2.0)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        print(f":: Timeout. Process killed.")
+        print(proc.stdout.read().decode())
+        return
     proc_outp = proc_stdout.decode()
     if proc.returncode != 0:
         print(f":: returncode: {proc.returncode}")  # e.g. -11 for segfault
@@ -64,7 +71,6 @@ def run_cpp(file, option, check, test, no_pch):
         if test == "all":
             selected = list(range(len(inline_tests)))
         else:
-            # e.g. inline:0,1,2
             selected = [int(x) for x in test.split(",")]
         print(f":: Run inline tests: {selected}")
         for i, (inp, outp) in enumerate(inline_tests):
