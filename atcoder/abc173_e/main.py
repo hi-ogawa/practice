@@ -1,8 +1,4 @@
-# AFTER EDITORIAL
-
-#
-# TODO: Not sure if it's a bug in theory or code.
-#
+# AFTER EDITORIAL, AC
 
 
 def solve(ls, k, debug=0):
@@ -18,8 +14,10 @@ def solve(ls, k, debug=0):
     ls_abs_argsort = sorted(list(range(n)), key=lambda i: -ls_abs[i])
 
     # Check if positive result is impossible
-    l = min(k, n_neg)  # consider if we pick as many negatives as possible
-    positive = (l % 2 == 0) or ((k <= n_neg) and n_pos > 0) or ((k > n_neg) and n > k)
+    if n_neg >= k:
+        positive = (k % 2 == 0) or (n_pos > 0)
+    else:
+        positive = (n_neg % 2 == 0) or (n > k)
 
     # If positive is impossible, pick "abs" small ones
     if not positive:
@@ -56,21 +54,26 @@ def solve(ls, k, debug=0):
     # If negative, ...
     #   1. replace small negative with large positive, or
     #   2. replace small positive with large negative
+    opt1 = None
+    opt2 = None
+    neg1 = pos1 = None
+    pos2 = neg2 = None
 
     # Check if "1" is possible
     swap_pos = None
     for i in range(k, n):
         if ls[ls_abs_argsort[i]] >= 0:
             swap_pos = i
+            pos1 = ls[ls_abs_argsort[i]]
             break
 
     swap_neg = None
     for i in range(k)[::-1]:
         if ls[ls_abs_argsort[i]] < 0:
             swap_neg = i
+            neg1 = ls[ls_abs_argsort[i]]
             break
 
-    # Go with "1"
     if swap_pos is not None and swap_neg is not None:
         p = 1
         p *= ls[ls_abs_argsort[swap_pos]]
@@ -81,31 +84,46 @@ def solve(ls, k, debug=0):
             x = ls[ls_abs_argsort[i]]
             p *= x
             p %= modulo
-        return p
+        opt1 = p
 
-    # Go with "2"
+    # Check if "2" is possible
     swap_pos = None
     for i in range(k)[::-1]:
         if ls[ls_abs_argsort[i]] >= 0:
             swap_pos = i
+            pos2 = ls[ls_abs_argsort[i]]
             break
 
     swap_neg = None
     for i in range(k, n):
         if ls[ls_abs_argsort[i]] < 0:
             swap_neg = i
+            neg2 = ls[ls_abs_argsort[i]]
             break
 
-    p = 1
-    p *= ls[ls_abs_argsort[swap_neg]]
-    p %= modulo
-    for i in range(k):
-        if i == swap_pos:
-            continue
-        x = ls[ls_abs_argsort[i]]
-        p *= x
+    if swap_pos is not None and swap_neg is not None:
+        p = 1
+        p *= ls[ls_abs_argsort[swap_neg]]
         p %= modulo
-    return p
+        for i in range(k):
+            if i == swap_pos:
+                continue
+            x = ls[ls_abs_argsort[i]]
+            p *= x
+            p %= modulo
+            opt2 = p
+
+    # Pick opt1 or opt2
+    if opt1 is None:
+        return opt2
+
+    if opt2 is None:
+        return opt1
+
+    if pos1 * pos2 > neg1 * neg2:
+        return opt1
+
+    return opt2
 
 
 def main(istr, ostr):
@@ -140,5 +158,19 @@ class Test(unittest.TestCase):
         inp = """\
 4 3
 -1 -2 -3 -4
+"""
+        main(io.StringIO(inp), sys.stdout)
+
+    def test_3(self):
+        inp = """\
+2 1
+-1 1000000000
+"""
+        main(io.StringIO(inp), sys.stdout)
+
+    def test_4(self):
+        inp = """\
+10 10
+1000000000 100000000 10000000 1000000 100000 10000 1000 100 10 1
 """
         main(io.StringIO(inp), sys.stdout)

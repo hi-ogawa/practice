@@ -18,7 +18,9 @@ def test_cpp(exec_file, name, inp, outp, check):
     proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
     # TODO: print before process exits (so that we can debug infinite loop etc...)
     try:
-        proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"), timeout=2.0)
+        proc_stdout, proc_stderr = proc.communicate(
+            input=bytes(inp, "utf-8"), timeout=2.0
+        )
     except subprocess.TimeoutExpired:
         proc.kill()
         print(f":: Timeout. Process killed.")
