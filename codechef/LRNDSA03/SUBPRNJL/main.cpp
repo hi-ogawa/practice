@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, TLE, WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,15 +26,42 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
+  int n, k;
+  cin >> n >> k;
+  vector<int> ls(n, 0);
+  cin >> ls;
+  // DD(ls);
+
   int res = 0;
+  RANGE(i0, 0, n) {
+    map<int, int> freqs;
+    RANGE(i1, i0, n) {
+      // Segment ls[i0:i1]
+      freqs[ls[i1]]++;
+      // DD(freqs);
+      int t = i1 - i0 + 1;
+      int m = (k + t - 1) / t;
+      int r = m * t - k + 1;
+      // DD(tie(k, t, m, r));
+
+      // TODO: need better searching
+      auto it = --freqs.end();
+      int y = it->second;
+      while (r > m * y) {
+        it--;
+        y += it->second;
+      }
+      int x = it->first;
+      if (freqs.count(x) && freqs.count(freqs[x])) {
+        res++;
+      }
+    }
+  }
+
   cout << res << endl;
 }
 
 int main() {
-  // [ Single case ]
-  // mainCase()
-
-  // [ Multiple cases ]
   int t;
   cin >> t;
   RANGE(i, 0, t) mainCase();
@@ -44,9 +69,13 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA03/SUBPRNJL/main.cpp --check
 
 %%%% begin
+1
+3 3
+1 2 3
 %%%%
+3
 %%%% end
 */

@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,15 +26,39 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n, z;
+  cin >> n >> z;
+  vector<int> ls(n, 0);
+  cin >> ls;
+
+  // AFTER EDITORIAL
+  // Max-heap (add "id" to support duplicate values)
+  set<pair<int, int>, greater<pair<int, int>>> heap;
+  RANGE(i, 0, n) {
+    heap.insert({ls[i], i});
+  }
+
+  ll k = 0;
+  bool fail = 0;
+  while (z > 0) {
+    if (heap.empty()) {
+      fail = 1;
+      break;
+    }
+    k++;
+    auto top = heap.begin();
+    int x = top->first;
+    z -= x;
+    heap.erase(top);
+    if (x > 1) {
+      heap.insert({x / 2, top->second});
+    }
+  }
+
+  cout << (fail ? "Evacuate" : to_string(k)) << endl;
 }
 
 int main() {
-  // [ Single case ]
-  // mainCase()
-
-  // [ Multiple cases ]
   int t;
   cin >> t;
   RANGE(i, 0, t) mainCase();
@@ -44,9 +66,37 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA03/SAVKONO/main.cpp --check
 
 %%%% begin
+1
+5 25
+7 13 8 17 3
 %%%%
+2
+%%%% end
+
+%%%% begin
+1
+5 200
+100 20 10 2 1
+%%%%
+5
+%%%% end
+
+%%%% begin
+1
+5 25
+1 2 1 2 1
+%%%%
+Evacuate
+%%%% end
+
+%%%% begin
+1
+5 200
+100 100 100 100 100
+%%%%
+2
 %%%% end
 */

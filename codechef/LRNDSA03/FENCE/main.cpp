@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,15 +26,46 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
+  int n, m, k;
+  cin >> n >> m >> k;
+  vector<pair<int, int>> ls(k, {0, 0});
+  cin >> ls;
+  // DD(ls);
+
+  set<pair<int, int>> data1;
+  set<pair<int, int>> data2;
+  for (auto xy : ls) {
+    data1.insert(xy);
+    data2.insert({xy.second, xy.first});
+  }
+  // DD(data1);
+  // DD(data2);
+
+  int res1 = 0;
+  {
+    // Count (x, y) -> (x, y + 1)
+    auto it = data1.begin();
+    auto pr = it++;
+    for (; it != data1.end(); pr = it++) {
+      res1 += (pr->first == it->first && pr->second + 1 == it->second);
+    }
+  }
+
+  int res2 = 0;
+  {
+    // Count (y, x) -> (y, x + 1)
+    auto it = data2.begin();
+    auto pr = it++;
+    for (; it != data2.end(); pr = it++) {
+      res2 += (pr->first == it->first && pr->second + 1 == it->second);
+    }
+  }
+
+  int res = 4 * k - 2 * (res1 + res2);
   cout << res << endl;
 }
 
 int main() {
-  // [ Single case ]
-  // mainCase()
-
-  // [ Multiple cases ]
   int t;
   cin >> t;
   RANGE(i, 0, t) mainCase();
@@ -44,9 +73,24 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA03/FENCE/main.cpp --check
 
 %%%% begin
+2
+4 4 9
+1 4
+2 1
+2 2
+2 3
+3 1
+3 3
+4 1
+4 2
+4 3
+4 4 1
+1 1
 %%%%
+20
+4
 %%%% end
 */

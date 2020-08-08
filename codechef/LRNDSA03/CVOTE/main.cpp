@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,25 +26,67 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n, m;
+  cin >> n >> m;
+  vector<pair<string, string>> ls1(n, {"", ""});
+  vector<string> ls2(m, "");
+  cin >> ls1;
+  cin >> ls2;
+
+  map<string, string> data1;
+  for (auto xy : ls1) {
+    string x, y;
+    tie(x, y) = xy;
+    data1[x] = y;
+  }
+  // DD(data1);
+
+  map<string, int> data2;
+  map<string, int> data3;
+  for (auto s : ls2) {
+    data2[s]++;
+    data3[data1[s]]++;
+  }
+  // DD(data2);
+  // DD(data3);
+
+  auto compare = [](auto x, auto y) {
+    return x.second < y.second || (x.second == y.second && x.first > y.first);
+  };
+
+  auto max2 = *max_element(ALL(data2), compare);
+  auto max3 = *max_element(ALL(data3), compare);
+  // DD(max2);
+  // DD(max3);
+
+  cout << max3.first << endl;
+  cout << max2.first << endl;
 }
 
 int main() {
-  // [ Single case ]
-  // mainCase()
-
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  RANGE(i, 0, t) mainCase();
+  // int t;
+  // cin >> t;
+  // RANGE(i, 0, t) mainCase();
+  mainCase();
   return 0;
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA03/CVOTE/main.cpp --check
 
 %%%% begin
+4 5
+Ramanujan India
+Torricelli Italy
+Gauss Germany
+Lagrange Italy
+Ramanujan
+Torricelli
+Torricelli
+Ramanujan
+Lagrange
 %%%%
+Italy
+Ramanujan
 %%%% end
 */

@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,25 +26,48 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n1, n2;
+  cin >> n1 >> n2;
+  vector<int> ls1(n1, 0);
+  vector<int> ls2(n2, 0);
+  cin >> ls1 >> ls2;
+  vector<int> ls1_arg(n1, 0);
+  vector<int> ls2_arg(n2, 0);
+  iota(ALL(ls1_arg), 0);
+  iota(ALL(ls2_arg), 0);
+  sort(ALL(ls1_arg), [&](auto x, auto y) { return ls1[x] < ls1[y]; });
+  sort(ALL(ls2_arg), [&](auto x, auto y) { return ls2[x] < ls2[y]; });
+
+  RANGE(i, 0, n1) {
+    // ls1[i] + ls2[0] < ls1[i + 1] + ls2[0]
+    cout << ls1_arg[i] << " " << ls2_arg[0] << endl;
+  }
+
+  RANGE(i, 1, n2) {
+    // ls1[n1 - 1] + ls2[0] < ls1[n1 - 1] + ls2[i] < ls1[n1 - 1] + ls2[i + 1]
+    cout << ls1_arg[n1 - 1] << " " << ls2_arg[i] << endl;
+  }
 }
 
 int main() {
-  // [ Single case ]
-  // mainCase()
-
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  RANGE(i, 0, t) mainCase();
+  // int t;
+  // cin >> t;
+  // RANGE(i, 0, t) mainCase();
+  mainCase();
   return 0;
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA03/DPAIRS/main.cpp --check
 
 %%%% begin
+3 2
+10 1 100
+4 3
 %%%%
+2 1
+0 0
+1 0
+0 1
 %%%% end
 */
