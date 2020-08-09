@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,14 +26,33 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n;
+  cin >> n;
+  vector<int> ls(n, 0);
+  cin >> ls;
+
+  // (value, id) where id for same value elements
+  set<tuple<int, int>> data;
+
+  RANGE(i, 0, n) {
+    auto it = data.upper_bound({ls[i], i});
+    if (it != data.end()) {
+      data.erase(it);
+    }
+    data.insert({ls[i], i});
+    // DD(data);
+  }
+
+  cout << data.size();
+  for (auto xy : data) {
+    cout << " " << get<0>(xy);
+  }
+  cout << endl;
 }
 
 int main() {
   // [ Single case ]
-  // mainCase();
-  // return 0;
+  // mainCase()
 
   // [ Multiple cases ]
   int t;
@@ -45,9 +62,19 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA04/STACKS/main.cpp --check
 
 %%%% begin
+3
+6
+3 4 5 1 1 2
+10
+3 2 9 5 2 9 4 14 7 10
+8
+14 5 13 19 17 10 18 12
 %%%%
+3 1 1 2
+5 2 2 4 7 10
+4 5 10 12 18
 %%%% end
 */

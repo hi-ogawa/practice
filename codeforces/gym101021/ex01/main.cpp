@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,26 +26,67 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  auto ask = [&](int x) {
+    cout << x << endl << flush;
+    string resp;
+    cin >> resp;
+    return resp;
+  };
+
+  int x0 = 1;
+  int x1 = 1000'000;
+  while (x0 < x1) {
+    int x = (x0 + x1 + 1) / 2;
+    auto resp = ask(x);
+    if (resp == "<") {
+      x1 = x - 1;
+    } else {
+      x0 = x;
+    }
+  }
+  cout << "! " << x0 << endl;
 }
 
 int main() {
   // [ Single case ]
-  // mainCase();
-  // return 0;
+  mainCase();
+  return 0;
 
   // [ Multiple cases ]
-  int t;
-  cin >> t;
-  RANGE(i, 0, t) mainCase();
-  return 0;
+  // int t;
+  // cin >> t;
+  // RANGE(i, 0, t) mainCase();
+  // return 0;
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/gym101021/ex01/main.cpp --check
 
 %%%% begin
+<
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
+>=
+<
 %%%%
 %%%% end
 */

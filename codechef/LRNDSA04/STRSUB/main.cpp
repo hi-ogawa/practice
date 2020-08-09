@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER EDITORIAL, WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,8 +26,63 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  // Input
+  int n, k, nq;
+  cin >> n >> k >> nq;
+
+  string s;
+  cin >> s;
+
+  vector<tuple<int, int>> qs(nq, {0, 0});
+  RANGE(i, 0, nq) cin >> get<0>(qs[i]) >> get<1>(qs[i]);
+
+  // [ left/right-maximal segments, which doesn't seem to be useful ]
+  // // Enumerate "maximal" segments
+  // vector<tuple<int, int>> segs(0, {0, 0});
+  // {
+  //   int i = 0;
+  //   int j = 0;
+  //   int c0 = 0;
+  //   int c1 = 0;
+  //   // Maximize [0, j)
+  //   while (j < n) {
+  //     if (c0 == k && s[j] == '0') { break; };
+  //     if (c1 == k && s[j] == '1') { break; };
+  //     if (s[j] == '0') { c0++; }
+  //     if (s[j] == '1') { c1++; }
+  //     j++;
+  //   }
+  //   segs.push_back({i, j});
+
+  //   while (j < n) {
+  //     // Progress [i, j) -> [i+1, j)
+  //     if (s[i] == '0') { c0--; }
+  //     if (s[i] == '1') { c1--; }
+  //     i++;
+
+  //     // Maximize [i, j)
+  //     bool progress = 0;
+  //     while (j < n) {
+  //       if (c0 == k && s[j] == '0') { break; };
+  //       if (c1 == k && s[j] == '1') { break; };
+  //       if (s[j] == '0') { c0++; }
+  //       if (s[j] == '1') { c1++; }
+  //       j++;
+  //       progress = 1;
+  //     }
+  //     if (progress) {
+  //       segs.push_back({i, j});
+  //     }
+  //   }
+  // }
+  // DD(segs);
+
+
+  for (auto q : qs) {
+    int ql, qr;
+    tie(ql, qr) = q;
+    // DD(tie(ql, qr));
+  }
 }
 
 int main() {
@@ -45,9 +98,18 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA04/STRSUB/main.cpp --check
 
 %%%% begin
+1
+8 2 3
+01110000
+1 4
+2 4
+5 8
 %%%%
+8
+5
+7
 %%%% end
 */
