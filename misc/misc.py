@@ -9,7 +9,7 @@
 # python misc/misc.py quadratic_residue 32
 # python misc/misc.py permutation_no_fix 5
 # python misc/misc.py play_nim
-#
+# python misc/misc.py fib_modulo
 #
 
 #
@@ -697,6 +697,20 @@ def repunit(n):
         print(f"{i + 2}: {r} {d}")
         if r == 0:
             break
+
+
+def fib_modulo(m = 10):
+    # By pigeonhole, it's necessarily periodic (TODO: can we prove it's "pure" periodic??)
+    i = 0
+    x, y = 0, 1
+    log = set()
+    while not (x, y) in log:
+        print(f"{i}: {x}")
+        log.add((x, y))
+        x, y = y, (x + y) % m
+        i += 1
+    print(f"{i + 0}: {x}")
+    print(f"{i + 1}: {y}")
 
 
 if __name__ == "__main__":
