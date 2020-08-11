@@ -1,6 +1,4 @@
-// AFTER EDITORIAL, WA
-
-// TODO: Debug it (Theory feels right but still WA).
+// AFTER EDITORIAL, AC
 
 //
 // PROP.
@@ -33,7 +31,7 @@ template<class T> ostream&            operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 
 // Main
-vector<int> solve(vector<uint>& ls, vector<tuple<int, int>>& qs) {
+vector<ll> solve(vector<uint>& ls, vector<tuple<int, int>>& qs) {
   int n = ls.size();
 
   // Find first set (-1 for zero)
@@ -78,29 +76,32 @@ vector<int> solve(vector<uint>& ls, vector<tuple<int, int>>& qs) {
 
   // Answer queries
   int nq = qs.size();
-  vector<int> result(nq, 0);
+  vector<ll> result(nq, 0);
   RANGE(iq, 0, nq) {
     auto [l, r] = qs[iq];
     l--; // To zero-based
-    result[iq] += (Z[r] - Z[l]) * (r - l);
+    result[iq] += (ll)(Z[r] - Z[l]) * (r - l);
     RANGE(b, 0, 32) {
-      result[iq] += (F[b][r] - F[b][l]) * (G[b][r] - G[b][l]);
+      result[iq] += (ll)(F[b][r] - F[b][l]) * (G[b][r] - G[b][l]);
     }
   }
   return result;
 }
 
 void main_case() {
-  int n, q;
+  int n, q; // <= 10^6
   cin >> n >> q;
-  vector<uint> ls(n, 0);
+
+  vector<uint> ls(n, 0); // <= 2^30
   RANGE(j, 0, n) {
     cin >> ls[j];
   }
+
   vector<tuple<int, int>> qs(q, {0, 0});
   RANGE(j, 0, q) {
     cin >> get<0>(qs[j]) >> get<1>(qs[j]);
   }
+
   auto result = solve(ls, qs);
   for (auto r : result) {
     cout << r << endl;
