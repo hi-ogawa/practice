@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -25,13 +23,58 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>&
 template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)    { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  ll n; // <= 10^4
+  cin >> n;
+
+  vector<ll> ls(n, 0); // <= 10^6
+  cin >> ls;
+
+  ll nq; // <= 10^4
+  cin >> nq;
+
+  // "Directed" DSU (merge happens only between root nodes)
+  vector<int> dsu(n, 0);
+  iota(ALL(dsu), 0);
+  auto score = ls;
+  function<int(int)> find = [&](int x) {
+    if (dsu[x] == x) { return x; }
+    return dsu[x] = find(dsu[x]);
+  };
+  auto merge = [&](int dest, int src) {
+    dsu[src] = dest;
+    score[dest] = max(score[dest], score[src]);
+  };
+
+  RANGE(iq, 0, nq) {
+    // DD(dsu);
+    // DD(score);
+    ll mode, x, y;
+    cin >> mode;
+
+    if (mode == 0) {
+      cin >> x >> y;
+      x--; y--;  // zero-based
+      ll fx = find(x);
+      ll fy = find(y);
+      if (fx == fy) {
+        cout << "Invalid query!" << endl;
+        continue;
+      }
+      if (score[fx] == score[fy]) { continue; }
+      if (score[fx] < score[fy]) { swap(fx, fy); }
+      merge(fx, fy);
+    }
+
+    if (mode == 1) {
+      cin >> x;
+      x--; // zero-based
+      cout << (find(x) + 1) << endl;
+    }
+  }
 }
 
 int main() {
@@ -47,9 +90,16 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codechef/LRNDSA08/DISHOWN/main.cpp --check
 
 %%%% begin
+1
+2
+1 2
+2
+0 1 2
+1 1
 %%%%
+2
 %%%% end
 */
