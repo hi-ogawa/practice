@@ -1,8 +1,4 @@
-// AFTER CONTEST
-
-// NOTE:
-// "left/right-maximal segments" seems interesting constructs,
-// but not useful for this problem.
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -31,7 +27,7 @@ template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& 
 // Main
 void mainCase() {
   // Input
-  int n, k, nq;
+  int n, k, nq; // <= 10^5
   cin >> n >> k >> nq;
 
   string s;
@@ -40,51 +36,79 @@ void mainCase() {
   vector<tuple<int, int>> qs(nq, {0, 0});
   RANGE(i, 0, nq) cin >> get<0>(qs[i]) >> get<1>(qs[i]);
 
-  // [ left/right-maximal segments, which doesn't seem to be useful ]
-  // Enumerate "maximal" segments
-  vector<tuple<int, int>> segs(0, {0, 0});
+  // Make "right-maximal" infixes
+  vector<int> segs(n, 0);
   {
-    int i = 0;
     int j = 0;
     int c0 = 0;
     int c1 = 0;
-    // Maximize [0, j)
-    while (j < n) {
-      if (c0 == k && s[j] == '0') { break; };
-      if (c1 == k && s[j] == '1') { break; };
-      if (s[j] == '0') { c0++; }
-      if (s[j] == '1') { c1++; }
-      j++;
-    }
-    segs.push_back({i, j});
-
-    while (j < n) {
-      // Progress [i, j) -> [i+1, j)
-      if (s[i] == '0') { c0--; }
-      if (s[i] == '1') { c1--; }
-      i++;
-
-      // Maximize [i, j)
-      bool progress = 0;
+    RANGE(i, 0, n) {
+      if (i - 1 >= 0 && s[i - 1] == '0') { c0--; }
+      if (i - 1 >= 0 && s[i - 1] == '1') { c1--; }
       while (j < n) {
         if (c0 == k && s[j] == '0') { break; };
         if (c1 == k && s[j] == '1') { break; };
         if (s[j] == '0') { c0++; }
         if (s[j] == '1') { c1++; }
         j++;
-        progress = 1;
       }
-      if (progress) {
-        segs.push_back({i, j});
-      }
+      segs[i] = j;
     }
   }
-  DD(segs);
+  // DD(segs);
 
+  // Cumsum interval length
+  vector<ll> seglength_cumsum(n + 1, 0);
+  RANGE(i, 0, n) {
+    seglength_cumsum[i + 1] = seglength_cumsum[i] + (segs[i] - i);
+  }
+  // DD(seglength_cumsum);
+
+  // Binary search max { x | segs(x) <= r }
+  auto search = [&](auto r) {
+    // [x0, x1)
+    int x0 = 0;
+    int x1 = n;
+    while (x0 + 1 < x1) {
+      int x = (x0 + x1) / 2;
+      if (segs[x] <= r) {
+        x0 = x;
+      } else {
+        x1 = x;
+      }
+    }
+    return x0;
+  };
+
+  // Answer queries
   for (auto q : qs) {
     int ql, qr;
     tie(ql, qr) = q;
-    DD(tie(ql, qr));
+    ql--; // zero-based, half-open [ql, qr)
+    // DD(tie(ql, qr));
+
+    if (qr < segs[ql]) {
+      // Take all substrings
+      ll c = qr - ql;
+      ll res = c * (c + 1) / 2;
+      cout << res << endl;
+      continue;
+    }
+
+    int x = search(qr);
+    // DD(tie(qr, x, segs[x]));
+
+    // TODO: is this sketchy when x <= ql ??
+    // Segments covered by [ql, qr)
+    ll res0 = seglength_cumsum[x + 1] - seglength_cumsum[ql];
+
+    // Segments chopped at qr
+    ll c = qr - (x + 1);
+    ll res1 = c * (c + 1) / 2;
+
+    // DD(tie(res0, res1));
+    ll res = res0 + res1;
+    cout << res << endl;
   }
 }
 
@@ -101,7 +125,7 @@ int main() {
 }
 
 /*
-python misc/run.py codechef/LRNDSA04/STRSUB/main.cpp --check
+python misc/run.py codechef/LRNDSA04/STRSUB/main_v2.cpp --check
 
 %%%% begin
 1
