@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// VC, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,23 +25,51 @@ template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-// c++17
-// template<class T, class = void> struct has_const_iterator : false_type {};
-// template<class T>               struct has_const_iterator<T, void_t<class T::const_iterator>> : true_type {};
-// template<class T, enable_if_t<has_const_iterator<T>::value && !is_same_v<string, T>, int> = 0>
-// ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
+  int n;
+  cin >> n;
+
+  vector<ll> ls(n, 0);
+  cin >> ls;
+
+  vector<ll> xs(n / 2, 0);
+  FOR(i, 0, n / 2) {
+    xs[i] = ls[2 * i + 1] - ls[2 * i];
+  }
+  vector<ll> ys((n - 1) / 2, 0);
+  FOR(i, 0, (n - 1) / 2) {
+    ys[i] = ls[2 * i + 1] - ls[2 * i + 2];
+  }
+  // DD(ls);
+  // DD(xs);
+  // DD(ys);
+
+  ll orig = 0;
+  FOR(i, 0, (n + 1) / 2) {
+    orig += ls[2 * i];
+  }
+  // DD(orig);
+
+  // Kadane's max segment sum
+  auto kadane = [](const vector<ll>& ls) -> ll {
+    ll res = 0, tmp = 0;
+    FOR(i, 0, (int)ls.size()) {
+      tmp = max((ll)0, tmp + ls[i]);
+      res = max(res, tmp);
+    }
+    return res;
+  };
+
+  ll res0 = kadane(xs);
+  ll res1 = kadane(ys);
+  ll res = orig + max((ll)0, max(res0, res1));
   cout << res << endl;
 }
 
 int main() {
-  ios_base::sync_with_stdio(false);
-  cin.tie(0);
-
   // [ Single case ]
   // mainCase();
   // return 0;
@@ -56,9 +82,22 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/edu90/d/main.cpp --check
 
 %%%% begin
+4
+8
+1 7 3 4 7 6 2 9
+5
+1 2 1 2 1
+10
+7 8 4 5 7 6 8 9 7 3
+4
+3 1 2 1
 %%%%
+26
+5
+37
+5
 %%%% end
 */

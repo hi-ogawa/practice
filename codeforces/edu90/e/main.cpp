@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,23 +25,76 @@ template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-// c++17
-// template<class T, class = void> struct has_const_iterator : false_type {};
-// template<class T>               struct has_const_iterator<T, void_t<class T::const_iterator>> : true_type {};
-// template<class T, enable_if_t<has_const_iterator<T>::value && !is_same_v<string, T>, int> = 0>
-// ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n, k; // n <= 150, k <= 9
+  cin >> n >> k;
+
+  //
+  // For x = ....9999d
+  //         <------> b = a + 9j
+  //         <--> a
+  //
+
+  auto tri = [](ll x) -> ll {
+    return (x * (x + 1)) / 2;
+  };
+
+  auto makeNumber = [](ll a, ll j, ll d) -> ll {
+    //  <-j-->
+    // a99..99d
+    stringstream s;
+    s << a;
+    FOR(i, 0, j) { s << "9"; }
+    s << d;
+    ll res;
+    s >> res;
+    return res;
+  };
+
+  ll kMax = numeric_limits<ll>::max();
+  ll res = kMax;
+  FOR(d, 0, 10) {
+    if (d + k <= 9) {
+      ll h = n - (tri(d + k) - tri(d - 1));
+      if (h < 0) { continue; }
+      if (h % (k + 1) != 0) { continue; }
+      ll b = h / (k + 1);
+      ll j = b / 9;
+      ll a = b % 9;
+      res = min(res, makeNumber(a, j, d));
+    }
+
+    if (d + k >= 10) {
+      ll h = n - (tri(9) - tri(d - 1) + tri(d + k - 10) + d + k - 9);
+      if (h < 0) { continue; }
+      // Solve (w, j) s.t.
+      //   h = 9j (10 - d) + w (k + 1)
+      for (ll j = 0; j <= h; j++) {
+        ll z = h - 9 * j * (10 - d);
+        if (z < 0) { continue; }
+        if (z % (k + 1) != 0) { continue; }
+        ll w = z / (k + 1);
+        ll a;
+        if (w < 9) {
+          a = w;
+        } else {
+          // a = ?99...998 with f(a) = w
+          string s;
+          ll q = (w - 8) / 9;
+          ll r = (w - 8) % 9;
+          a = makeNumber(r, q, 8);
+        }
+        res = min(res, makeNumber(a, j, d));
+      }
+    }
+  }
+  cout << (res == kMax ? -1 : res) << endl;
 }
 
 int main() {
-  ios_base::sync_with_stdio(false);
-  cin.tie(0);
-
   // [ Single case ]
   // mainCase();
   // return 0;
@@ -56,9 +107,38 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/edu90/e/main.cpp --check
 
 %%%% begin
+1
+12 1
 %%%%
+19
+%%%% end
+
+%%%% begin
+1
+42 7
+%%%%
+4
+%%%% end
+
+%%%% begin
+7
+1 0
+1 1
+42 7
+13 7
+99 1
+99 0
+99 2
+%%%%
+1
+0
+4
+-1
+599998
+99999999999
+7997
 %%%% end
 */

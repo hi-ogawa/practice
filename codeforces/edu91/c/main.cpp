@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,23 +25,35 @@ template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-// c++17
-// template<class T, class = void> struct has_const_iterator : false_type {};
-// template<class T>               struct has_const_iterator<T, void_t<class T::const_iterator>> : true_type {};
-// template<class T, enable_if_t<has_const_iterator<T>::value && !is_same_v<string, T>, int> = 0>
-// ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
+  ll n, x;
+  cin >> n >> x;
+
+  vector<ll> ls(n, 0);
+  cin >> ls;
+  sort(ALL(ls));
+  // DD(ls);
+
+  ll res = 0;
+  int i = n - 1;
+  while (i >= 0) {
+    int i0 = i;
+    while (i >= 0) {
+      int y = ls[i];
+      i--;
+      if ((i0 - i) * y >= x) {
+        res++;
+        break;
+      }
+    }
+  }
   cout << res << endl;
 }
 
 int main() {
-  ios_base::sync_with_stdio(false);
-  cin.tie(0);
-
   // [ Single case ]
   // mainCase();
   // return 0;
@@ -56,9 +66,19 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/edu91/c/main.cpp --check
 
 %%%% begin
+3
+5 10
+7 11 2 9 5
+4 8
+2 4 2 3
+4 11
+1 3 3 7
 %%%%
+2
+1
+0
 %%%% end
 */

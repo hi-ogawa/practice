@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// VC, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,23 +25,37 @@ template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-// c++17
-// template<class T, class = void> struct has_const_iterator : false_type {};
-// template<class T>               struct has_const_iterator<T, void_t<class T::const_iterator>> : true_type {};
-// template<class T, enable_if_t<has_const_iterator<T>::value && !is_same_v<string, T>, int> = 0>
-// ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  ll n;
+  cin >> n;
+  vector<ll> ls(n, 0);
+  cin >> ls;
+
+  bool res0 = 0;
+  bool res1 = 0;
+  int ix, iy;
+  FOR(i, 0, n - 1) {
+    if (ls[i] < ls[i + 1]) {
+      res0 = 1;
+      ix = i;
+      continue;
+    }
+    if (res0 && ls[i] > ls[i + 1]) {
+      res1 = 1;
+      iy = i;
+      break;
+    }
+  }
+  cout << (res1 ? "YES" : "NO") << endl;
+  if (res1) {
+    cout << (ix + 1) << " " << (iy + 1) << " " << (iy + 2) << endl;
+  }
 }
 
 int main() {
-  ios_base::sync_with_stdio(false);
-  cin.tie(0);
-
   // [ Single case ]
   // mainCase();
   // return 0;
@@ -56,9 +68,21 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/edu91/a/main.cpp --check
 
 %%%% begin
+3
+4
+2 1 4 3
+6
+4 6 1 2 5 3
+5
+5 3 1 2 4
 %%%%
+YES
+2 3 4
+YES
+3 5 6
+NO
 %%%% end
 */

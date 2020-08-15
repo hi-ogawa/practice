@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// VC, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -27,21 +25,56 @@ template<class T>            ostream& operator<<(ostream& o, const vector<T>& x)
 template<class T1, class T2> ostream& operator<<(ostream& o, const set<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const map<T1, T2>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& x)  { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
-// c++17
-// template<class T, class = void> struct has_const_iterator : false_type {};
-// template<class T>               struct has_const_iterator<T, void_t<class T::const_iterator>> : true_type {};
-// template<class T, enable_if_t<has_const_iterator<T>::value && !is_same_v<string, T>, int> = 0>
-// ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
 // Main
 void mainCase() {
-  int res = 0;
-  cout << res << endl;
+  int n; // <= 10^6
+  cin >> n;
+
+  vector<ll> xs(n, 0); // <= 10^9
+  vector<ll> ys(n, 0); // <= 10^9
+  cin >> xs >> ys;
+
+  // Distribute y[0] = (z) + (y[0] - z) >= x[0] + x[-1]
+  // f(z) = 0, 1, -1
+  auto evaluate = [&](ll z) -> ll {
+    ll tmp = ys[0] - z;
+    FOR(i, 1, n) {
+      tmp = ys[i] - max((ll)0, xs[i] - tmp);
+      if (tmp < 0) { return -1; }
+    }
+    return (tmp + z >= xs[0]) ? 0 : 1;
+  };
+
+  auto search = [&]() -> bool {
+    // [z0, z1)
+    ll z0 = 0;
+    ll z1 = ys[0] + 1;
+    while (true) {
+      ll z = (z0 + z1) / 2;
+      // DD(z);
+
+      ll fz = evaluate(z);
+      if (fz == 0) { return true; }
+      if (z0 + 1 == z1) { break; }
+
+      if (fz < 0) {
+        z1 = z;
+      } else {
+        z0 = z;
+      }
+    }
+    return false;
+  };
+  // DD(search());
+
+  bool res = search();
+  cout << (res ? "YES" : "NO") << endl;
 }
 
 int main() {
-  ios_base::sync_with_stdio(false);
+  ios_base::sync_with_stdio(0);
   cin.tie(0);
 
   // [ Single case ]
@@ -56,9 +89,39 @@ int main() {
 }
 
 /*
-python misc/run.py xxx/main.cpp --check
+python misc/run.py codeforces/edu90/f/main.cpp --check
 
 %%%% begin
+1
+4
+2 3 4 5
+3 7 2 2
 %%%%
+NO
+%%%% end
+
+%%%% begin
+5
+3
+2 3 4
+3 3 3
+3
+3 3 3
+2 3 4
+4
+2 3 4 5
+3 7 2 2
+4
+4 5 2 3
+2 3 2 7
+2
+1 1
+10 10
+%%%%
+YES
+YES
+NO
+YES
+YES
 %%%% end
 */
