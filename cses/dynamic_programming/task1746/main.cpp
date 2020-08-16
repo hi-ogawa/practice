@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,79 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  ll n, m; // n <= 10^5, m <= 100
+  cin >> n >> m;
+
+  vector<ll> ls(n, 0);
+  cin >> ls;
+  for (auto& x : ls) { x--; } // -1, 0, .., m-1
+
+  constexpr ll modulo = 1000'000'000 + 7;
+  auto add = [](ll x, ll y) { return (x + y) % modulo; };
+
+  vector<ll> dp(m, 0);
+  if (ls[0] == -1) {
+    fill(ALL(dp), 1);
+  } else {
+    dp[ls[0]] = 1;
+  }
+  // DD(dp);
+
+  auto dp_prev = dp;
+  FOR(i, 1, n) {
+    FOR(y, 0, m) {
+      for (auto d : {-1, 1}) {
+        if (0 <= y + d && y + d < m) {
+          dp[y] = add(dp[y], dp_prev[y + d]);
+        }
+      }
+    }
+    if (ls[i] >= 0) {
+      FOR(y, 0, m) {
+        if (y != ls[i]) { dp[y] = 0; }
+      }
+    }
+    dp_prev = dp;
+    // DD(dp);
+  }
+
+  ll res = accumulate(ALL(dp), (ll)0, add);
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1746/main_v2.cpp --check
 
 %%%% begin
+10 100
+0 0 0 0 0 0 0 0 0 0
 %%%%
+1908416
+%%%% end
+
+%%%% begin
+7 3
+0 1 3 0 2 0 0
+%%%%
+0
+%%%% end
+
+%%%% begin
+3 5
+2 0 2
+%%%%
+3
 %%%% end
 */

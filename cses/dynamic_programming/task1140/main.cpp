@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,67 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  ll n; // <= 10^6
+  cin >> n;
+  vector<tuple<ll, ll, ll>> ls(n, {0, 0, 0});
+  cin >> ls;
+  sort(ALL(ls), [](auto x, auto y) { return tie(get<1>(x), get<0>(x)) < tie(get<1>(y), get<0>(y)); });
+  // DD(ls);
+
+  // max { i | get<1>(ls[i]) < x }
+  auto search = [&](ll x) -> int {
+    if (x <= get<1>(ls[0])) { return -1; }
+    // [i0, i1)
+    int i0 = 0;
+    int i1 = n;
+    while (i0 + 1 < i1) {
+      int i = (i0 + i1) / 2;
+      if (get<1>(ls[i]) < x) {
+        i0 = i;
+      } else {
+        i1 = i;
+      }
+    }
+    return i0;
+  };
+
+  vector<ll> dp(n, 0);
+  ll dp_max = 0;
+  FOR(i, 0, n) {
+    auto [a, _b, p] = ls[i];
+    int j = search(a);
+    ll y = j != -1 ? dp[j] : 0;
+    dp_max = max(dp_max, y + p);
+    dp[i] = dp_max;
+    // DD(dp);
+  }
+
+  ll res = dp_max;
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1140/main.cpp --check
 
 %%%% begin
+4
+2 4 4
+3 6 6
+6 8 2
+5 7 3
 %%%%
+7
 %%%% end
 */

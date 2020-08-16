@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,55 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  ll a, b; // <= 500
+  cin >> a >> b;
+
+  // WLOG, a <= b
+  if (a > b) { swap(a, b); }
+
+  vector<vector<ll>> dp(a + 1, vector<ll>(b + 1, 0));
+  auto _dp = [&](int i, int j) {
+    if (i > j) { swap(i, j); }
+    return dp[i][j];
+  };
+  FOR(i, 1, a + 1) {
+    FOR(j, i + 1, b + 1) {
+      ll tmp = 1 << 30;
+      FOR(i1, 1, i) {
+        ll i2 = i - i1;
+        tmp = min(tmp, _dp(i1, j) + _dp(i2, j));
+      }
+      FOR(j1, 1, j) {
+        ll j2 = j - j1;
+        tmp = min(tmp, _dp(i, j1) + _dp(i, j2));
+      }
+      dp[i][j] = tmp + 1;
+    }
+  }
+  // DD2(dp);
+
+  ll res = dp[a][b];
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1744/main.cpp --check
 
 %%%% begin
+3 5
 %%%%
+3
 %%%% end
 */

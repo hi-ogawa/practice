@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,51 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  ll n, x; // n <= 100, x <= 10^6
+  cin >> n >> x;
+
+  vector<ll> ls(n, 0); // <= 10^6
+  cin >> ls;
+  sort(ALL(ls));
+  // DD(ls);
+
+  constexpr ll modulo = 1000'000'000 + 7;
+  auto add = [](ll x, ll y) { return (x + y) % modulo; };
+
+  vector<ll> dp(x + 1, 0);
+  dp[0] = 1;
+  for (auto a : ls) {
+    FOR(j, 0, x + 1) {
+      if (j - a >= 0) {
+        dp[j] = add(dp[j], dp[j - a]);
+      }
+    }
+  }
+  // DD(dp);
+
+  ll res = dp[x];
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1636/main.cpp --check
 
 %%%% begin
+3 9
+2 3 5
 %%%%
+3
 %%%% end
 */

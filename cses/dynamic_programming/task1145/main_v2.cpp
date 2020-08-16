@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,46 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  ll n; // <= 10^6
+  cin >> n;
+  vector<ll> ls(n, 0); // <= 10^9
+  cin >> ls;
+
+  vector<ll> dp;
+  FOR(i, 0, n) {
+    ll x = ls[i];
+    auto it = lower_bound(ALL(dp), x);
+    if (it == dp.end()) {
+      dp.push_back(x);
+    } else {
+      *it = x;
+    }
+    // DD(dp);
+  }
+
+  ll res = dp.size();
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1145/main_v2.cpp --check
 
 %%%% begin
+8
+7 3 5 3 6 2 9 8
 %%%%
+4
 %%%% end
 */

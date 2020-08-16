@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,26 +31,48 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  ll res = 0;
+  string s1, s2;
+  cin >> s1 >> s2;
+
+  ll n1 = s1.size(); // <= 5000
+  ll n2 = s2.size();
+
+  vector<vector<ll>> dp(n1 + 1, vector<ll>(n2 + 1, 0));
+  FOR(i, 0, n1 + 1) { dp[i][0] = i; }
+  FOR(j, 0, n2 + 1) { dp[0][j] = j; }
+  FOR(i, 1, n1 + 1) {
+    FOR(j, 1, n2 + 1) {
+      dp[i][j] = min(dp[i - 1][j - 1], min(dp[i - 1][j], dp[i][j - 1])) + 1;
+      if (s1[i - 1] == s2[j - 1]) {
+        dp[i][j] = min(dp[i][j], dp[i - 1][j - 1]);
+      }
+    }
+  }
+  // DD2(dp);
+
+  ll res = dp[n1][n2];
   cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/dynamic_programming/task1639/main.cpp --check
 
 %%%% begin
+LOVE
+MOVIE
 %%%%
+2
 %%%% end
 */
