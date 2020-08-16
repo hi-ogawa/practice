@@ -28,45 +28,53 @@ template<class T, size_t N>  ostream& operator<<(ostream& o, const array<T, N>& 
 
 // Main
 void mainCase() {
-  ll m, d, w; // <= 10^9
-  cin >> m >> d >> w;
+  ll n, k, z;
+  cin >> n >> k >> z;
+  // n <= 10^5
+  // z <= 5
 
-  //
-  // PROP.
-  //   (x - 1).d + y = (y - 1).d + x ∈ Zw
-  //   <=> (y - x) (d - 1) = 0 ∈ Zw
-  //   <=> w | (y - x) (d - 1)
-  //   <=> (w / gcd(w, d - 1)) | (y - x)
-  //
+  vector<ll> ls(n, 0);
+  cin >> ls;
 
-  ll k = w / gcd(w, d - 1);
-  ll l = min(m, d);
-  // DD(tie(m, d, w, k, l));
+  // cumsum
+  vector<ll> ps(n + 1, 0);
+  FOR(i, 0, n) { ps[i + 1] = ps[i] + ls[i]; }
 
-  // [ Show pairs ]
-  // FOR(x, 1, l + 1) {
-  //   ll y = x + k;
-  //   while (y <= l) {
-  //     DD(tie(x, y));
-  //     y += k;
-  //   }
-  // }
+  // ls[i] + ls[i+1] (bonus for single turn at "i")
+  vector<ll> qs(n - 1, 0);
+  FOR(i, 0, n - 1) { qs[i] = ls[i] + ls[i + 1]; }
+  // DD(ls);
+  // DD(ps);
+  // DD(qs);
 
-  // ∑_{1 ≤ x ≤ l} ⌊(l - x) / k⌋ = ⌊0/k⌋ + ⌊1/k⌋ + .. + ⌊(l-1)/k⌋
-  // [ by brute force ]
-  // ll res = 0;
-  // FOR(x, 1, l + 1) {
-  //   res += ((l - x) / k);
-  // }
-  // DD(res);
-  // [ by triangle number etc... ]
-  ll p = l - 1;
-  ll q = p / k;
-  ll res = 0;
-  res += k * (((q - 1) * q) / 2);
-  res += (1 + (p % k)) * q;
-  // DD(res);
-
+  // Brute-force (enumerate the right-most index to reach)
+  // 0 .. k-2, k-1, k
+  // 0 .. k-2, k-1,
+  // ...
+  // 0 .. k-2z+1
+  // 0 .. k-2z
+  ll res = ps[k + 1];
+  FOR(i, 1, z + 1) {
+    // All full turns
+    {
+      ll w = k - 2 * i;
+      if (0 <= w) {
+        ll x = ps[w + 1]; // sum single path
+        ll y = *max_element(qs.begin(), qs.begin() + w); // turn at maximum
+        res = max(res, x + i * y);
+      }
+    }
+    // End by half turn
+    {
+      ll w = k - 2 * i + 1;
+      if (0 < w) {
+        ll x = ps[w + 1]; // sum single path
+        ll y = *max_element(qs.begin(), qs.begin() + w); // turn at maximum
+        ll yy = ls[w - 1]; // end by half turn
+        res = max(res, x + (i - 1) * y + yy);
+      }
+    }
+  }
   cout << res << endl;
 }
 
@@ -78,32 +86,35 @@ int main() {
   // [ Multiple cases ]
   int t;
   cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  FOR(i, 0, t) mainCase();
   return 0;
 }
 
 /*
-python misc/run.py codeforces/ex1389E/main.cpp --check
+python misc/run.py codeforces/edu92/b/main.cpp --check
 
 %%%% begin
 1
-6 7 4
+5 4 4
+10 20 30 40 50
 %%%%
-6
+150
 %%%% end
 
 %%%% begin
-5
-6 7 4
-10 7 12
-12 30 7
-1 1 1
-3247834 10298779 625324
+4
+5 4 0
+1 5 4 3 2
+5 4 1
+1 5 4 3 2
+5 4 4
+10 20 30 40 50
+10 7 3
+4 6 8 2 9 9 7 4 10 9
 %%%%
-6
-9
-5
-0
-116461800
+15
+19
+150
+56
 %%%% end
 */

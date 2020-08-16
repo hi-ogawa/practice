@@ -144,7 +144,7 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/ex1389D/main.cpp --check
+python misc/run.py codeforces/edu92/d/main.cpp --check
 
 %%%% begin
 1
