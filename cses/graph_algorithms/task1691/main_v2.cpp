@@ -1,4 +1,4 @@
-// AC
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -83,39 +83,25 @@ void mainCase() {
     return;
   }
 
-  // Collect cycles
-  vector<map<int, deque<int>>> cycles(n);
-  {
-    set<int> remains(ALL(compo0));
-    int cid = 0;
-    while (!remains.empty()) {
-      // Find single cycle from v (not necessarily simple)
-      int v = *remains.begin(); remains.erase(v);
-      while (!adj[v].empty()) {
-        int u = *adj[v].begin();
-        cycles[v][cid].push_back(u);
-        adj[v].erase(u); adj[u].erase(v);
-        if (adj[v].size() == 0) { remains.erase(v); }
-        v = u;
-      }
-      cid++;
-    }
-  }
-  // DD(cycles);
-
-  // Reconstruct Euler cycle
+  // Construct Euler cycle with stack
   vector<int> res;
   {
-    int v = 0;
-    while (!cycles[v].empty()) {
-      res.push_back(v);
-      auto& [cid, cyc] = *cycles[v].rbegin(); // Traverse from "last-found" cycle
-      int u = cyc.front(); cyc.pop_front();
-      if (cyc.empty()) { cycles[v].erase(cid); }
-      v = u;
+    vector<int> stack;
+    stack.push_back(0);
+    while (!stack.empty()) {
+      // DD(stack);
+      int v = stack.back();
+      if (adj[v].empty()) {
+        res.push_back(v);
+        stack.pop_back();
+        continue;
+      }
+      int u = *adj[v].begin();
+      adj[v].erase(u); adj[u].erase(v);
+      stack.push_back(u);
     }
-    res.push_back(0);
   }
+  // DD(res);
 
   FOR(i, 0, (int)res.size()) {
     if (i) cout << " ";
@@ -137,7 +123,7 @@ int main() {
 }
 
 /*
-python misc/run.py cses/graph_algorithms/task1691/main.cpp --check
+python misc/run.py cses/graph_algorithms/task1691/main_v2.cpp --check
 
 %%%% begin
 10 16

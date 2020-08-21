@@ -1,4 +1,6 @@
-// AC
+// WIP
+
+// Cf. task1691
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -49,80 +51,70 @@ void mainCase() {
   vector<tuple<int, int>> edges(m, {0, 0});
   cin >> edges;
 
-  // Find connected components
-  Dsu dsu(n);
-  vector<int> degs(n, 0);
-  vector<set<int>> adj(n);
+  int v_beg = 0, v_end = n - 1;
+  edges.push_back({v_end + 1, v_beg + 1});
+
+  // Adjacency and degrees
+  vector<vector<int>> adj(n);
+  vector<array<int, 2>> degs(n, {0, 0}); // in-out
   for (auto [x, y] : edges) {
     x--; y--;
-    degs[x]++; degs[y]++;
-    dsu.merge(x, y);
-    adj[x].insert(y);
-    adj[y].insert(x);
-  }
-  map<int, vector<int>> compos;
-  FOR(i, 0, n) {
-    compos[dsu.find(i)].push_back(i);
-  }
-  // DD(compos);
-
-  // Check if impossible
-  auto& compo0 = compos[dsu.find(0)];
-  bool even = 1;
-  bool no_other_edges = 1;
-  for (auto v : compo0) {
-    even = even && (degs[v] % 2 == 0);
-  }
-  for (auto& [c, vs] : compos) {
-    if (c != dsu.find(0)) {
-      no_other_edges = no_other_edges && (vs.size() == 1);
-    }
-  }
-  if (!(even && no_other_edges)) {
-    cout << "IMPOSSIBLE" << endl;
-    return;
+    adj[x].push_back(y);
+    degs[x][1]++; degs[y][0]++;
   }
 
-  // Collect cycles
-  vector<map<int, deque<int>>> cycles(n);
+  // Check solvability
+  bool ok1 = 1;
+  FOR(i, 0, n) { ok1 = ok1 && (degs[i][0] == degs[i][1]); }
+  if (!ok1) { cout << "IMPOSSIBLE" << endl; return; }
+
+  // Euler tour
+  vector<int> tour;
   {
-    set<int> remains(ALL(compo0));
-    int cid = 0;
-    while (!remains.empty()) {
-      // Find single cycle from v (not necessarily simple)
-      int v = *remains.begin(); remains.erase(v);
-      while (!adj[v].empty()) {
-        int u = *adj[v].begin();
-        cycles[v][cid].push_back(u);
-        adj[v].erase(u); adj[u].erase(v);
-        if (adj[v].size() == 0) { remains.erase(v); }
-        v = u;
+    vector<int> st;
+    st.push_back(v_beg);
+    while (!st.empty()) {
+      int v = st.back();
+      if (adj[v].empty()) {
+        tour.push_back(v);
+        st.pop_back();
+        continue;
       }
-      cid++;
+      int u = adj[v].back(); adj[v].pop_back();
+      st.push_back(u);
     }
+    reverse(ALL(tour));
   }
-  // DD(cycles);
+  // DD(tour);
 
-  // Reconstruct Euler cycle
+  // Check no edges left (i.e. check connected component)
+  bool ok2 = 1;
+  FOR(i, 0, n) { ok2 = ok2 && adj[i].empty(); }
+  if (!ok2) { cout << "IMPOSSIBLE" << endl; return; }
+
+  // Split tour to path
   vector<int> res;
   {
-    int v = 0;
-    while (!cycles[v].empty()) {
-      res.push_back(v);
-      auto& [cid, cyc] = *cycles[v].rbegin(); // Traverse from "last-found" cycle
-      int u = cyc.front(); cyc.pop_front();
-      if (cyc.empty()) { cycles[v].erase(cid); }
-      v = u;
+    int k = -1;
+    FOR(i, 0, m + 1) {
+      if (tour[i] == v_end && tour[i + 1] == v_beg) {
+        k = i + 1;
+        break;
+      }
     }
-    res.push_back(0);
+    assert(k >= 0);
+    FOR(i, k, m + 1) { res.push_back(tour[i]); }
+    FOR(i, 0, k)     { res.push_back(tour[i]); }
   }
+  // DD(res);
 
-  FOR(i, 0, (int)res.size()) {
+  FOR(i, 0, m + 1) {
     if (i) cout << " ";
     cout << (res[i] + 1);
   }
   cout << endl;
 }
+
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
@@ -137,66 +129,17 @@ int main() {
 }
 
 /*
-python misc/run.py cses/graph_algorithms/task1691/main.cpp --check
+python misc/run.py cses/graph_algorithms/task1693/main.cpp --check
 
 %%%% begin
-10 16
-9 10
-8 6
-8 5
-1 7
-2 8
-3 8
-3 1
-6 3
-10 3
-8 9
-3 5
-10 2
-5 9
-7 8
-9 3
-5 10
-%%%%
-1 3 5 8 2 10 3 6 8 3 9 5 10 9 8 7 1
-%%%% end
-
-%%%% begin
-10 10
-1 2
-2 3
-3 4
-4 1
-2 5
 5 6
-6 2
-3 7
-7 8
-8 3
-%%%%
-1 2 5 6 2 3 7 8 3 4 1
-%%%% end
-
-%%%% begin
-4 3
-1 2
-2 3
-3 1
-%%%%
-1 2 3 1
-%%%% end
-
-%%%% begin
-6 8
 1 2
 1 3
-2 3
 2 4
-2 6
-3 5
-3 6
-4 5
+2 5
+3 1
+4 2
 %%%%
-1 2 4 5 3 6 2 3 1
+1 3 1 2 4 2 5
 %%%% end
 */
