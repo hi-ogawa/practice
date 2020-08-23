@@ -1,4 +1,4 @@
-// CONTEST
+// CONTEST, AC
 
 #include <bits/stdc++.h>
 using namespace std;
