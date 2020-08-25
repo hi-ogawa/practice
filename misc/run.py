@@ -44,15 +44,22 @@ def test_cpp(exec_file, name, inp, outp, check):
     print(proc_outp)
 
 
-def run_cpp(file, option, check, test, no_pch, no_run, exec_file):
+def run_cpp(file, check, test, no_pch, no_run, exec_file, debug):
     compiler = "clang++"
-    default_option = "-std=c++17 -O2 -march=native -Wall -Wextra -Wshadow"
-    pch_file = "./build/pch.hpp.gch"
-    command = f"{compiler} {default_option} -o {exec_file} {file}"
-    if option:
-        command += f" {option}"
+    default_option = "-std=c++17 -Wall -Wextra -Wshadow"
+    command = f"{compiler} {default_option}"
+
+    if debug:
+        pch_file = "./build/pch.hpp.gch-debug"
+        command += " -g -DDEBUG -fsanitize=address -fsanitize=undefined"
+    else:
+        pch_file = "./build/pch.hpp.gch"
+        command += " -O2 -march=native"
+
     if not no_pch:
         command += f" -include-pch {pch_file}"
+
+    command += f" -o {exec_file} {file}"
 
     print(f":: Compiling... [{command}]")
     proc = subprocess.run(command, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -97,7 +104,6 @@ def run_cpp(file, option, check, test, no_pch, no_run, exec_file):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str)
-    parser.add_argument("--option", type=str)
     parser.add_argument("--check", action="store_true", default=False)
     parser.add_argument(
         "--test",
@@ -108,6 +114,7 @@ def main():
     parser.add_argument("--no-pch", action="store_true", default=False)
     parser.add_argument("--no-run", action="store_true", default=False)
     parser.add_argument("--exec-file", type=str, default="./build/main")
+    parser.add_argument("--debug", action="store_true", default=False)
     args = parser.parse_args()
     run_cpp(**args.__dict__)
 
