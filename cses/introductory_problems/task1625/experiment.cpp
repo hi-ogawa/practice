@@ -1,6 +1,4 @@
-// AFTER EDITORIAL, TLE
-
-// TODO: On my machine, it takes about 0.7sec, but TLE on the server.
+// AFTER EDITORIAL
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -31,11 +29,7 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
-// Main
 void mainCase() {
-  string s;
-  cin >> s;
-
   constexpr int n = 7;
   constexpr int n2 = n * n;
 
@@ -50,16 +44,29 @@ void mainCase() {
     return (0 <= v[0] && v[0] < n) && (0 <= v[1] && v[1] < n) && ((enc(v) & hist) == 0);
   };
 
-  ivec2 v_beg = {0, 0}, v_end = {6, 0};
+  auto printHist = [&](ull hist) {
+    FOR(i, 0, n) {
+      FOR(j, 0, n) {
+        cout << !!(enc({i, j}) & hist);
+      }
+      cout << endl;
+    }
+    // FOR(i, 0, n2) { cout << ((hist >> i) & 1); }
+    // cout << endl;
+  };
+
+  ivec2 v_beg = {0, 0}, v_end = {6, 6};
   ull hamiltonian = ~((~0ULL) << n2);
 
-  vector<tuple<ivec2, ull, int>> st; // ((i, j), path-history, path-length)
-  st.push_back({v_beg, enc(v_beg), 0});
+  vector<tuple<ivec2, ull>> st; // ((i, j), path-history)
+  st.push_back({v_beg, enc(v_beg)});
 
   ll res = 0;
   while (!st.empty()) {
-    auto [v, hist, len] = st.back(); st.pop_back();
+    auto [v, hist] = st.back(); st.pop_back();
     if (v == v_end) {
+      cout << "GOAL:" << endl;
+      printHist(hist);
       res += (hist == hamiltonian);
       continue;
     }
@@ -72,48 +79,22 @@ void mainCase() {
     if ((ok[0] && ok[2]) && (!ok[1] && !ok[3])) { continue; }
     if ((ok[1] && ok[3]) && (!ok[0] && !ok[2])) { continue; }
 
-    char c = s[len];
-    char mapping[4] = {'D', 'R', 'U', 'L'};
     FOR(i, 0, 4) {
-      if (ok[i] && (c == '?' || mapping[i] == c)) {
+      if (ok[i]) {
         auto u = add(v, dirs[i]);
-        st.push_back({u, enc(u) | hist, len + 1});
+        st.push_back({u, enc(u) | hist});
       }
     }
   }
-  cout << res << endl;
+  DD(res);
 }
 
-int main() {
-  ios_base::sync_with_stdio(0); cin.tie(0);
-  // [ Single case ]
-  mainCase();
-  return 0;
-  // [ Multiple cases ]
-  // int t;
-  // cin >> t;
-  // FOR(i, 0, t) { mainCase(); }
-  // return 0;
-}
+int main() { mainCase(); }
 
 /*
-python misc/run.py cses/introductory_problems/task1625/main.cpp --check
+python misc/run.py cses/introductory_problems/task1625/experiment.cpp
 
 %%%% begin
-????????????????????????????????????????????????
 %%%%
-88418
-%%%% end
-
-%%%% begin
-DRURRRRRDDDLUULDDDLDRRURDDLLLLLURULURRUULDLLDDDD
-%%%%
-1
-%%%% end
-
-%%%% begin
-??????R??????U??????????????????????????LD????D?
-%%%%
-201
 %%%% end
 */
