@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, AC
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -32,69 +32,70 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// Fenwick tree for range counting
+struct FenwickTree {
+  int n_;
+  vector<int> data_;
+  FenwickTree(int n) { n_ = n; data_.resize(n); }
+  void incr(int qi, int qv) {
+    while (qi < n_) {
+      data_[qi] += qv;
+      qi = (qi | (qi + 1));
+    }
+  }
+  int reduce(int qi) {
+    ll res = 0;
+    while (qi >= 0) {
+      res += data_[qi];
+      qi = (qi & (qi + 1)) - 1;
+    }
+    return res;
+  }
+  int reduce(int l, int r) {
+    return reduce(r) -reduce(l - 1);
+  }
+};
+
 // Main
+void mainCase() {
+  // Input
+  int n; // <= 10^5
+  cin >> n;
+  vector<array<int, 4>> lines(n, {0}); // |p| <= 10^6
+  cin >> lines;
 
-// Simple DP (TLE)
-void mainCase_v1() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
-  sort(ALL(ls));
-  DD(ls);
+  // Horizontal-sweep events
+  enum { kHIn = 1, kV = 2, kHOut = 3}; // Ordering matters
 
-  map<ll, ll, greater<ll>> dp;
-  dp[0] = 1;
-  FOR(i, 0, n) {
-    ll t = ls[i];
-    for (auto [k, _v] : dp) {
-      if (k + t <= x) { // culling
-        dp[k + t] += dp[k];
-      }
+  vector<array<int, 4>> events; // (x, h-in/h-out/v, y1, y2)
+  for (auto [x1, y1, x2, y2] : lines) {
+    assert(x1 <= x2);
+    assert(y1 <= y2);
+    if (y1 == y2) {
+      events.push_back({x1, kHIn, y1, y1});
+      events.push_back({x2, kHOut, y1, y1});
     }
-    DD(dp);
+    if (x1 == x2) {
+      events.push_back({x1, kV, y1, y2});
+    }
   }
-  ll res = dp[x];
-  cout << res << endl;
-}
+  sort(ALL(events));
+  DD(events);
 
-// Simple DP with "meet in the middle" (AC)
-void mainCase_v2() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
-  sort(ALL(ls)); // TODO: analyze consequence of sort
-  DD(ls);
-
-  auto doDp = [&](int i0, int i1) -> map<ll, ll, greater<ll>> {
-    map<ll, ll, greater<ll>> dp;
-    dp[0] = 1;
-    FOR(i, i0, i1) {
-      ll t = ls[i];
-      for (auto [k, _v] : dp) {
-        if (k + t <= x) {
-          dp[k + t] += dp[k];
-        }
-      }
-    }
-    return dp;
-  };
-  auto dp1 = doDp(0, n / 2);
-  auto dp2 = doDp(n / 2, n);
-  DD(dp1.size());
-  DD(dp2.size());
-  // DD(dp1);
-  // DD(dp2);
-
+  // Sweep
+  int y_lim = 1e6; // Translate y coord to positive for Fenwick tree range counting
+  FenwickTree isects(2 * y_lim);
   ll res = 0;
-  for (auto [y, yc] : dp1) {
-    res += yc * dp2[x - y];
+  for (auto [_x, t, y1, y2] : events) {
+    y1 += y_lim; y2 += y_lim;
+    if (t == kHIn) { isects.incr(y1, 1); }
+    if (t == kHOut) { isects.incr(y1, -1); }
+    if (t == kV) {
+      res += isects.reduce(y1, y2);
+    }
   }
   cout << res << endl;
 }
-
-void mainCase() { mainCase_v2(); }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
@@ -109,12 +110,14 @@ int main() {
 }
 
 /*
-python misc/run.py cses/additional_problems/task1628/main.cpp --check
+python misc/run.py cses/additional_problems/task1740/main.cpp --check
 
 %%%% begin
-4 5
-1 2 3 2
-%%%%
 3
+2 3 7 3
+3 1 3 5
+6 2 6 6
+%%%%
+2
 %%%% end
 */

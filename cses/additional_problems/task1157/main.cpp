@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, AC
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -20,11 +20,8 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 }
 
 // Debugging
-#ifndef DEBUG
-#define DEBUG 0
-#endif
-#define DD(X) do { if (DEBUG) { std::cout << #X ": " << (X) << std::endl << std::flush; } } while (0)
-#define DD2(X) do { if (DEBUG) { std::cout << #X ":" << std::endl; for (auto x : (X)) { std::cout << x << std::endl << std::flush; } } } while (0)
+#define DD(X) std::cout << #X ": " << (X) << std::endl << std::flush
+#define DD2(X) std::cout << #X ":" << std::endl; for (auto x : (X)) { std::cout << x << std::endl << std::flush; }
 namespace std {
 template<class ...Ts>        ostream& operator<<(ostream& o, const tuple<Ts...>& x) { o << "("; apply([&](auto&& y, auto&&... ys){ o << y; ((o << ", " << ys), ...); }, x); o << ")"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>& x) { o << tie(x.first, x.second); return o; }
@@ -33,68 +30,12 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 }
 
 // Main
-
-// Simple DP (TLE)
-void mainCase_v1() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
-  sort(ALL(ls));
-  DD(ls);
-
-  map<ll, ll, greater<ll>> dp;
-  dp[0] = 1;
-  FOR(i, 0, n) {
-    ll t = ls[i];
-    for (auto [k, _v] : dp) {
-      if (k + t <= x) { // culling
-        dp[k + t] += dp[k];
-      }
-    }
-    DD(dp);
-  }
-  ll res = dp[x];
+void mainCase() {
+  ll y, x;
+  cin >> y >> x;
+  ll res = y + x - 2;
   cout << res << endl;
 }
-
-// Simple DP with "meet in the middle" (AC)
-void mainCase_v2() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
-  sort(ALL(ls)); // TODO: analyze consequence of sort
-  DD(ls);
-
-  auto doDp = [&](int i0, int i1) -> map<ll, ll, greater<ll>> {
-    map<ll, ll, greater<ll>> dp;
-    dp[0] = 1;
-    FOR(i, i0, i1) {
-      ll t = ls[i];
-      for (auto [k, _v] : dp) {
-        if (k + t <= x) {
-          dp[k + t] += dp[k];
-        }
-      }
-    }
-    return dp;
-  };
-  auto dp1 = doDp(0, n / 2);
-  auto dp2 = doDp(n / 2, n);
-  DD(dp1.size());
-  DD(dp2.size());
-  // DD(dp1);
-  // DD(dp2);
-
-  ll res = 0;
-  for (auto [y, yc] : dp1) {
-    res += yc * dp2[x - y];
-  }
-  cout << res << endl;
-}
-
-void mainCase() { mainCase_v2(); }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
@@ -109,12 +50,11 @@ int main() {
 }
 
 /*
-python misc/run.py cses/additional_problems/task1628/main.cpp --check
+python misc/run.py cses/additional_problems/task1157/main.cpp --check
 
 %%%% begin
-4 5
-1 2 3 2
+3 5
 %%%%
-3
+6
 %%%% end
 */

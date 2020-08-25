@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, AC
+// TLE
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -32,69 +32,92 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
-// Main
+// DSU
+struct Dsu {
+  vector<int> data_;
+  Dsu(int n) { data_.resize(n), iota(ALL(data_), 0); }
+  int find(int a) {
+    if (data_[a] == a) { return a; }
+    return data_[a] = find(data_[a]);
+  }
+  void merge(int dst, int src) {
+    data_[find(src)] = find(dst);
+  }
+};
 
-// Simple DP (TLE)
-void mainCase_v1() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
+// Main
+void mainCase() {
+  // Input
+  int n, m; // <= 10^5
+  cin >> n >> m;
+  vector<tuple<int, int>> edges(m, {0, 0});
+  cin >> edges;
+  for (auto& [x, y] : edges) { x--; y--; }
+
+  // Connected components
+  Dsu dsu(n);
+  for (auto [x, y] : edges) {
+    dsu.merge(x, y);
+  }
+  map<int, int> compo_sizes;
+  FOR(i, 0, n) {
+    compo_sizes[dsu.find(i)]++;
+  }
+  vector<int> ls;
+  for (auto [k, v] : compo_sizes) {
+    ls.push_back(v);
+  }
   sort(ALL(ls));
   DD(ls);
 
-  map<ll, ll, greater<ll>> dp;
-  dp[0] = 1;
-  FOR(i, 0, n) {
-    ll t = ls[i];
-    for (auto [k, _v] : dp) {
-      if (k + t <= x) { // culling
-        dp[k + t] += dp[k];
+  // Find possible sums (obviously TLE)
+  if (0) {
+    int k = ls.size();
+    vector<bool> dp(n + 1, 0);
+    dp[0] = 1;
+    FOR(i, 0, k) {
+      int x = ls[i];
+      for (int j = n; j >= x; j--) {
+        dp[j] = dp[j] || dp[j - x];
       }
     }
     DD(dp);
+
+    FOR(i, 1, n + 1) {
+      cout << dp[i];
+    }
+    cout << endl;
   }
-  ll res = dp[x];
-  cout << res << endl;
-}
 
-// Simple DP with "meet in the middle" (AC)
-void mainCase_v2() {
-  ll n, x; // n <= 40, x <= 10^9
-  cin >> n >> x;
-  vector<ll> ls(n, 0); // >= 1
-  cin >> ls;
-  sort(ALL(ls)); // TODO: analyze consequence of sort
-  DD(ls);
+  // Find possible sums (TODO: some optimization based on multiset ps??)
+  {
+    map<int, int> ps;
+    for (auto x : ls) { ps[x]++; }
+    vector<tuple<int, int>> qs(ALL(ps));
+    int l = qs.size(); // <= sqrt(n)
+    DD(qs);
 
-  auto doDp = [&](int i0, int i1) -> map<ll, ll, greater<ll>> {
-    map<ll, ll, greater<ll>> dp;
-    dp[0] = 1;
-    FOR(i, i0, i1) {
-      ll t = ls[i];
-      for (auto [k, _v] : dp) {
-        if (k + t <= x) {
-          dp[k + t] += dp[k];
+    vector<vector<bool>> dp(l + 1, vector<bool>(n + 1, 0));
+    dp[0][0] = 1;
+    FOR(i, 0, l) {
+      auto [x, t] = qs[i];
+      // TODO: can we cull some steps?
+      for (int j = 0; j <= n; j++) {
+        for (int c = 0; c <= t; c++) {
+          int y = j + c * x;
+          if (y > n) { break; }
+          dp[i + 1][y] = dp[i + 1][y] + dp[i][j];
         }
       }
     }
-    return dp;
-  };
-  auto dp1 = doDp(0, n / 2);
-  auto dp2 = doDp(n / 2, n);
-  DD(dp1.size());
-  DD(dp2.size());
-  // DD(dp1);
-  // DD(dp2);
+    DD2(dp);
 
-  ll res = 0;
-  for (auto [y, yc] : dp1) {
-    res += yc * dp2[x - y];
+    FOR(i, 1, n + 1) {
+      cout << dp[l][i];
+    }
+    cout << endl;
   }
-  cout << res << endl;
 }
-
-void mainCase() { mainCase_v2(); }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
@@ -109,12 +132,14 @@ int main() {
 }
 
 /*
-python misc/run.py cses/additional_problems/task1628/main.cpp --check
+python misc/run.py cses/additional_problems/task1706/main.cpp --check
 
 %%%% begin
-4 5
-1 2 3 2
+5 3
+1 2
+2 3
+1 5
 %%%%
-3
+10011
 %%%% end
 */
