@@ -1,8 +1,3 @@
-// WA
-
-// NOTE: It's necessary to save all leaves,
-//       but arbitrary connections between leaves are not sufficient (cf. test.sh)
-
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -32,70 +27,63 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
-// Main
-void mainCase() {
-  int n; // <= 10^5, >= 3
-  cin >> n;
+// Check
+int check(istream& inp, istream& outp) {
+  int n;
+  inp >> n;
   vector<tuple<int, int>> edges(n - 1, {0, 0});
-  cin >> edges;
+  inp >> edges;
   for (auto& [x, y] : edges) { x--; y--; }
+
+  int m;
+  outp >> m;
+  vector<tuple<int, int>> new_edges(m, {0, 0});
+  outp >> new_edges;
+  for (auto& [x, y] : new_edges) { x--; y--; }
+
+  //
+  // Bridge check by brute-force
+  //
+  edges.insert(edges.end(), ALL(new_edges));
 
   vector<vector<int>> adj(n);
   for (auto [x, y] : edges) {
     adj[x].push_back(y); swap(x, y);
     adj[x].push_back(y);
   }
-  // DD2(adj);
 
-  vector<int> ls; // leaves
-  FOR(i, 0, n) {
-    if (adj[i].size() == 1) {
-      ls.push_back(i);
+  // Check if connected without edge (v0, v1)
+  auto dfs = [&](int v0, int v1) -> bool {
+    vector<int> done(n, 0);
+    vector<int> st;
+    st.push_back(0);
+    while (!st.empty()) {
+      int v = st.back(); st.pop_back();
+      for (auto u : adj[v]) {
+        if ((v == v0 && u == v1) || (v == v1 && u == v0)) { continue; }
+        if (done[u]) { continue; }
+        done[u] = 1;
+        st.push_back(u);
+      }
+    }
+    return accumulate(ALL(done), 0) == n;
+  };
+
+  for (auto [x, y] : edges) {
+    bool tmp = dfs(x, y);
+    if (!tmp) {
+      printf("Found bridge: (%d, %d)\n", x + 1, y + 1);
+      return -1;
     }
   }
-  int k = ls.size();
-  // DD(ls);
-
-  vector<tuple<int, int>> new_edges;
-  FOR(i, 0, k / 2) {
-    new_edges.push_back({ls[i], ls[i + k / 2]});
-  }
-  if (k % 2 == 1) {
-    new_edges.push_back({ls[0], ls.back()});
-  }
-  // DD(new_edges);
-
-  cout << new_edges.size() << endl;
-  for (auto [x, y] : new_edges) {
-    x++; y++;
-    cout << x << " " << y << endl;
-  }
-}
-
-int main() {
-  ios_base::sync_with_stdio(0); cin.tie(0);
-  // [ Single case ]
-  mainCase();
   return 0;
-  // [ Multiple cases ]
-  // int t;
-  // cin >> t;
-  // FOR(i, 0, t) { mainCase(); }
-  // return 0;
 }
 
-/*
-python misc/run.py cses/additional_problems/task1704/main.cpp --check
-
-%%%% begin
-5
-1 2
-1 3
-3 4
-3 5
-%%%%
-2
-2 4
-4 5
-%%%% end
-*/
+int main(int argc, const char* argv[]) {
+  assert(argc >= 3);
+  ifstream inp(argv[1]);
+  ifstream outp(argv[2]);
+  assert(inp);
+  assert(outp);
+  return check(inp, outp);
+}
