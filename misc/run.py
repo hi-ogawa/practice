@@ -44,10 +44,9 @@ def test_cpp(exec_file, name, inp, outp, check):
     print(proc_outp)
 
 
-def run_cpp(file, option, check, test, no_pch):
+def run_cpp(file, option, check, test, no_pch, no_run, exec_file):
     compiler = "clang++"
     default_option = "-std=c++17 -O2 -march=native -Wall -Wextra -Wshadow"
-    exec_file = "./build/main"
     pch_file = "./build/pch.hpp.gch"
     command = f"{compiler} {default_option} -o {exec_file} {file}"
     if option:
@@ -66,6 +65,9 @@ def run_cpp(file, option, check, test, no_pch):
     print(":: Compile success")
     if proc.stdout:  # Compile warning if any
         print(proc.stdout.decode())
+
+    if no_run:
+        return
 
     if test.startswith("inline:"):
         test = test[len("infile:") :]
@@ -104,6 +106,8 @@ def main():
         help='e.g. "inline:all", "inline:0,1,2", "file:in.txt:out.txt"',
     )
     parser.add_argument("--no-pch", action="store_true", default=False)
+    parser.add_argument("--no-run", action="store_true", default=False)
+    parser.add_argument("--exec-file", type=str, default="./build/main")
     args = parser.parse_args()
     run_cpp(**args.__dict__)
 
