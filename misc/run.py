@@ -3,6 +3,7 @@ import subprocess
 from subprocess import PIPE, STDOUT
 import argparse
 import io
+import timeit
 
 
 def find_inline_tests(file):
@@ -13,22 +14,21 @@ def find_inline_tests(file):
     return tests
 
 
-def test_cpp(exec_file, name, inp, outp, check):
+def test_cpp(exec_file, name, inp, outp, check, timeout):
     print(f":: Running test ({name})")
+    time_begin = timeit.default_timer()
     proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
-    # TODO: print before process exits (so that we can debug infinite loop etc...)
     try:
-        proc_stdout, proc_stderr = proc.communicate(
-            input=bytes(inp, "utf-8"), timeout=2.0
-        )
+        proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"), timeout=timeout)
     except subprocess.TimeoutExpired:
         proc.kill()
-        print(f":: Timeout. Process killed.")
+        print(f":: Timeout ({timeout}s). Process killed.")
         print(proc.stdout.read().decode())
         return
+    time_end = timeit.default_timer()
+    print(f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}")
     proc_outp = proc_stdout.decode()
     if proc.returncode != 0:
-        print(f":: returncode: {proc.returncode}")  # e.g. -11 for segfault
         print(proc_outp)
         return
     if not check:
@@ -44,7 +44,7 @@ def test_cpp(exec_file, name, inp, outp, check):
     print(proc_outp)
 
 
-def run_cpp(file, check, test, no_pch, no_run, exec_file, debug):
+def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
     compiler = "clang++"
     default_option = "-std=c++17 -Wall -Wextra -Wshadow"
     command = f"{compiler} {default_option}"
@@ -87,7 +87,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug):
         for i, (inp, outp) in enumerate(inline_tests):
             if not i in selected:
                 continue
-            test_cpp(exec_file, f"inline:{i}", inp, outp, check)
+            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout)
         return
 
     if test.startswith("file:"):
@@ -95,7 +95,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug):
         infile, outfile = test.split(":") if ":" in test else [test, None]
         inp = open(infile).read()
         outp = open(outfile).read() if outfile else ""
-        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check)
+        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout)
         return
 
     raise RuntimeError(f"Found unsupported test: {test}")
@@ -115,6 +115,7 @@ def main():
     parser.add_argument("--no-run", action="store_true", default=False)
     parser.add_argument("--exec-file", type=str, default="./build/main")
     parser.add_argument("--debug", action="store_true", default=False)
+    parser.add_argument("--timeout", type=float, default=5)
     args = parser.parse_args()
     run_cpp(**args.__dict__)
 
