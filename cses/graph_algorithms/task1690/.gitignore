@@ -1,0 +1,3 @@
+# wget -O cses/graph_algorithms/task1690/test17.txt https://cses.fi/file/9745b31bbc2e8f282075e93e4f32a00d28b34796be2023ac6d5a10bd210deda3/1/1/
+# wget -O cses/graph_algorithms/task1690/test15.txt https://cses.fi/file/70715fd28ce3a5b878ce052611aad2dd0a5940025a2f9069fce9533367e0ab86/1/1/
+test*.txt
