@@ -1,6 +1,4 @@
-// TLE
-
-// NOTE: looked for "meet in the middle" but didn't succeed
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -44,53 +42,31 @@ void mainCase() {
   cin >> edges;
   for (auto& [x, y] : edges) { x--; y--; }
 
-  vector<vector<int>> adj(n, vector<int>(n, 0));
+  vector<vector<ll>> adj(n, vector<ll>(n, 0));
   for (auto [x, y] : edges) { adj[y][x]++; } // Take care dup edges
 
-  auto enc = [](int v) -> ull { return 1ULL << v; };
+  auto enc = [](int v) -> ull { return 1 << v; };
 
-  // TODO: TLE since P(n, n/2) where n = 20
-  auto solve = [&](int v_beg, int len_tot, bool flip) -> vector<map<ull, ll>> {
-    // DD(tie(v_beg, len_tot, flip));
-    vector<map<ull, ll>> res(n);
-    vector<tuple<int, int, ll, ull>> st; // (v, len, multiplicity, history)
-    st.push_back({v_beg, 1, 1, enc(v_beg)});
-    while (!st.empty()) {
-      auto [v, len, k, hist] = st.back(); st.pop_back();
-      if (len == len_tot) {
-        // DD(tie(v, hist));
-        res[v][hist] = add(res[v][hist], k);
-        continue;
-      }
-      FOR(u, 0, n) {
-        int p = flip ? adj[v][u] : adj[u][v];
-        if (p && (enc(u) & hist) == 0) {
-          st.push_back({u, len + 1, mul(k, p), enc(u) | hist});
-        }
-      }
-    }
-    return res;
-  };
-
-  // Meet in the middle
   int v_beg = 0, v_end = n - 1;
-  auto res1 = solve(v_beg, (n / 2) + 1, 0);
-  auto res2 = solve(v_end, (n + 1) / 2, 1);
-  // DD(res1);
-  // DD(res2);
-
   ull hamiltonian = ~((~0ULL) << n);
 
-  ll res = 0;
-  FOR(v, 0, n) { // O(n)
-    for (auto [e1, k1] : res1[v]) { // O(binom(n, n/2))
-      ull e2 = (hamiltonian & ~e1) | enc(v);
-      if (res2[v].count(e2)) {
-        ll k2 = res2[v][e2];
-        res = add(res, mul(k1, k2));
+  // dp[v][hist] = #{ Ham-paths reaching "v" after visiting "hist" starting from "v_beg" }
+  vector<vector<ll>> dp(n, vector<ll>(1 << n, 0));
+  dp[v_beg][0] = 1;
+
+  FOR(hist, 0, 1 << n) {
+    FOR(v, 0, n) {
+      ll p = dp[v][hist];
+      if (p == 0 || (hist & enc(v))) { continue; }
+      ull histv = hist | enc(v);
+      FOR(u, 0, n) {
+        ll q = adj[u][v];
+        if (q == 0 || (histv & enc(u))) { continue; }
+        dp[u][histv] = add(dp[u][histv], mul(p, q));
       }
     }
   }
+  ll res = dp[v_end][hamiltonian & ~enc(v_end)];
   cout << res << endl;
 }
 
@@ -107,7 +83,7 @@ int main() {
 }
 
 /*
-python misc/run.py cses/graph_algorithms/task1690/main.cpp --check
+python misc/run.py cses/graph_algorithms/task1690/main_v2.cpp --check
 
 %%%% begin
 2 3
