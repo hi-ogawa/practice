@@ -55,10 +55,16 @@ void mainCase() {
 
   vector<tuple<ivec2, ull, int>> st; // ((i, j), path-history, path-length)
   st.push_back({v_beg, enc(v_beg), 0});
+  // [ Micro optimization using raw pointer ]
+  // int ptr = 0;
+  // st.resize(1 << 10);
+  // st[ptr++] = {v_beg, enc(v_beg), 0};
 
   ll res = 0;
   while (!st.empty()) {
+  // while (ptr > 0) {
     auto [v, hist, len] = st.back(); st.pop_back();
+    // auto [v, hist, len] = st[--ptr];
     if (v == v_end) {
       res += (hist == hamiltonian);
       continue;
@@ -78,6 +84,7 @@ void mainCase() {
       if (ok[i] && (c == '?' || mapping[i] == c)) {
         auto u = add(v, dirs[i]);
         st.push_back({u, enc(u) | hist, len + 1});
+        // st[ptr++] = {u, enc(u) | hist, len + 1};
       }
     }
   }
