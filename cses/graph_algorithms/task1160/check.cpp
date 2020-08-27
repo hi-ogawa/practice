@@ -1,7 +1,3 @@
-//
-// Default setup for C++
-//
-
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -23,7 +19,7 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 
 // Debugging
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 #define DD(X) do { if (DEBUG) { cout << #X ": " << (X) << endl << flush; } } while (0)
 #define DD2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
@@ -35,28 +31,45 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
-// Main
-void mainCase() {
-  ll res = 0;
-  cout << res << endl;
-}
+int mainCheck(istream& inp, istream& outp) {
+  int n, m;
+  inp >> n >> m;
+  vector<int> parents(n, -1);
+  inp >> parents;
+  for (auto& x : parents) { x--; }
+  vector<array<int, 2>> qs(m, {0, 0});
+  inp >> qs;
+  for (auto& [x, y] : qs) { x--; y--; }
 
-int main() {
-  ios_base::sync_with_stdio(0); cin.tie(0);
-  // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  vector<int> res(m, 0);
+  outp >> res;
+
+  auto check = [&](int x, int y) -> int {
+    int res = -1;
+    FOR(i, 0, n) {
+      if (x == y) { res = i; break; }
+      x = parents[x];
+    }
+    return res;
+  };
+
+  FOR(i, 0, m) {
+    auto [x, y] = qs[i];
+    int expected = check(x, y);
+    if (res[i] != expected) {
+      cout << "[WA] ";
+      DDX(i, qs[i], res[i], expected);
+      return 1;
+    }
+  }
   return 0;
 }
 
-/*
-python misc/run.py misc/example.cpp --check
-
-%%%% begin
-%%%%
-%%%% end
-*/
+int main(int argc, const char* argv[]) {
+  assert(argc >= 3);
+  ifstream inp(argv[1]);
+  ifstream outp(argv[2]);
+  assert(inp);
+  assert(outp);
+  return mainCheck(inp, outp);
+}
