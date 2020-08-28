@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,28 +33,89 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// DSU
+struct Dsu {
+  vector<int> data_;
+  Dsu(int n) { data_.resize(n); iota(ALL(data_), 0); }
+  int find(int a) {
+    if (data_[a] == a) { return a; }
+    return data_[a] = find(data_[a]);
+  }
+  void merge(int dst, int src) {
+    data_[find(src)] = find(dst);
+  }
+};
+
 // Main
 void mainCase() {
-  ll res = 0;
-  cout << res << endl;
+  int n, m, nq;
+  cin >> n >> m >> nq;
+  vector<tuple<int, int>> edges(m, {0, 0});
+  cin >> edges;
+  vector<tuple<int, int>> qs(nq, {0, 0});
+  cin >> qs;
+  for (auto& [x, y] : edges) { x--; y--; if (x > y) swap(x, y); }
+  for (auto& [x, y] : qs) { x--; y--; if (x > y) swap(x, y); }
+  dbg(edges);
+  dbg(qs);
+
+  Dsu dsu(n);
+  set<tuple<int, int>> qs_set(ALL(qs));
+  for (auto [x, y] : edges) {
+    if (!qs_set.count({x, y})) { // all broken initially
+      dsu.merge(x, y);
+    };
+  }
+
+  set<int> roots;
+  FOR(i, 0, n) { roots.insert(dsu.find(i)); }
+  int nc = roots.size(); // number of components
+
+  vector<int> res(nq, 0);
+  res[nq - 1] = nc;
+  for (int iq = nq - 1; iq >= 1; iq--) { // restore broken edges in reverse order
+    auto [x, y] = qs[iq];
+    if (dsu.find(x) != dsu.find(y)) {
+      dsu.merge(x, y);
+      nc--;
+    }
+    res[iq - 1] = nc;
+  }
+  dbg(res);
+
+  FOR(i, 0, nq) {
+    if (i) cout << " ";
+    cout << res[i];
+  }
+  cout << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
   // [ Single case ]
-  // mainCase();
-  // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
+  mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py cses/additional_problems/task1677/main.cpp --check
 
 %%%% begin
+5 5 3
+1 2
+1 3
+2 3
+3 4
+4 5
+3 4
+2 3
+4 5
 %%%%
+2 2 3
 %%%% end
 */
