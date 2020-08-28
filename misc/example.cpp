@@ -25,9 +25,9 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 #ifndef DEBUG
 #define DEBUG 0
 #endif
-#define DD(X) do { if (DEBUG) { cout << #X ": " << (X) << endl << flush; } } while (0)
-#define DD2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
-#define DDX(...) do { if (DEBUG) { cout << "(" #__VA_ARGS__ "): " << make_tuple(__VA_ARGS__) << endl << flush; } } while (0)
+#define dbg(X) do { cout << #X ": " << (X) << endl << flush; } while (0)
+#define dbg2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
+#define dbgv(...) do { if (DEBUG) { cout << "(" #__VA_ARGS__ "): " << make_tuple(__VA_ARGS__) << endl << flush; } } while (0)
 namespace std {
 template<class ...Ts>        ostream& operator<<(ostream& o, const tuple<Ts...>& x) { o << "("; apply([&](auto&& y, auto&&... ys){ o << y; ((o << ", " << ys), ...); }, x); o << ")"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>& x) { o << tie(x.first, x.second); return o; }
