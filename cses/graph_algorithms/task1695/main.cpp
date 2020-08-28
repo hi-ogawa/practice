@@ -1,15 +1,6 @@
 // AC
 
-// PROP.
-//   Maximul flow => Maximum flow
-//   PROOF.
-//     Ford-Fulkerson maximulity implies its flow achieves min-cut (cf. max-flow min-cut proof).
-//     Thus, it's also maximum since any cut is an upper bound of flow.
-//
-// PROP.
-//   In Edmonds-Karp, one edge gets "saturated" at most (V.E) times.
-//   PROOF. TODO
-//
+// cf. task1694
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -48,31 +39,26 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 void mainCase() {
   int n, m; // n <= 500, m <= 1000
   cin >> n >> m;
-  vector<tuple<int, int, ll>> edges(m, {0, 0, 0}); // capacity <= 10^9
+  vector<tuple<int, int>> edges(m, {0, 0});
   cin >> edges;
-  for (auto& [x, y, _c] : edges) { x--; y--; }
-  dbg(edges);
+  for (auto& [x, y] : edges) { x--; y--; }
 
   vector<vector<int>> adj(n);
-  vector<vector<ll>> cap(n, vector<ll>(n, 0)); // Modified by "update"
-  for (auto& [x, y, c] : edges) {
+  vector<vector<int>> cap(n, vector<int>(n, 0));
+  for (auto [x, y] : edges) {
     adj[x].push_back(y);
     adj[y].push_back(x);
-    cap[x][y] += c; // Handle duplicated edge
+    cap[x][y] = cap[y][x] = 1;
   }
-  dbg(adj);
-  dbg2(cap);
-  auto cap_orig = cap;
 
   int v_beg = 0, v_end = n - 1;
-  vector<int> parent(n); // Modified by "search"
-  parent[v_beg] = v_beg;
+  vector<int> parent(n);
 
-  // Find shortest path
-  auto search = [&]() -> bool {
+  auto search = [&]() {
+    fill(ALL(parent), -1);
+    parent[v_beg] = v_beg;
     deque<int> q;
     q.push_back(v_beg);
-    fill(ALL(parent), -1);
     while (!q.empty()) {
       int v = q.front(); q.pop_front();
       if (v == v_end) { break; }
@@ -83,47 +69,49 @@ void mainCase() {
         }
       }
     }
-    return parent[v_end] != -1;
   };
 
-  // Update capacity based on found path
-  auto update = [&]() -> bool {
-    // Find saturation value
-    ll flow = -1;
-    {
-      int v = v_end;
-      while (v != v_beg) {
-        int u = parent[v];
-        flow = min((ull)flow, (ull)cap[u][v]);
-        v = u;
-      }
+  auto update = [&]() {
+    int flow = -1;
+    int v = v_end;
+    while (v != v_beg) { // find min capacity along path
+      int u = parent[v];
+      flow = min((uint)flow, (uint)cap[u][v]);
+      v = u;
     }
-
-    // Update capacity
-    {
-      int v = v_end;
-      while (v != v_beg) {
-        int u = parent[v];
-        cap[u][v] -= flow;
-        cap[v][u] += flow;
-        v = u;
-      }
+    v = v_end;
+    while (v != v_beg) { // update capacity
+      int u = parent[v];
+      cap[u][v] -= flow;
+      cap[v][u] += flow;
+      v = u;
     }
-    return 1;
   };
 
-  // Loop search and update
-  while (search()) {
+  // Max flow
+  while (true) {
+    search();
+    if (parent[v_end] == -1) { break; }
     update();
-    dbg(parent);
-    dbg2(cap);
   }
+  dbg2(cap);
+  dbg(parent);
 
-  ll res = 0;
+  // Min-cut(A, ¬A) where v ∈ A <=> parent[v] != -1 (i.e. reachable from v_beg)
+  vector<tuple<int, int>> res;
   FOR(v, 0, n) {
-    res += cap_orig[v_beg][v] - cap[v_beg][v];
+    for (auto u : adj[v]) {
+      if (parent[v] != -1 && parent[u] == -1) {
+        res.push_back({v, u});
+      }
+    }
   }
-  cout << res << endl;
+  dbg(res);
+
+  cout << res.size() << endl;
+  for (auto [x, y] : res) {
+    cout << (x + 1) << " " << (y + 1) << endl;
+  }
 }
 
 int main() {
@@ -139,16 +127,18 @@ int main() {
 }
 
 /*
-python misc/run.py cses/graph_algorithms/task1694/main.cpp --check
+python misc/run.py cses/graph_algorithms/task1695/main.cpp --check
 
 %%%% begin
 4 5
-1 2 3
-2 4 2
-1 3 4
-3 4 5
-4 1 3
+1 2
+1 3
+2 3
+3 4
+1 4
 %%%%
-6
+2
+3 4
+1 4
 %%%% end
 */
