@@ -4,6 +4,7 @@ from subprocess import PIPE, STDOUT
 import argparse
 import io
 import timeit
+import sys
 
 
 def find_inline_tests(file):
@@ -67,7 +68,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
     if proc.returncode != 0:
         print(":: Compile failure")
         print(proc.stdout.decode())
-        return
+        return 1
 
     print(":: Compile success")
     if proc.stdout:  # Compile warning if any
@@ -117,7 +118,7 @@ def main():
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--timeout", type=float, default=5)
     args = parser.parse_args()
-    run_cpp(**args.__dict__)
+    sys.exit(run_cpp(**args.__dict__))
 
 
 if __name__ == "__main__":
