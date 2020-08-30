@@ -1,6 +1,6 @@
 // AC
 
-// TODO: this solution completely relies on there's no hash collision
+// NOTE: After finding "center (centers)" of the tree, use same hash-cheating as task1700.
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,6 +35,16 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// 64bit hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
+ull hash64(ull x) {
+  x ^= x >> 30;
+  x *= 0xbf58476d1ce4e5b9ULL;
+  x ^= x >> 27;
+  x *= 0x94d049bb133111ebULL;
+  x ^= x >> 31;
+  return x;
+};
+
 // Main
 void mainCase() {
   int n;
@@ -56,26 +66,56 @@ void mainCase() {
     adj2[y].push_back(x);
   }
 
-  // 64bit hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
-  auto hash = [](ull x) -> ull {
-    x ^= x >> 30;
-    x *= 0xbf58476d1ce4e5b9ULL;
-    x ^= x >> 27;
-    x *= 0x94d049bb133111ebULL;
-    x ^= x >> 31;
-    return x;
+  auto getCenters = [&](const vector<vector<int>>& adj) -> vector<int> {
+    vector<int> deg(n, 0);
+    FOR(v, 0, n) {
+      for (auto u : adj[v]) { deg[u]++; }
+    }
+    set<tuple<int, int>> pq;
+    FOR(v, 0, n) { pq.insert({deg[v], v}); }
+
+    while (pq.size() > 2) {
+      vector<int> removed;
+      set<tuple<int, int>> decreased;
+      for (auto [d, v]: pq) {
+        if (d > 1) { break; }
+        removed.push_back(v);
+        for (auto u : adj[v]) {
+          if (deg[u] > 0) {
+            decreased.insert({deg[u], u});
+          }
+        }
+      }
+      for (auto v : removed) {
+        pq.erase({1, v});
+        deg[v]--;
+        for (auto u : adj[v]) {
+          if (deg[u] > 0) {
+            deg[u]--;
+          }
+        }
+      }
+      for (auto [d, v] : decreased) {
+        pq.erase({d, v});
+        pq.insert({deg[v], v});
+      }
+    }
+
+    vector<int> res;
+    for (auto [_d, v] : pq) { res.push_back(v); }
+    return res;
   };
 
-  // Take hash of path by degree (and just wish no hash collision...)
-  auto solve = [&](const vector<vector<int>>& adj) -> vector<ull> {
+  // Same approach (cheat) as task1700
+  auto getHash = [&](int root, const vector<vector<int>>& adj) -> vector<ull> {
     vector<ull> res(n, 0);
     vector<bool> done(n, 0);
     deque<tuple<int, ull>> q;
-    q.push_back({0, 0});
-    done[0] = 1;
+    q.push_back({root, 0});
+    done[root] = 1;
     while (!q.empty()) {
       auto [v, h] = q.front(); q.pop_front();
-      res[v] = h = hash(h ^ adj[v].size());
+      res[v] = h = hash64(h ^ adj[v].size());
       for (auto u : adj[v]) {
         if (!done[u]) {
           done[u] = 1;
@@ -86,14 +126,24 @@ void mainCase() {
     return res;
   };
 
-  auto hs1 = solve(adj1);
-  auto hs2 = solve(adj2);
-  sort(ALL(hs1));
-  sort(ALL(hs2));
-  dbg(hs1);
-  dbg(hs2);
+  auto cs1 = getCenters(adj1);
+  auto cs2 = getCenters(adj2);
+  vector<vector<ull>> hs1, hs2;
+  for (auto c : cs1) { hs1.emplace_back() = getHash(c, adj1); }
+  for (auto c : cs2) { hs2.emplace_back() = getHash(c, adj2); }
+  for (auto& h : hs1) { sort(ALL(h)); }
+  for (auto& h : hs2) { sort(ALL(h)); }
+  dbg(cs1);
+  dbg(cs2);
+  dbg2(hs1);
+  dbg2(hs2);
 
-  bool res = hs1 == hs2;
+  bool res = 0;
+  for (auto& h1 : hs1) {
+    for (auto& h2 : hs2) {
+      if (h1 == h2) { res = 1; break; }
+    }
+  }
   cout << (res ? "YES" : "NO") << endl;
 }
 
@@ -110,7 +160,26 @@ int main() {
 }
 
 /*
-python misc/run.py cses/additional_problems/task1700/main.cpp --check
+python misc/run.py cses/additional_problems/task1701/main.cpp --check
+
+%%%% begin
+1
+7
+5 3
+3 1
+2 7
+2 3
+6 1
+4 5
+4 3
+3 5
+6 7
+3 6
+2 4
+1 5
+%%%%
+YES
+%%%% end
 
 %%%% begin
 2
@@ -125,7 +194,7 @@ python misc/run.py cses/additional_problems/task1700/main.cpp --check
 1 3
 3 2
 %%%%
-NO
+YES
 YES
 %%%% end
 */
