@@ -1,4 +1,4 @@
-// WIP, WA
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -20,8 +20,12 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 }
 
 // Debugging
-#define DD(X) std::cout << #X ": " << (X) << std::endl << std::flush
-#define DD2(X) std::cout << #X ":" << std::endl; for (auto x : (X)) { std::cout << x << std::endl << std::flush; }
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+#define dbg(X) do { if (DEBUG) { cout << #X ": " << (X) << endl << flush; } } while (0)
+#define dbg2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
+#define dbgv(...) do { if (DEBUG) { cout << "(" #__VA_ARGS__ "): " << make_tuple(__VA_ARGS__) << endl << flush; } } while (0)
 namespace std {
 template<class ...Ts>        ostream& operator<<(ostream& o, const tuple<Ts...>& x) { o << "("; apply([&](auto&& y, auto&&... ys){ o << y; ((o << ", " << ys), ...); }, x); o << ")"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>& x) { o << tie(x.first, x.second); return o; }
@@ -38,12 +42,12 @@ void mainCase() {
   cin >> edges;
   for (auto& [x, y, c] : edges) { x--; y--; c *= -1; } // Minimize cost
 
-  int v_beg = 0, v_end = n - 1;
+  int v_beg = 0, v_end = n - 1; // reachable
 
   // Bellman-Ford (LEMMA. shortest paths are simple <=> no negative cycle)
-  bool neg_cycle = 0;
   ll kInf = 1L << 60;
   vector<ll> dists(n, kInf);
+  vector<bool> negs(n, 0);
   dists[v_beg] = 0;
   FOR(i, 0, n) {
     bool found = 0;
@@ -53,20 +57,34 @@ void mainCase() {
       if (d < dists[y]) {
         dists[y] = d;
         found = 1;
+        if (i == n - 1) { negs[y] = 1; }
       }
     }
-    // DD(dists);
     if (!found) { break; }
-    if (found && i >= n - 1) {
-      neg_cycle = 1;
+  }
+
+  // BFS (Check if v_end is reachable from negative cycles)
+  vector<vector<int>> adjT(n);
+  for (auto [x, y, _c] : edges) { adjT[y].push_back(x); }
+
+  bool ok = 1;
+  deque<int> q;
+  vector<bool> done(n, 0);
+  q.push_back(v_end);
+  done[v_end] = 0;
+  while (!q.empty()) {
+    auto v = q.front(); q.pop_front();
+    if (negs[v]) { ok = 0; break; }
+    for (auto u : adjT[v]) {
+      if (!done[u]) {
+        done[u] = 1;
+        q.push_back(u);
+      }
     }
   }
-  // TODO: Prove "nth improvement detection" detects all negative cycles
-  // TODO: Need to check if v_end is reachable from some negative cycle (see 2nd test case)
 
-  if (neg_cycle) {
-    cout << -1 << endl;
-    return;
+  if (!ok) {
+    cout << -1 << endl; return;
   }
   cout << (-dists[v_end]) << endl;
 }
@@ -94,6 +112,7 @@ python misc/run.py cses/graph_algorithms/task1673/main.cpp --check
 2 4 1
 1 4 100
 %%%%
+-1
 %%%% end
 
 %%%% begin
@@ -103,6 +122,7 @@ python misc/run.py cses/graph_algorithms/task1673/main.cpp --check
 3 2 1
 1 4 1
 %%%%
+1
 %%%% end
 
 %%%% begin
