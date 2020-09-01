@@ -1,6 +1,6 @@
 Math and Programming Practice
 
-```
+```bash
 # Lint *.py
 pip install -r requirements.txt
 shopt -s globstar

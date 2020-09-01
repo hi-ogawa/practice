@@ -1,4 +1,4 @@
-// WIP, WA
+// AC
 
 // Cf. task1973
 
@@ -22,8 +22,12 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 }
 
 // Debugging
-#define DD(X) std::cout << #X ": " << (X) << std::endl << std::flush
-#define DD2(X) std::cout << #X ":" << std::endl; for (auto x : (X)) { std::cout << x << std::endl << std::flush; }
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+#define dbg(X) do { if (DEBUG) { cout << #X ": " << (X) << endl << flush; } } while (0)
+#define dbg2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
+#define dbgv(...) do { if (DEBUG) { cout << "(" #__VA_ARGS__ "): " << make_tuple(__VA_ARGS__) << endl << flush; } } while (0)
 namespace std {
 template<class ...Ts>        ostream& operator<<(ostream& o, const tuple<Ts...>& x) { o << "("; apply([&](auto&& y, auto&&... ys){ o << y; ((o << ", " << ys), ...); }, x); o << ")"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>& x) { o << tie(x.first, x.second); return o; }
@@ -40,55 +44,80 @@ void mainCase() {
   cin >> edges;
   for (auto& [x, y, c] : edges) { x--; y--; }
 
-  // TODO: Use roots of components
+  vector<vector<int>> adj(n);
+  for (auto [x, y, _c] : edges) { adj[x].push_back(y); }
 
-  // Bellman-Ford
-  ll kInf = 1L << 60;
-  vector<ll> dists(n, kInf);
-  vector<int> parents(n, -1);
-  dists[0] = 0;
-  FOR(i, 0, n) {
-    bool found = 0;
-    for (auto [x, y, c] : edges) {
-      if (dists[x] == kInf) { continue; }
-      ll d = dists[x] + c;
-      if (d < dists[y]) {
-        dists[y] = d;
-        found = 1;
-        // TODO: prove the LAST improving edge always leads to negative cycle
-        // TODO: prove why restricting to "if (i == n - 1)" doesn't work.
-        parents[y] = x;
+  // Find roots not reachable each other
+  vector<int> roots;
+  {
+    vector<bool> done(n, 0);
+    auto bfs = [&](int v0) {
+      deque<int> q;
+      q.push_back(v0);
+      done[v0] = 1;
+      while (!q.empty()) {
+        int v = q.front(); q.pop_front();
+        for (auto u : adj[v]) {
+          if (!done[u]) {
+            done[u] = 1;
+            q.push_back(u);
+          }
+        }
+      }
+    };
+    FOR(v, 0, n) {
+      if (!done[v]) {
+        roots.push_back(v);
+        bfs(v);
       }
     }
-    if (!found) { break; }
   }
-  // DD(dists);
-  // DD(parents);
+  dbg(roots);
 
-  // No improvement at nth step
-  auto it = find_if(ALL(parents), [](auto x) { return x != -1; });
-  if (it == parents.end()) {
-    cout << "NO" << endl;
-    return;
+  // Find negative cycle via Bellman-Ford (TODO: prove "parents" always leads to negative cycle)
+  auto solve = [&](int v_root, vector<int>& res) -> bool {
+    ll kInf = 1L << 60;
+    vector<ll> dists(n, kInf);
+    vector<int> parents(n, -1);
+    dists[v_root] = 0;
+    int v_neg = -1;
+    FOR(i, 0, n) {
+      bool found = 0;
+      for (auto [x, y, c] : edges) {
+        ll d = dists[x] + c;
+        if (d < dists[y]) {
+          dists[y] = d;
+          parents[y] = x;
+          found = 1;
+          if (i == n - 1) { v_neg = y; }
+        }
+      }
+      if (!found) { return 0; }
+    }
+
+    // Backtrack from v_neg
+    vector<bool> visited(n, 0);
+    int v = v_neg;
+    while (!visited[v]) {
+      visited[v] = 1;
+      res.push_back(v);
+      v = parents[v];
+    }
+    res.erase(res.begin(), find(ALL(res), v));
+    res.push_back(v);
+    reverse(ALL(res));
+    return 1;
+  };
+
+  bool ok = 0;
+  vector<int> res;
+  for (auto v : roots) {
+    if (ok = solve(v, res)) { break; }
   }
 
-  // Backtrack improvement path/loop
-  vector<bool> visited(n, 0);
-  vector<int> vs;
-  // int v = *it;
-  int v = distance(parents.begin(), it);
-  while (visited[v] == 0) {
-    // DD(v);
-    visited[v] = 1;
-    vs.push_back(v);
-    v = parents[v];
+  if (!ok) {
+    cout << "NO" << endl; return;
   }
-  // DD(v);
-  // DD(vs);
-
-  vector<int> res(find(ALL(vs), v), vs.end());
-  res.push_back(v);
-  reverse(ALL(res));
 
   cout << "YES" << endl;
   FOR(i, 0, (int)res.size()) {
@@ -121,6 +150,7 @@ python misc/run.py cses/graph_algorithms/task1197/main.cpp --check
 3 4 3
 4 2 6
 %%%%
+NO
 %%%% end
 
 %%%% begin
