@@ -1,6 +1,4 @@
-//
-// Default setup for C++
-//
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -54,7 +52,7 @@ int main() {
 }
 
 /*
-python misc/run.py misc/example.cpp --check
+python misc/run.py misc/templates/main.cpp --check
 
 %%%% begin
 %%%%
