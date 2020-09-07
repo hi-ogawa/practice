@@ -1,6 +1,3 @@
-# WIP
-#   hopefully something usable only with builtin library
-
 def get_request(url):
     import urllib.request
     with urllib.request.urlopen(url) as f:
@@ -10,6 +7,7 @@ def get_request(url):
 def get_tests(url):
     import re
     content = get_request(url)
+    # Very rough regexp but seems works fine
     it = re.finditer('<pre>(.*?)</pre>', content, re.DOTALL)
     ls = ["\n".join(m.group(1).split('<br />')).strip() for m in it]
     return list(zip(ls[0::2], ls[1::2]))
