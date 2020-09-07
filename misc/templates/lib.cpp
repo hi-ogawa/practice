@@ -4,6 +4,7 @@
 // - Suffix array
 // - ...
 
+// Fenwick tree for sum
 struct FenwickTree {
   int n_;
   vector<int> data_;
@@ -27,3 +28,16 @@ struct FenwickTree {
     return reduce(r) - reduce(l);
   }
 };
+
+// Z function
+vector<int> makeZ(const string& s) {
+  int n = s.size();
+  vector<int> z(n);
+  int l = 1, r = 1; // [l, r)
+  FOR(i, 1, n) {
+    if (i < r) { z[i] = min(z[i - l], r - i); }
+    while (i + z[i] < n && s[i + z[i]] == s[z[i]]) { z[i]++; }
+    if (i + z[i] > r) { l = i; r = i + z[i]; }
+  }
+  return z;
+}
