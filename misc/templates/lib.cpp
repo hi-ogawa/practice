@@ -41,3 +41,13 @@ vector<int> makeZ(const string& s) {
   }
   return z;
 }
+
+// 64bit hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
+ull hash64(ull x) {
+  x ^= x >> 30;
+  x *= 0xbf58476d1ce4e5b9ULL;
+  x ^= x >> 27;
+  x *= 0x94d049bb133111ebULL;
+  x ^= x >> 31;
+  return x;
+};
