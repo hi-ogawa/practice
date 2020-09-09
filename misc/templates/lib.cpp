@@ -4,6 +4,17 @@
 // - Suffix array
 // - ...
 
+// Disjoint set union
+struct Dsu {
+  vector<int> data_;
+  Dsu(int n) { data_.resize(n); iota(ALL(data_)); }
+  void merge(int dst, int src) { data_[find(src)] = find(dst); }
+  int find(int a) {
+    if (a == data_[a]) { return a; }
+    return data_[a] = find(data_[a]);
+  }
+};
+
 // Fenwick tree for sum
 struct FenwickTree {
   int n_;
