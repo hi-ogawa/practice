@@ -63,7 +63,7 @@ uint32_t reverse32(uint32_t x) {
 }
 
 // DFT / IDFT
-void dft(vector<cd>& f, bool inv = 0) {
+void dft(vector<cd>& f, bool inv) {
   int n = f.size();
   int m = 0;
   while ((1 << m) < n) { m++; }
@@ -71,7 +71,7 @@ void dft(vector<cd>& f, bool inv = 0) {
     int j = reverse32(i) >> (32 - m);
     if (i < j) { swap(f[i], f[j]); }
   }
-  for (int l = 2; l <= n; l <<= 1) {
+  for (int l = 2; l <= n; l *= 2) {
     cd u = exp((inv ? 2i : -2i) * M_PI / (cd)l);
     for (int i = 0; i < n; i += l) {
       cd z = 1.0;
