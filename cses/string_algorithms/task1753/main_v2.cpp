@@ -1,4 +1,4 @@
-// WA, TLE
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -40,17 +40,19 @@ void mainCase() {
   int n1 = s1.size(), n2 = s2.size();
   if (n1 < n2) { cout << 0 << endl; return; }
 
-  auto getHash = [](const string& s) -> ll {
-    ll b = 31, m = 1e9 + 7, h = 0;
-    for (auto c : s) { h = (h * b + c - '0' + 1) % m; }
+  ll m = 1e9 + 7;
+  ll b = mt19937((ull)&mainCase)() % m;
+
+  auto getHash = [&](const string& s) -> ll {
+    ll h = 0;
+    for (auto c : s) { h = (h * b + c - 'a' + 1) % m; }
     return h;
   };
 
-  auto getHashCum = [](const string& s) -> vector<ll> {
-    ll b = 31, m = 1e9 + 7;
+  auto getHashCum = [&](const string& s) -> vector<ll> {
     int n = s.size();
     vector<ll> h(n + 1);
-    FOR(i, 0, n) { h[i + 1] = (h[i] * b + s[i] - '0' + 1) % m; }
+    FOR(i, 0, n) { h[i + 1] = (h[i] * b + s[i] - 'a' + 1) % m; }
     return h;
   };
 
@@ -59,14 +61,13 @@ void mainCase() {
   dbg(h);
   dbg(ls);
 
-  ll b = 31, m = 1e9 + 7, p = 1;
+  ll p = 1;
   FOR(i, 0, n2) { p = (p * b) % m; }
 
   int res = 0;
   FOR(i, n2, n1 + 1) {
     ll hh = (ls[i] - ls[i - n2] * p) % m;
-    res += (h - hh) % m == 0; // WA
-    // res += (h - hh) % m == 0) && (s1.compare(i - n2, n2, s2) == 0); // TLE
+    res += (h - hh) % m == 0;
   }
   cout << res << endl;
 }
