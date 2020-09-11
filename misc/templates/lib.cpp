@@ -95,3 +95,24 @@ void dft(vector<cd>& f, bool inv) {
     for (auto& x : f) { x /= n; }
   }
 }
+
+// High dimentional vector
+template<class T, size_t Rank>
+struct Tensor {
+  using idx_t = array<int, Rank>;
+  idx_t shape_;
+  vector<T> data_;
+  Tensor(const idx_t& shape, T init_value) : shape_{shape} {
+    data_.assign(flatIndex(shape_), init_value);
+  }
+  int flatIndex(const idx_t& idx) {
+    int res = idx[0];
+    for (int i = 1; i < (int)Rank; i++) { res += res * shape_[i] + idx[i]; }
+    return res;
+  }
+  template<class ...Is>
+  T& operator()(Is... i) {
+    static_assert(Rank == sizeof...(i));
+    return data_[flatIndex(idx_t{i...})];
+  }
+};
