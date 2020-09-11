@@ -35,63 +35,86 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n, k;
-  cin >> n >> k;
-  vector<vector<int>> ls(k, vector<int>(n));
-  cin >> ls;
-  for (auto& xs : ls) { for (auto& x : xs) x--; } // zero-based
+  ll n; // <= 2000
+  cin >> n;
+  vector<vector<ll>> board(n, vector<ll>(n));
+  cin >> board;
 
-  // WLOG, ls[0] = (0, 1, .., n - 1)
-  vector<int> enc(n);
-  FOR(i, 0, n) { enc[ls[0][i]] = i; }
-  FOR(i, 0, k) {
+  // Points for all diagonals
+  vector<ll> ls1(n), ls2(n), ls3(n), ls4(n);
+  FOR(i, 0, n) {
     FOR(j, 0, n) {
-      ls[i][j] = enc[ls[i][j]];
+      if (i + j < n)  { ls1[i] += board[i + j][j]; }
+      if (i + j < n)  { ls2[i] += board[j][i + j]; }
+      if (i - j >= 0) { ls3[i] += board[i - j][j]; }
+      if (i - j + n - 1 < n) { ls4[i] += board[i - j + n - 1][j]; }
     }
   }
-  dbg2(ls);
+  dbg(ls1);
+  dbg(ls2);
+  dbg(ls3);
+  dbg(ls4);
 
-  // Then, problem is equivalent to finding common increasing subseq. of ls[1], .. ls[k - 1];
-  // dp[x] = max common incr subseq end with x
-  vector<int> dp(n, 1);
-  auto ls_inv = ls;
-  FOR(i, 0, k) {
+  // Optimize for each parity
+  ll res1 = 0, res2 = 0;
+  array<int, 2> res3 = {0, 0}, res4 = {1, 0};
+  FOR(i, 0, n) {
     FOR(j, 0, n) {
-      ls_inv[i][ls[i][j]] = j;
+      ll p = i >= j ? ls1[i - j] : ls2[j - i];
+      ll q = i + j < n ? ls3[i + j] : ls4[i + j - (n - 1)];
+      ll tmp = p + q - board[i][j];
+      if ((i + j) % 2 == 0) {
+        if (tmp > res1) {
+          res1 = tmp;
+          res3 = {i, j};
+        }
+      } else {
+        if (tmp > res2) {
+          res2 = tmp;
+          res4 = {i, j};
+        }
+      }
     }
   }
-  FOR(x, 1, n) {
-    FOR(y, 0, x) {
-      bool ok = 1;
-      FOR(i, 1, k) {
-        if (ls_inv[i][y] > ls_inv[i][x]) { ok = 0; break; }
-      }
-      if (ok) {
-        dp[x] = max(dp[x], dp[y] + 1);
-      }
-    }
-  }
-  dbg(dp);
+  dbgv(res1, res2, res3, res4);
 
-  int res = *max_element(ALL(dp));
-  cout << res << endl;
+  cout << (res1 + res2) << endl;
+  cout << (res3[0] + 1) << " " << (res3[1] + 1) << " ";
+  cout << (res4[0] + 1) << " " << (res4[1] + 1) << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
+  // [ Single case ]
   mainCase();
   return 0;
+  // [ Multiple cases ]
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
 python misc/run.py codeforces/problemset/463D/main.cpp --check
 
 %%%% begin
-4 3
-1 4 2 3
-4 1 2 3
-1 2 4 3
+2
+0 0
+0 0
 %%%%
-3
+0
+1 1 2 1
+%%%% end
+
+%%%% begin
+4
+1 1 1 1
+2 1 1 0
+1 1 1 0
+1 0 0 1
+%%%%
+12
+2 2 3 2
 %%%% end
 */
