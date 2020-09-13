@@ -1,0 +1,3 @@
+# wget -O cses/additional_problems/task1706/test9.txt  https://cses.fi/file/944cfa8f6dc5910b364625b01fc3d22db1355cca11e4f70c6197a3f7fe0b92e2/1/1/
+# wget -O cses/additional_problems/task1706/test10.txt https://cses.fi/file/87c3838635e3947870cbf80361f750c2b991c6f106cb107c9312c1d4032e95e8/1/1/
+test*.txt
