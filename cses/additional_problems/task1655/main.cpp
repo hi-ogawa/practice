@@ -47,7 +47,8 @@ void mainCase() {
   auto ps = ls;
   FOR(i, 1, n) { ps[i] ^= ps[i - 1]; }
 
-  multiset<int> ms(ALL(ps));
+  map<int, int> ms;
+  for (auto x : ps) { ms[x]++; }
 
   // Find max { u ^ x | u \in ms }
   auto solve = [&](int x) -> int {
@@ -77,11 +78,12 @@ void mainCase() {
     return res;
   };
 
-  int res = *--ms.end();
+  int res = ms.rbegin()->first;
   FOR(i, 0, n - 1) {
     // Find max xor segment starting from "i"
-    ms.erase(ms.find(ps[i]));
-    res = max(res, solve(ps[i]));
+    int x = ps[i];
+    if (--ms[x] == 0) { ms.erase(x); }
+    res = max(res, solve(x));
   }
   cout << res << endl;
 }
