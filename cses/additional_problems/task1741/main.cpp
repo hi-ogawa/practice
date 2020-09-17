@@ -62,7 +62,7 @@ struct SegmentTree {
   // TODO: probably this relies on the fact that all "add request" is countered by "sub request"
   ll value(int l, int r, int j) { // Value with resolving request if negative
     if (req_[j] < 0) {
-      // TODO: this makes it's not really "lazy" segment tree system (i.e. probably not "log(n)" query)
+      // TODO: this makes it not really "lazy" segment tree system (i.e. probably not "log(n)" query)
       propagate(j);
       ll v1 = value(l, (l + r) / 2, left(j));
       ll v2 = value((l + r) / 2, r, right(j));
@@ -124,25 +124,18 @@ void mainCase() {
   int lim = 1e6; // Translate y coord to positive
   SegmentTree isects(2 * lim + 1);
   ll res = 0;
-  int ie = 0, ne = events.size();
-  FOR(sweep_x, -lim, lim + 1) {
-    // Integrate vertical union
-    ll tmp = isects.reduce(0, 2 * lim + 1);
-    DD(tie(sweep_x, tmp));
-    res += tmp;
+  int sweep_x = -lim;
+  for (auto [x, y1, y2, t] : events) {
+    // Integrate union
+    ll w = x - sweep_x;
+    ll h = isects.reduce(0, 2 * lim + 1);
+    res += w * h;
 
     // Update isects
-    while (ie < ne && events[ie][0] <= sweep_x) {
-      auto [x, y1, y2, t] = events[ie++];
-      DD(tie(sweep_x, x, y1, y2, t));
-      y1 += lim; y2 += lim;
-      if (t == kIn) {
-        isects.incr(y1, y2, 1);
-      }
-      if (t == kOut) {
-        isects.incr(y1, y2, -1);
-      }
-    }
+    y1 += lim; y2 += lim;
+    if (t == kIn) { isects.incr(y1, y2, 1); }
+    if (t == kOut) { isects.incr(y1, y2, -1); }
+    sweep_x = x;
   }
   cout << res << endl;
 }
