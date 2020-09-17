@@ -1,2 +1,4 @@
-# wget -P cses/range_queries/task1144 https://cses.fi/file/cab0a275f2a1622aadfbc165272f27343f89040a689fb12eea51e92e4e230255/1/1/
-index.html*
+# wget -O cses/range_queries/task1144/test6.txt https://cses.fi/file/cab0a275f2a1622aadfbc165272f27343f89040a689fb12eea51e92e4e230255/1/1/
+# wget -O cses/range_queries/task1144/test7.txt https://cses.fi/file/d26bd8bac144558b9c920fc40e195e1b7e13b88e9aefb45ddc8e05a5397ec9eb/1/1/
+# wget -O cses/range_queries/task1144/test11.txt https://cses.fi/file/aa7684773afad1ef9e9132cbee187f25c28e0512daed608dce7747ed694b901d/1/1/
+test*.txt

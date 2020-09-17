@@ -1,6 +1,4 @@
-// TLE
-
-// TODO: faster than main_v3.cpp but still TLE
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -52,6 +50,16 @@ struct FenwickTree {
   }
 };
 
+// Hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
+uint32_t hash32(uint32_t x) {
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return x;
+}
+
 // Main
 void mainCase() {
   int n, nq; // <= 10^6
@@ -63,36 +71,37 @@ void mainCase() {
   // Compress domain ~ 10^6
   auto ls2 = ls;
   auto qs2 = qs;
-  int v_max = 0;
+  int enc_max = 0;
   {
-    vector<int> vals;
-    for (auto x : ls) { vals.push_back(x); }
+    vector<int> dec;
+    for (auto x : ls) { dec.push_back(x); }
     for (auto [t, a, b] : qs) {
-      if (t == '!') { vals.push_back(b); }
-      if (t == '?') { vals.push_back(a); vals.push_back(b); }
+      if (t == '!') { dec.push_back(b); }
+      if (t == '?') { dec.push_back(a); dec.push_back(b); }
     }
-    sort(ALL(vals));
-    vals.erase(unique(ALL(vals)), vals.end());
+    sort(ALL(dec));
+    dec.erase(unique(ALL(dec)), dec.end());
+    enc_max = dec.size();
 
-    v_max = vals.size();
-    map<int, int> vals_inv;
-    FOR(i, 0, v_max) { vals_inv[vals[i]] = i; }
+    struct Hash { size_t operator()(int x) const { return hash32(x); }; };
+    unordered_map<int, int, Hash> enc;
+    FOR(i, 0, enc_max) { enc[dec[i]] = i; }
 
     FOR(i, 0, n) {
-      ls2[i] = vals_inv[ls[i]];
+      ls2[i] = enc[ls[i]];
     }
     FOR(i, 0, nq) {
       auto [t, a, b] = qs[i];
       if (t == '!') {
-        qs2[i] = {t, a, vals_inv[b]};
+        qs2[i] = {t, a, enc[b]};
       }
       if (t == '?') {
-        qs2[i] = {t, vals_inv[a], vals_inv[b]};
+        qs2[i] = {t, enc[a], enc[b]};
       }
     }
   }
 
-  FenwickTree tree(v_max);
+  FenwickTree tree(enc_max);
   for (auto x : ls2) { tree.incr(x, 1); }
 
   for (auto [t, a, b] : qs2) {
@@ -124,7 +133,7 @@ int main() {
 }
 
 /*
-python misc/run.py cses/range_queries/task1144/main_v2.cpp --check
+python misc/run.py cses/range_queries/task1144/main_v4.cpp --check
 
 %%%% begin
 5 3

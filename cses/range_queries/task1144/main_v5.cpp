@@ -1,6 +1,4 @@
-// TLE
-
-// TODO: faster than main_v2.cpp but still TLE
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -52,6 +50,16 @@ struct FenwickTree {
   }
 };
 
+// Hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
+uint32_t hash32(uint32_t x) {
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return x;
+}
+
 // Main
 void mainCase() {
   int n, nq; // <= 10^6
@@ -61,55 +69,33 @@ void mainCase() {
   cin >> ls >> qs;
 
   // Compress domain ~ 10^6
-  auto ls2 = ls;
-  auto qs2 = qs;
-  int v_max = 0;
-  {
-    map<int, vector<tuple<int, int>>> vals;
-    FOR(i, 0, n) {
-      vals[ls[i]].push_back({0, i});
-    }
-    FOR(i, 0, nq) {
-      auto [t, a, b] = qs[i];
-      if (t == '!') { vals[b].push_back({2, i}); }
-      if (t == '?') {
-        vals[a].push_back({1, i});
-        vals[b].push_back({2, i});
-      }
-    }
-    int i = 0;
-    for (auto [_v, ks] : vals) {
-      for (auto [t, k] : ks) {
-        if (t == 0) { ls2[k] = i; }
-        if (t == 1) {
-          auto [s, _a, b] = qs2[k];
-          qs2[k] = {s, i, b};
-        }
-        if (t == 2) {
-          auto [s, a, _b] = qs2[k];
-          qs2[k] = {s, a, i};
-        }
-      }
-      i++;
-    }
-    v_max = i;
+  vector<int> dec;
+  for (auto x : ls) { dec.push_back(x); }
+  for (auto [t, a, b] : qs) {
+    if (t == '!') { dec.push_back(b); }
+    if (t == '?') { dec.push_back(a); dec.push_back(b); }
   }
-  // DD(ls2);
-  // DD(qs2);
+  sort(ALL(dec));
+  dec.erase(unique(ALL(dec)), dec.end());
+  int enc_max = dec.size();
 
-  FenwickTree tree(v_max);
-  for (auto x : ls2) { tree.incr(x, 1); }
+  struct Hash { size_t operator()(int x) const { return hash32(x); }; };
+  unordered_map<int, int, Hash> enc;
+  FOR(i, 0, enc_max) { enc[dec[i]] = i; }
 
-  for (auto [t, a, b] : qs2) {
+  FenwickTree tree(enc_max);
+  for (auto x : ls) { tree.incr(enc[x], 1); }
+
+  for (auto [t, a, b] : qs) {
     if (t == '!') {
       a--;
-      tree.incr(ls2[a], -1);
-      tree.incr(b, 1);
-      ls2[a] = b;
+      tree.incr(enc[ls[a]], -1);
+      tree.incr(enc[b], 1);
+      ls[a] = b;
     }
     if (t == '?') {
-      ll f1 = tree.reduce(a - 1);
-      ll f2 = tree.reduce(b);
+      ll f1 = tree.reduce(enc[a] - 1);
+      ll f2 = tree.reduce(enc[b]);
       ll res = f2 - f1;
       cout << res << endl;
     }
@@ -129,7 +115,7 @@ int main() {
 }
 
 /*
-python misc/run.py cses/range_queries/task1144/main_v3.cpp --check
+python misc/run.py cses/range_queries/task1144/main_v5.cpp --check
 
 %%%% begin
 5 3
