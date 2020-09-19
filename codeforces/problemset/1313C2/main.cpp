@@ -1,6 +1,4 @@
-// WA
-
-// NOTE: theory should be right but it fails one of big test cases...
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -89,7 +87,7 @@ void mainCase() {
   // Min fix cost to make "i"-pyramid  (min fix cost <=> max count)
   ll c_res = 1ULL << 62;
   int i_res = 0;
-  FOR(i, 0, n - 1) {
+  FOR(i, 0, n) {
     ll tmp = ps[i] + qs[i];
     if (tmp < c_res) {
       c_res = tmp;
