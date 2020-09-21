@@ -1,7 +1,6 @@
-// WA, WIP
+// TLE
 
-// NOTE: WA on n = 20000 (Test: #46)
-// NOTE: similar to cses/additional_problems/task1706/main_v5.cpp
+// NOTE: TLE on n = 100000 (Test: #51)
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -96,10 +95,32 @@ struct ModInt {
       }
       if (ok) { return y; }
     }
-    assert(0);
+    return -1; // assert(0)
   }
 
-  static inline const mint generator = mint(const_findGenerator(M));
+  static inline constexpr ll generator_ll     = const_findGenerator(M);
+  static inline constexpr ll generator_inv_ll = const_pow(generator_ll, M - 2, M);
+  static inline const mint generator          = mint(generator_ll);
+  static inline const mint generator_inv      = mint(generator_inv_ll);
+
+  // Precomputation for FFT
+
+  static inline mint roots[32][2] = {};
+  static void findRoots() {
+    if (roots[0][0] != 0) { return; }
+    for (int b = 0; (M - 1) % (1 << b) == 0; b++) {
+      roots[b][0] = generator.pow((M - 1) >> b);
+      roots[b][1] = generator_inv.pow((M - 1) >> b);
+    }
+  }
+
+  static inline mint pow2Invs[30] = {};
+  static void findPow2Invs() {
+    if (pow2Invs[0] != 0) { return; }
+    for (int b = 0; b < 30; b++) {
+      pow2Invs[b] = mint(1 << b).inv();
+    }
+  }
 };
 
 // FFT
@@ -115,15 +136,16 @@ uint32_t reverse32(uint32_t x) {
 template<class mint>
 void fft(vector<mint>& f, bool inv) {
   int n = f.size();
-  int m = 0;
-  while ((1 << m) < n) { m++; }
+  int nb = 0;
+  while ((1 << nb) < n) { nb++; }
   FOR(i, 0, n) {
-    int j = reverse32(i) >> (32 - m);
+    int j = reverse32(i) >> (32 - nb);
     if (i < j) { swap(f[i], f[j]); }
   }
-  for (int l = 2; l <= n; l *= 2) {
-    mint u = mint::generator.pow((mint::modulo - 1) / l);
-    if (inv) { u = u.inv(); }
+  for (int lb = 1; lb <= nb; lb++) {
+    int l = 1 << lb;
+    mint::findRoots();
+    mint u = mint::roots[lb][inv];
     for (int i = 0; i < n; i += l) {
       mint z = 1;
       for (int k = 0; k < l / 2; k++) {
@@ -135,7 +157,8 @@ void fft(vector<mint>& f, bool inv) {
     }
   }
   if (inv) {
-    mint inv_n = mint(n).inv();
+    mint::findPow2Invs();
+    mint inv_n = mint::pow2Invs[nb];
     for (auto& x : f) { x *= inv_n; }
   }
 }
@@ -147,54 +170,28 @@ void polymul(vector<mint>& p, vector<mint>& q, vector<mint>& r) {
   fft(r, 1);
 }
 
-constexpr tuple<ll, ll, ll> solveBezout(ll p, ll q) { // xp + yq = gcd(p, q)
-  bool _swap = 0;
-  if (p < q) { swap(p, q); _swap = 0; }
-  ll x1 = 1, x2 = 0;
-  ll y1 = 0, y2 = 1;
-  ll z1 = p, z2 = q;
-  while (z2 != 0) {
-    ll s = z1 / z2, r = z1 % z2;
-    tie(x1, x2) = make_tuple(x2, x1 - s * x2);
-    tie(y1, y2) = make_tuple(y2, y1 - s * y2);
-    tie(z1, z2) = make_tuple(z2, r);
-  }
-  if (_swap) { swap(x1, y1); }
-  return {x1, y1, z1};
+template<class mint>
+void polymul(const vector<mint>& p, const vector<mint>& q, vector<mint>& r) {
+  auto pp = p; auto qq = q; polymul(pp, qq, r);
 }
 
-void polymulCRT(vector<ll>& p, vector<ll>& q, vector<ll>& r, int modulo) {
-  const ll m1 = 998244353; // = 1 + 2^23 x 7 x 17
-  const ll m2 = 754974721; // = 1 + 2^24 x 3^2 x 5
-  ll n1, n2, _g;
-  tie(n1, n2, _g) = solveBezout(m1, m2);
+using mint = ModInt<998244353>;
 
-  auto add = [&](ll x, ll y) -> ll { return (x + y) % modulo; };
-  auto mul = [&](ll x, ll y) -> ll { return (x * y) % modulo; };
-  auto solveCRT = [&](ll x1, ll x2) -> ll {
-    // n1 m1 + n2 m2 = 1
-    // =>
-    // x = x1 = x1 n2 m2 (mod m1)
-    // x = x2 = x2 n1 m1 (mod m2)
-    // x = x1 n2 m2 + x2 n1 m1 (mod m1 m2)
-    return add(mul(x1, mul(n2, m2)), mul(x2, mul(n1, m1)));
-  };
-
+void polymulRebase(vector<ll>& p, vector<ll>& q, vector<ll>& r, int b) {
   int n = p.size();
-  vector<ModInt<m1>> p1(n), q1(n), r1(n);
-  vector<ModInt<m2>> p2(n), q2(n), r2(n);
+  vector<mint> p0(n), p1(n), q0(n), q1(n), p0q0(n), p0q1(n), p1q0(n), p1q1(n);
   FOR(i, 0, n) {
-    p1[i] = p[i]; q1[i] = q[i];
-    p2[i] = p[i]; q2[i] = q[i];
+    p1[i] = p[i] / b; p0[i] = p[i] % b;
+    q1[i] = q[i] / b; q0[i] = q[i] % b;
   }
-  polymul(p1, q1, r1);
-  polymul(p2, q2, r2);
+  polymul(vector<mint>(p0), vector<mint>(q0), p0q0);
+  polymul(             p0,  vector<mint>(q1), p0q1);
+  polymul(vector<mint>(p1),              q0 , p1q0);
+  polymul(             p1 ,              q1 , p1q1);
   FOR(i, 0, n) {
-    r[i] = solveCRT(r1[i].v, r2[i].v);
+    r[i] = p1q1[i].v * b * b + (p1q0[i].v + p0q1[i].v) * b + p0q0[i].v;
   }
 }
-
-using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
 
 int pow2Ceil(int n) {
   int b = 0;
@@ -202,33 +199,32 @@ int pow2Ceil(int n) {
   return 1 << b;
 }
 
-// NOTE: this overflows since we expect "n * modulo * modulo ~ 10^5.10^3.10^3 > 998244353"
-void polymulMod(vector<mint>& p, vector<mint>& q, vector<mint>& r, int modulo) {
+void polymulMod(vector<ll>& p, vector<ll>& q, vector<ll>& r, int n_lim, int modulo, int base) {
   // Align to power of two
-  int n = 2 * pow2Ceil(max(p.size(), q.size()));
+  int n = pow2Ceil(min(n_lim, 2 * (int)max(p.size(), q.size())));
   p.resize(n); q.resize(n); r.resize(n);
 
   // Multiply
-  polymul(p, q, r);
+  polymulRebase(p, q, r, base);
 
-  // Take modulo and remove leading zero
+  // Take modulo and remove leading zeros
   int m = 1;
   FOR(i, 0, n) {
-    r[i].v %= modulo;
+    r[i] %= modulo;
     if (r[i] != 0) { m = i + 1; }
   }
   r.resize(m);
 }
 
-vector<mint> polymulModAll(vector<vector<mint>>& ps, int modulo) {
+vector<ll> polymulModAll(vector<vector<ll>>& ps, int n_lim, int modulo, int base) {
   // Multiply together from small degrees
   auto compare = [](auto& x, auto& y) { return x.size() < y.size(); };
-  multiset<vector<mint>, decltype(compare)> heap(compare);
+  multiset<vector<ll>, decltype(compare)> heap(compare);
   heap.insert(ALL(ps));
   while (heap.size() >= 2) {
     auto p = *heap.begin(); heap.erase(heap.begin());
     auto q = *heap.begin(); heap.erase(heap.begin());
-    polymulMod(p, q, q, modulo);
+    polymulMod(p, q, q, n_lim, modulo, base);
     heap.insert(q);
   }
   return *heap.begin();
@@ -245,16 +241,17 @@ void mainCase() {
   for (auto x : ls) { x--; cnts[x]++; }
 
   // Make 0/1 coefficient polynomials
-  vector<vector<mint>> ps(m);
+  vector<vector<ll>> ps(m);
   FOR(i, 0, m) { ps[i].assign(cnts[i] + 1, 1); }
   dbg2(ps);
 
   const int modulo = 1009;
-  auto q = polymulModAll(ps, modulo);
+  const int base = 32; // base^2 > modulo
+  auto q = polymulModAll(ps, n + 1, modulo, base);
   dbg(q);
   assert(k < (int)q.size());
 
-  int res = q[k].v;
+  int res = q[k];
   cout << res << endl;
 }
 
@@ -265,7 +262,14 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/problemset/958F3/main.cpp --check
+python misc/run.py codeforces/problemset/958F3/main_v3.cpp --check
+
+%%%% begin
+111 16 58
+15 6 4 7 7 10 16 2 3 1 4 8 10 1 2 11 6 6 14 16 6 16 1 2 13 2 7 13 1 4 1 4 12 2 4 11 15 12 9 13 10 4 11 7 5 3 12 11 11 3 16 15 9 6 15 11 4 14 8 15 16 3 9 10 9 1 8 4 14 7 13 5 1 8 5 11 8 14 1 8 15 2 5 2 4 5 9 2 10 11 11 5 7 11 11 14 5 16 14 2 4 11 12 10 7 14 2 5 3 2 1
+%%%%
+552
+%%%% end
 
 %%%% begin
 4 3 2

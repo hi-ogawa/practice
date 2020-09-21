@@ -1,7 +1,7 @@
-// WA, WIP
+// WA
 
-// NOTE: WA on n = 20000 (Test: #46)
-// NOTE: similar to cses/additional_problems/task1706/main_v5.cpp
+// NOTE: Again WA on n = 20000 (Test: #46)
+// TODO: is my CRT wrong?
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -150,27 +150,33 @@ void polymul(vector<mint>& p, vector<mint>& q, vector<mint>& r) {
 constexpr tuple<ll, ll, ll> solveBezout(ll p, ll q) { // xp + yq = gcd(p, q)
   bool _swap = 0;
   if (p < q) { swap(p, q); _swap = 0; }
-  ll x1 = 1, x2 = 0;
-  ll y1 = 0, y2 = 1;
-  ll z1 = p, z2 = q;
-  while (z2 != 0) {
-    ll s = z1 / z2, r = z1 % z2;
-    tie(x1, x2) = make_tuple(x2, x1 - s * x2);
-    tie(y1, y2) = make_tuple(y2, y1 - s * y2);
-    tie(z1, z2) = make_tuple(z2, r);
+  array<ll, 2> x = {1, 0};
+  array<ll, 2> y = {0, 1};
+  array<ll, 2> z = {p, q};
+  while (z[1] != 0) {
+    ll s = z[0] / z[1], r = z[0] % z[1];
+    x = {x[1], x[0] - s * x[1]};
+    y = {y[1], y[0] - s * y[1]};
+    z = {z[1], r};
   }
-  if (_swap) { swap(x1, y1); }
-  return {x1, y1, z1};
+  if (_swap) { swap(x[0], y[0]); }
+  return {x[0], y[0], z[0]};
 }
 
+// TODO: I thought this won't overflow but maybe wrong??
 void polymulCRT(vector<ll>& p, vector<ll>& q, vector<ll>& r, int modulo) {
   const ll m1 = 998244353; // = 1 + 2^23 x 7 x 17
   const ll m2 = 754974721; // = 1 + 2^24 x 3^2 x 5
   ll n1, n2, _g;
   tie(n1, n2, _g) = solveBezout(m1, m2);
+  assert(n1 * m1 + n2 * m2 == 1);
 
-  auto add = [&](ll x, ll y) -> ll { return (x + y) % modulo; };
+  auto mod_sub = [&](ll x) -> ll { while (x >= modulo) { x -= modulo; } return x; };
+  auto mod_up  = [&](ll x) -> ll { return mod_sub((x % modulo) + modulo); };
+  auto add = [&](ll x, ll y) -> ll { return mod_sub(x + y); };
   auto mul = [&](ll x, ll y) -> ll { return (x * y) % modulo; };
+  n1 = mod_up(n1);
+  n2 = mod_up(n2);
   auto solveCRT = [&](ll x1, ll x2) -> ll {
     // n1 m1 + n2 m2 = 1
     // =>
@@ -184,17 +190,19 @@ void polymulCRT(vector<ll>& p, vector<ll>& q, vector<ll>& r, int modulo) {
   vector<ModInt<m1>> p1(n), q1(n), r1(n);
   vector<ModInt<m2>> p2(n), q2(n), r2(n);
   FOR(i, 0, n) {
+    assert(0 <= p[i] && p[i] < modulo);
+    assert(0 <= q[i] && q[i] < modulo);
     p1[i] = p[i]; q1[i] = q[i];
     p2[i] = p[i]; q2[i] = q[i];
   }
   polymul(p1, q1, r1);
   polymul(p2, q2, r2);
+  dbg(r1);
+  dbg(r2);
   FOR(i, 0, n) {
     r[i] = solveCRT(r1[i].v, r2[i].v);
   }
 }
-
-using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
 
 int pow2Ceil(int n) {
   int b = 0;
@@ -202,28 +210,24 @@ int pow2Ceil(int n) {
   return 1 << b;
 }
 
-// NOTE: this overflows since we expect "n * modulo * modulo ~ 10^5.10^3.10^3 > 998244353"
-void polymulMod(vector<mint>& p, vector<mint>& q, vector<mint>& r, int modulo) {
+void polymulMod(vector<ll>& p, vector<ll>& q, vector<ll>& r, int modulo) {
   // Align to power of two
   int n = 2 * pow2Ceil(max(p.size(), q.size()));
   p.resize(n); q.resize(n); r.resize(n);
 
   // Multiply
-  polymul(p, q, r);
+  polymulCRT(p, q, r, modulo);
 
-  // Take modulo and remove leading zero
+  // Remove leading zeros
   int m = 1;
-  FOR(i, 0, n) {
-    r[i].v %= modulo;
-    if (r[i] != 0) { m = i + 1; }
-  }
+  FOR(i, 0, n) { if (r[i] != 0) { m = i + 1; } }
   r.resize(m);
 }
 
-vector<mint> polymulModAll(vector<vector<mint>>& ps, int modulo) {
+vector<ll> polymulModAll(vector<vector<ll>>& ps, int modulo) {
   // Multiply together from small degrees
   auto compare = [](auto& x, auto& y) { return x.size() < y.size(); };
-  multiset<vector<mint>, decltype(compare)> heap(compare);
+  multiset<vector<ll>, decltype(compare)> heap(compare);
   heap.insert(ALL(ps));
   while (heap.size() >= 2) {
     auto p = *heap.begin(); heap.erase(heap.begin());
@@ -245,7 +249,7 @@ void mainCase() {
   for (auto x : ls) { x--; cnts[x]++; }
 
   // Make 0/1 coefficient polynomials
-  vector<vector<mint>> ps(m);
+  vector<vector<ll>> ps(m);
   FOR(i, 0, m) { ps[i].assign(cnts[i] + 1, 1); }
   dbg2(ps);
 
@@ -254,7 +258,7 @@ void mainCase() {
   dbg(q);
   assert(k < (int)q.size());
 
-  int res = q[k].v;
+  int res = q[k];
   cout << res << endl;
 }
 
@@ -265,7 +269,14 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/problemset/958F3/main.cpp --check
+python misc/run.py codeforces/problemset/958F3/main_v2.cpp --check
+
+%%%% begin
+111 16 58
+15 6 4 7 7 10 16 2 3 1 4 8 10 1 2 11 6 6 14 16 6 16 1 2 13 2 7 13 1 4 1 4 12 2 4 11 15 12 9 13 10 4 11 7 5 3 12 11 11 3 16 15 9 6 15 11 4 14 8 15 16 3 9 10 9 1 8 4 14 7 13 5 1 8 5 11 8 14 1 8 15 2 5 2 4 5 9 2 10 11 11 5 7 11 11 14 5 16 14 2 4 11 12 10 7 14 2 5 3 2 1
+%%%%
+552
+%%%% end
 
 %%%% begin
 4 3 2

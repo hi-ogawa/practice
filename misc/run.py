@@ -63,14 +63,17 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
     command += f" -o {exec_file} {file}"
 
     print(f":: Compiling... [{command}]")
+    time_begin = timeit.default_timer()
     proc = subprocess.run(command, shell=True, stdout=PIPE, stderr=STDOUT)
+    time_end = timeit.default_timer()
+
 
     if proc.returncode != 0:
         print(":: Compile failure")
         print(proc.stdout.decode())
         return 1
 
-    print(":: Compile success")
+    print(f":: Compile success (time: {time_end - time_begin:.4f})")
     if proc.stdout:  # Compile warning if any
         print(proc.stdout.decode())
 
