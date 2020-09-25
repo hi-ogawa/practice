@@ -47,8 +47,7 @@ void mainCase() {
   ps.insert(ps.end(), ALL(ls));
   ps.push_back(v);
 
-  // Knuth DP
-  // TODO: prove monotonicity of optimal indices
+  // Knuth DP (cf. Theorem 1 in Yao's "Efficient dynamic programming using quadrangle inequalities")
   ll kInf = 1e18;
   vector<vector<ll>> dp(n, vector<ll>(n + 1, kInf));
   vector<vector<int>> dp2(n, vector<int>(n + 1));

@@ -58,8 +58,24 @@ void mainCase() {
   }
   dbg2(costs);
 
+  //
   // Divide/Conquer DP
-  // TODO: prove monotonicity of "k"
+  //
+  // PROP.
+  //   Quadrangle inequality for c(i, j) \implies K(i, j) ≤ K(i, j + 1)
+  //   where
+  //     K(i, j) = argmin_{k < j} dp(i - 1, k) + c(k, j)
+  //
+  //   PROOF.
+  //     It suffices to show, for k ≤ k',
+  //       dp(i - 1, k) + c(k, j)     ≥ dp(i - 1, k') + c(k', j)   -- (1)
+  //       \implies
+  //       dp(i - 1, k) + c(k, j + 1) ≥ dp(i - 1, k') + c(k', j + 1)
+  //     Indeed, it holds since:
+  //       c(k, j + 1) - c(k', j + 1)
+  //         ≥ c(k, j) - c(k', j)           (∵ Quadrangle inequality)
+  //         ≥ dp(i - 1, k') - dp(i - 1, k) (∵ (1))
+  //
 
   const int kInf = 1e9;
   vector<vector<int>> dp(m + 1, vector<int>(n + 1));
