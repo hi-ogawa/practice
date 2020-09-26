@@ -1,0 +1,4 @@
+# python codeforces/problemset/1083E/generate.py 10000    > codeforces/problemset/1083E/input01.txt
+# python codeforces/problemset/1083E/generate.py 100000   > codeforces/problemset/1083E/input02.txt
+# python codeforces/problemset/1083E/generate.py 1000000  > codeforces/problemset/1083E/input03.txt
+input*.txt
