@@ -71,7 +71,9 @@ uint32_t reverse32(uint32_t x) {
 }
 
 // DFT / IDFT
-void dft(vector<cd>& f, bool inv) {
+using cd = complex<double>;
+
+void fft(vector<cd>& f, bool inv) {
   int n = f.size();
   int m = 0;
   while ((1 << m) < n) { m++; }
@@ -116,3 +118,36 @@ struct Tensor {
     return data_[flatIndex(idx_t{i...})];
   }
 };
+
+// Modulo
+template<ll Modulo>
+struct ModInt {
+  using mint = ModInt;
+  static constexpr ll modulo = Modulo;
+  ll v;
+  ModInt() : v{0} {}
+  template<class T> ModInt(T x) : v{static_cast<ll>(x)} {}
+  template<class T> operator T() { return static_cast<T>(v); }
+  friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
+
+  mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
+  mint& operator-=(const mint& y) { return *this += (modulo - y.v); }
+  mint& operator*=(const mint& y) { v = ((v * y.v) % modulo); return *this; }
+  mint& operator/=(const mint& y) { return *this *= y.inv(); }
+  friend mint operator+(const mint& x, const mint& y) { return mint(x) += y; }
+  friend mint operator-(const mint& x, const mint& y) { return mint(x) -= y; }
+  friend mint operator*(const mint& x, const mint& y) { return mint(x) *= y; }
+  friend mint operator/(const mint& x, const mint& y) { return mint(x) /= y; }
+  mint inv() const { return pow(modulo - 2); }
+  mint pow(ll e) const {
+    mint x = *this, res = 1;
+    while (e > 0) {
+      if (e & 1) { res *= x; }
+      e >>= 1; x *= x;
+    }
+    return res;
+  }
+};
+
+using mint = ModInt<(ll)1e9 + 7>;
+using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
