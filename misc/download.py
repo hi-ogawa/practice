@@ -1,6 +1,8 @@
 def get_request(url):
     import urllib.request
-    with urllib.request.urlopen(url) as f:
+    req = urllib.request.Request(url)
+    req.add_header('User-agent', 'Mozilla/5.0')
+    with urllib.request.urlopen(req) as f:
         return f.read().decode('utf-8')
 
 
@@ -27,6 +29,22 @@ def parse_atcoder(content):
     return tests
 
 
+def parse_hackerrank(content):
+    import re
+    ls = []
+    if re.search('<code>', content):
+        # Simple test format
+        it = re.finditer('<code>(.*?)</code>', content, re.DOTALL)
+        ls = [m.group(1).strip() for m in it]
+    else:
+        # Complex test format (all lines wrapped by <span>)
+        it = re.finditer('<pre>(.*?)</pre>', content, re.DOTALL)
+        for m in it:
+            mit = re.finditer('<span(.*?)>(.*?)</span>', m.group(1), re.DOTALL)
+            ls.append('\n'.join(mm.group(2) for mm in mit).strip())
+    return list(zip(ls[0::2], ls[1::2]))
+
+
 def get_tests(url):
     import re
     content = get_request(url)
@@ -34,6 +52,8 @@ def get_tests(url):
         tests = parse_codeforces(content)
     elif re.search('atcoder\.jp', url):
         tests = parse_atcoder(content)
+    elif re.search('hackerrank\.com', url):
+        tests = parse_hackerrank(content)
     else:
         raise RuntimeError('Unknown url')
     return tests
