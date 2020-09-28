@@ -127,7 +127,6 @@ struct ModInt {
   ll v;
   ModInt() : v{0} {}
   template<class T> ModInt(T x) : v{static_cast<ll>(x)} {}
-  template<class T> operator T() { return static_cast<T>(v); }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
 
   mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
@@ -138,6 +137,8 @@ struct ModInt {
   friend mint operator-(const mint& x, const mint& y) { return mint(x) -= y; }
   friend mint operator*(const mint& x, const mint& y) { return mint(x) *= y; }
   friend mint operator/(const mint& x, const mint& y) { return mint(x) /= y; }
+  friend bool operator==(const mint& x, const mint& y) { return x.v == y.v; }
+  friend bool operator!=(const mint& x, const mint& y) { return x.v != y.v; }
   mint inv() const { return pow(modulo - 2); }
   mint pow(ll e) const {
     mint x = *this, res = 1;
@@ -146,6 +147,32 @@ struct ModInt {
       e >>= 1; x *= x;
     }
     return res;
+  }
+
+  // Factorial, binomial, inverse
+  static inline vector<mint> _facts, _inv_facts;
+  static void makeFactorials(int n) {
+    _facts.resize(n + 1);
+    _inv_facts.resize(n + 1);
+    _facts[0] = 1;
+    _inv_facts[0] = 1;
+    for (int i = 1; i <= n; i++) {
+      _facts[i] = _facts[i - 1] * mint(i);
+    }
+    _inv_facts[n] = _facts[n].inv();
+    for (int i = n; i >= 1; i--) {
+      _inv_facts[i - 1] = _inv_facts[i] * i;
+    }
+  }
+  static mint fact(int n, bool inv = 0) {
+    assert(!_facts.empty());
+    return inv ? _inv_facts[n] : _facts[n];
+  }
+  static mint binom(int n, int k) {
+    return fact(n) * fact(n - k, 1) * fact(k, 1);
+  }
+  static mint inverse(int n) {
+    return fact(n - 1) * fact(n, 1);
   }
 };
 
