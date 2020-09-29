@@ -1,8 +1,3 @@
-// TODO:
-// - DSU
-// - Segment tree
-// - Suffix array
-// - ...
 
 // Disjoint set union
 struct Dsu {
@@ -71,25 +66,48 @@ uint32_t reverse32(uint32_t x) {
 }
 
 // DFT / IDFT
-using cd = complex<double>;
+template<class T>
+void fft(vector<T>& f, bool inv) {
+  // Precompute roots and their powers
+  static bool first_run = true;
+  constexpr int nb_max = 20;
+  static array<vector<vector<T>>, 2> roots; // roots[inv][b][k] = (2^b root)^k
+  if (first_run) {
+    first_run = false;
+    using TV = typename T::value_type;
+    const TV pi = acos(-1);
+    roots[0].resize(1 << nb_max);
+    roots[1].resize(1 << nb_max);
+    for (int b = 1; b < nb_max; b++) {
+      int l = 1 << b;
+      roots[0][b].resize(l / 2);
+      roots[1][b].resize(l / 2);
+      for (int k = 0; k < l / 2; k++) {
+        TV t = 2.0 * pi * (TV)k / (TV)l;
+        roots[0][b][k] = {cos(t), - sin(t)};
+        roots[1][b][k] = {cos(t), + sin(t)};
+      }
+    }
+  }
 
-void fft(vector<cd>& f, bool inv) {
   int n = f.size();
-  int m = 0;
-  while ((1 << m) < n) { m++; }
+  assert(n <= (1 << nb_max));
+
+  int nb = 0;
+  while ((1 << nb) < n) { nb++; }
   FOR(i, 0, n) {
-    int j = reverse32(i) >> (32 - m);
+    int j = reverse32(i) >> (32 - nb);
     if (i < j) { swap(f[i], f[j]); }
   }
-  for (int l = 2; l <= n; l *= 2) {
-    cd u = exp((inv ? 2i : -2i) * M_PI / (cd)l);
+  for (int lb = 1; lb <= nb; lb++) {
+    int l = 1 << lb;
+    auto& u = roots[inv][lb];
     for (int i = 0; i < n; i += l) {
-      cd z = 1.0;
       for (int k = 0; k < l / 2; k++) {
-        cd& x = f[i + k];
-        cd& y = f[i + k + l / 2];
-        tie(x, y) = make_tuple(x + z * y, x - z * y);
-        z *= u;
+        auto x = f[i + k];
+        auto y = f[i + k + l / 2] * u[k];
+        f[i + k]         = x + y;
+        f[i + k + l / 2] = x - y;
       }
     }
   }
@@ -178,3 +196,11 @@ struct ModInt {
 
 using mint = ModInt<(ll)1e9 + 7>;
 using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
+
+
+// Order statistics tree (cf. https://codeforces.com/blog/entry/11080 by adamant)
+#include <ext/pb_ds/assoc_container.hpp>
+template<class Key, class Compare = less<Key>>
+using ordered_set = __gnu_pbds::tree<
+  Key, __gnu_pbds::null_type, Compare,
+  __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
