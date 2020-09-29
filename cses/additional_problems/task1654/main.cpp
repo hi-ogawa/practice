@@ -1,4 +1,4 @@
-// WIP
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -20,8 +20,12 @@ istream& operator>>(istream& i, T& x) { for (auto& y : x) { i >> y; } return i; 
 }
 
 // Debugging
-#define DD(X) std::cout << #X ": " << (X) << std::endl << std::flush
-#define DD2(X) std::cout << #X ":" << std::endl; for (auto x : (X)) { std::cout << x << std::endl << std::flush; }
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+#define dbg(X) do { if (DEBUG) { cout << #X ": " << (X) << endl << flush; } } while (0)
+#define dbg2(X) do { if (DEBUG) { cout << #X ":" << endl; for (auto& __x : (X)) { cout << __x << endl << flush; } } } while (0)
+#define dbgv(...) do { if (DEBUG) { cout << "(" #__VA_ARGS__ "): " << make_tuple(__VA_ARGS__) << endl << flush; } } while (0)
 namespace std {
 template<class ...Ts>        ostream& operator<<(ostream& o, const tuple<Ts...>& x) { o << "("; apply([&](auto&& y, auto&&... ys){ o << y; ((o << ", " << ys), ...); }, x); o << ")"; return o; }
 template<class T1, class T2> ostream& operator<<(ostream& o, const pair<T1, T2>& x) { o << tie(x.first, x.second); return o; }
@@ -31,60 +35,46 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n; // <= 10^6
+  int n; // [1, 2 x 10^5]
   cin >> n;
-  vector<int> ls(n, 0); // 1 <= x <= 10^6
+  vector<int> ls(n); // [1, 10^6]
   cin >> ls;
 
-  int m = *max_element(ALL(ls));
-  int k = 0; // m < 2^k
-  while ((1 << k) <= m) { k++; }
-  DD(tie(m, k));
+  const int k = 20;
+  const int k_mask = (1 << k) - 1;
 
-  // TODO: Probably, memoized recursion style DP is convinient to enumerate all subsets 2^k
-  vector<int> dp0(m + 1, 0);
-  vector<int> dp1(m + 1, 0);
-  vector<int> dp2(m + 1, 0);
-  vector<int> dp3(m + 1, 0);
-
-  // Single bit
+  // dp[S] = #{i | ls[i] ⊆ S} by "sum over subsets"
+  vector<int> dp(1 << k), dp_neg(1 << k);
   for (auto x : ls) {
-    dp0[x]++;
-    FOR(i, 0, k) {
-      int y = 1 << i;
-      if (x == y) {
-        dp1[y]++;
-      }
-      if (x & y) {
-        dp2[y]++;
-        dp3[y]++;
+    dp[x]++;
+    dp_neg[~x & k_mask]++;
+  }
+  FOR(v, 0, k) {
+    FOR(s, 0, 1 << k) {
+      if (s & (1 << v)) {
+        dp[s] += dp[s ^ (1 << v)];
+        dp_neg[s] += dp_neg[s ^ (1 << v)];
       }
     }
   }
-  DD(dp0);
-  DD(dp1);
-  DD(dp2);
-  DD(dp3);
 
-  // More bits
+  // 1. x ∪ y = x  <=>  y ⊆ x
+  // 2. x ∩ y = x  <=>  x ⊆ y  <=>  ¬y ⊆ ¬x
+  // 3. x ∩ y ≠ ∅  <=>  not(x ∩ y = ∅)  <=>  not(y ⊆ ¬x)
 
-
-  // Results
-  for (auto x : ls) {
-    cout << dp1[x] << " " << dp2[x] << " " << dp3[x] << endl;
+  FOR(i, 0, n) {
+    int x = ls[i], x_neg = ~ls[i] & k_mask;
+    array<int, 3> res = {dp[x], dp_neg[x_neg], n - dp[x_neg]};
+    FOR(j, 0, 3) {
+      cout << res[j] << " \n"[j == 2];
+    }
   }
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
-  // [ Single case ]
   mainCase();
   return 0;
-  // [ Multiple cases ]
-  // int t;
-  // cin >> t;
-  // FOR(i, 0, t) { mainCase(); }
-  // return 0;
 }
 
 /*
