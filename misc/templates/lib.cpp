@@ -74,16 +74,16 @@ void fft(vector<T>& f, bool inv) {
   static array<vector<vector<T>>, 2> roots; // roots[inv][b][k] = (2^b root)^k
   if (first_run) {
     first_run = false;
-    using TV = typename T::value_type;
-    const TV pi = acos(-1);
-    roots[0].resize(1 << nb_max);
-    roots[1].resize(1 << nb_max);
+    using U = typename T::value_type;
+    const U pi = acos(-1);
+    roots[0].resize(nb_max + 1);
+    roots[1].resize(nb_max + 1);
     for (int b = 1; b < nb_max; b++) {
       int l = 1 << b;
       roots[0][b].resize(l / 2);
       roots[1][b].resize(l / 2);
       for (int k = 0; k < l / 2; k++) {
-        TV t = 2.0 * pi * (TV)k / (TV)l;
+        U t = 2.0 * pi * (U)k / (U)l;
         roots[0][b][k] = {cos(t), - sin(t)};
         roots[1][b][k] = {cos(t), + sin(t)};
       }
@@ -142,14 +142,18 @@ template<ll Modulo>
 struct ModInt {
   using mint = ModInt;
   static constexpr ll modulo = Modulo;
-  ll v;
+  uint32_t v;
   ModInt() : v{0} {}
-  template<class T> ModInt(T x) : v{static_cast<ll>(x)} {}
+  template<class T> ModInt(T x) {
+    ll y = (ll)x % modulo;
+    if (y < 0) { y += modulo; }
+    v = y;
+  }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
 
   mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
   mint& operator-=(const mint& y) { return *this += (modulo - y.v); }
-  mint& operator*=(const mint& y) { v = ((v * y.v) % modulo); return *this; }
+  mint& operator*=(const mint& y) { v = (ll)v * y.v % modulo; return *this; }
   mint& operator/=(const mint& y) { return *this *= y.inv(); }
   friend mint operator+(const mint& x, const mint& y) { return mint(x) += y; }
   friend mint operator-(const mint& x, const mint& y) { return mint(x) -= y; }

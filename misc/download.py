@@ -6,6 +6,16 @@ def get_request(url):
         return f.read().decode('utf-8')
 
 
+def get_request_browserless(url):
+    # Cf. https://docs.browserless.io/docs/faq.html#how-can-i-try-out-the-service
+    import urllib.request, urllib.parse, json
+    data = json.dumps(dict(url=url)).encode('utf-8')
+    req = urllib.request.Request('https://chrome.browserless.io/content', data=data)
+    req.add_header('Content-Type', 'application/json')
+    with urllib.request.urlopen(req) as f:
+        return f.read().decode('utf-8')
+
+
 def parse_codeforces(content):
     import re
     it = re.finditer('<pre>(.*?)</pre>', content, re.DOTALL)
@@ -45,15 +55,28 @@ def parse_hackerrank(content):
     return list(zip(ls[0::2], ls[1::2]))
 
 
+def parse_codechef(content):
+    import re
+    # TODO: there seem other patterns (e.g. without <code>)
+    it = re.finditer('<pre(.*?)><code(.*?)>(.*?)</code></pre>', content, re.DOTALL)
+    ls = [m.group(3).strip() for m in it]
+    return list(zip(ls[0::2], ls[1::2]))
+
+
 def get_tests(url):
     import re
-    content = get_request(url)
     if re.search('codeforces\.com', url):
+        content = get_request(url)
         tests = parse_codeforces(content)
     elif re.search('atcoder\.jp', url):
+        content = get_request(url)
         tests = parse_atcoder(content)
     elif re.search('hackerrank\.com', url):
+        content = get_request(url)
         tests = parse_hackerrank(content)
+    elif re.search('codechef\.com', url):
+        content = get_request_browserless(url)
+        tests = parse_codechef(content)
     else:
         raise RuntimeError('Unknown url')
     return tests
