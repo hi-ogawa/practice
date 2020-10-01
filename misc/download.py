@@ -63,6 +63,14 @@ def parse_codechef(content):
     return list(zip(ls[0::2], ls[1::2]))
 
 
+def parse_library_checker(content):
+    import re
+    it = re.finditer('<pre>(.*?)</pre>', content, re.DOTALL)
+    ls = [m.group(1).strip() for m in it]
+    ls.pop(0)
+    return list(zip(ls[0::2], ls[1::2]))
+
+
 def get_tests(url):
     import re
     if re.search('codeforces\.com', url):
@@ -77,6 +85,9 @@ def get_tests(url):
     elif re.search('codechef\.com', url):
         content = get_request_browserless(url)
         tests = parse_codechef(content)
+    elif re.search('judge\.yosupo\.jp', url):
+        content = get_request(url)
+        tests = parse_library_checker(content)
     else:
         raise RuntimeError('Unknown url')
     return tests
