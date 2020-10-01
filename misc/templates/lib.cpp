@@ -149,8 +149,8 @@ struct ModInt {
     if (y < 0) { y += modulo; }
     v = y;
   }
+  friend istream& operator>>(istream& istr,       mint& self) { return istr >> self.v; }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
-
   mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
   mint& operator-=(const mint& y) { return *this += (modulo - y.v); }
   mint& operator*=(const mint& y) { v = (ll)v * y.v % modulo; return *this; }
