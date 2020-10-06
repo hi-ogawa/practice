@@ -161,6 +161,7 @@ struct ModInt {
   friend mint operator/(const mint& x, const mint& y) { return mint(x) /= y; }
   friend bool operator==(const mint& x, const mint& y) { return x.v == y.v; }
   friend bool operator!=(const mint& x, const mint& y) { return x.v != y.v; }
+  mint operator-() const { return mint() - *this; }
   mint inv() const { return pow(modulo - 2); }
   mint pow(ll e) const {
     mint x = *this, res = 1;
@@ -171,30 +172,22 @@ struct ModInt {
     return res;
   }
 
-  // Factorial, binomial, inverse
-  static inline vector<mint> _facts, _inv_facts;
+  // Factorial, binomial
+  static inline vector<mint> facts[2];
   static void makeFactorials(int n) {
-    _facts.resize(n + 1);
-    _inv_facts.resize(n + 1);
-    _facts[0] = 1;
-    _inv_facts[0] = 1;
-    for (int i = 1; i <= n; i++) {
-      _facts[i] = _facts[i - 1] * mint(i);
+    facts[0].assign(n + 1, 1);
+    facts[1].assign(n + 1, 1);
+    for (int i = 2; i <= n; i++) {
+      facts[0][i] = facts[0][i - 1] * i;
     }
-    _inv_facts[n] = _facts[n].inv();
-    for (int i = n; i >= 1; i--) {
-      _inv_facts[i - 1] = _inv_facts[i] * i;
+    facts[1][n] = facts[0][n].inv();
+    for (int i = n - 1; i >= 2; i--) {
+      facts[1][i] = facts[1][i + 1] * (i + 1);
     }
-  }
-  static mint fact(int n, bool inv = 0) {
-    assert(!_facts.empty());
-    return inv ? _inv_facts[n] : _facts[n];
   }
   static mint binom(int n, int k) {
-    return fact(n) * fact(n - k, 1) * fact(k, 1);
-  }
-  static mint inverse(int n) {
-    return fact(n - 1) * fact(n, 1);
+    if (n < k) { return 0; }
+    return facts[0][n] * facts[1][n - k] * facts[1][k];
   }
 };
 
@@ -208,3 +201,32 @@ template<class Key, class Compare = less<Key>>
 using ordered_set = __gnu_pbds::tree<
   Key, __gnu_pbds::null_type, Compare,
   __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
+
+
+// Segment tree for sum
+struct SegmentTree {
+  int n = 1;
+  vector<int> data;
+  SegmentTree(int _n) {
+    while (n < _n) { n *= 2; }
+    data.resize(2 * n);
+  }
+  void set(int qi, int qv) {
+    if (qi >= n) { return; }
+    int j = qi + n;
+    data[j] = qv;
+    while (j > 1) {
+      j /= 2;
+      data[j] = data[2 * j] + data[2 * j + 1];
+    }
+  }
+  int reduce(int ql, int qr) {
+    function<int(int, int, int)> rec = [&](int l, int r, int j) -> int {
+      if (qr <= l || r <= ql) { return 0; }
+      if (ql <= l && r <= qr) { return data[j]; }
+      int m = (l + r) / 2;
+      return rec(l, m, 2 * j) + rec(m, r, 2 * j + 1);
+    };
+    return rec(0, n, 1);
+  }
+};
