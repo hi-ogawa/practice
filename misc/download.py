@@ -65,9 +65,9 @@ def parse_codechef(content):
 
 def parse_library_checker(content):
     import re
+    content = content.split("Sample")[1]
     it = re.finditer('<pre>(.*?)</pre>', content, re.DOTALL)
     ls = [m.group(1).strip() for m in it]
-    ls.pop(0)
     return list(zip(ls[0::2], ls[1::2]))
 
 
@@ -93,30 +93,30 @@ def get_tests(url):
     return tests
 
 
-TEST_FORMAT = """\
+TEST_FORMAT = """
 %%%% begin
 {}
 %%%%
 {}
 %%%% end
-"""
+""".strip()
 
 
-def main(url):
-    print(f":: Downloading... [{url}]")
+def main(url, quiet):
+    if not quiet:
+        print(f":: Downloading... [{url}]")
     tests = get_tests(url)
-    print(f":: Download success")
-    print()
-    for inp, outp in tests:
-        print(TEST_FORMAT.format(inp, outp))
+    if not quiet:
+        print(f":: Download success")
+    print("\n\n".join(TEST_FORMAT.format(x, y) for x, y in tests))
 
 
 def main_cli():
-    import sys, argparse
+    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("url", type=str)
-    args = parser.parse_args()
-    main(**args.__dict__)
+    parser.add_argument("--quiet", action="store_true", default=False)
+    main(**parser.parse_args().__dict__)
 
 
 if __name__ == "__main__":

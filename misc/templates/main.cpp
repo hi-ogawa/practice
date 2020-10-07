@@ -28,26 +28,20 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 
 // Main
 void mainCase() {
-  ll res = 0;
-  cout << res << endl;
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
-  // [ Single case ]
   // mainCase();
   // return 0;
-  // [ Multiple cases ]
-  int t;
-  cin >> t;
-  FOR(i, 0, t) { mainCase(); }
-  return 0;
+  // int t;
+  // cin >> t;
+  // FOR(i, 0, t) { mainCase(); }
+  // return 0;
 }
 
 /*
-python misc/run.py misc/templates/main.cpp --check
+python misc/run.py {{FILE}}
 
-%%%% begin
-%%%%
-%%%% end
+{{TESTS}}
 */
