@@ -5,6 +5,7 @@ import argparse
 import io
 import timeit
 import sys
+import os.path
 
 
 def find_inline_tests(file):
@@ -15,10 +16,27 @@ def find_inline_tests(file):
     return tests
 
 
-def test_cpp(exec_file, name, inp, outp, check, timeout):
+def monitor_memory_usage(proc, mem_info):
+    # Monkey patch "Popen" instance to read /proc/<pid>/status before process exiting
+    # (cf. https://github.com/python/cpython/blob/3.8/Lib/subprocess.py#L1772)
+    method_name = "_remaining_time" # This seems to be a good choice since it's called during "select" loop
+    proc_file = f"/proc/{proc.pid}/status"
+    old_method = getattr(proc, method_name)
+    def new_method(self, *args):
+        if os.path.isfile(proc_file):
+            m = re.search("VmPeak:(.*)", open(proc_file).read())
+            if m:
+                mem_info[0] = m.group(1).strip()
+        old_method(*args)
+    setattr(proc, method_name, new_method.__get__(proc))
+
+
+def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
     proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
+    mem_info = [None]
+    monitor_memory_usage(proc, mem_info)
     try:
         proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"), timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -27,8 +45,10 @@ def test_cpp(exec_file, name, inp, outp, check, timeout):
         print(proc.stdout.read().decode())
         return
     time_end = timeit.default_timer()
-    print(f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}")
+    print(f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}, memory: {mem_info[0]}")
     proc_outp = proc_stdout.decode()
+    if truncate:
+        proc_outp = proc_outp[:truncate] + f" [truncate={truncate}]"
     if proc.returncode != 0:
         print(proc_outp)
         return
@@ -45,9 +65,9 @@ def test_cpp(exec_file, name, inp, outp, check, timeout):
     print(proc_outp)
 
 
-def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
+def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate):
     compiler = "clang++"
-    default_option = "-std=c++17 -Wall -Wextra -Wshadow"
+    default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
     command = f"{compiler} {default_option}"
 
     if debug:
@@ -91,7 +111,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
         for i, (inp, outp) in enumerate(inline_tests):
             if not i in selected:
                 continue
-            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout)
+            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout, truncate)
         return
 
     if test.startswith("file:"):
@@ -99,7 +119,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout):
         infile, outfile = test.split(":") if ":" in test else [test, None]
         inp = open(infile).read()
         outp = open(outfile).read() if outfile else ""
-        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout)
+        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout, truncate)
         return
 
     raise RuntimeError(f"Found unsupported test: {test}")
@@ -120,6 +140,7 @@ def main():
     parser.add_argument("--exec-file", type=str, default="./build/main")
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--timeout", type=float, default=5)
+    parser.add_argument("--truncate", type=int, default=None)
     args = parser.parse_args()
     sys.exit(run_cpp(**args.__dict__))
 
