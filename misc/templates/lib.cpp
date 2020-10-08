@@ -1,12 +1,14 @@
 
 // Disjoint set union
 struct Dsu {
-  vector<int> data_;
-  Dsu(int n) { data_.resize(n); iota(ALL(data_)); }
-  void merge(int dst, int src) { data_[find(src)] = find(dst); }
+  vector<int> ps;
+  Dsu(int n) { ps.resize(n); iota(ALL(ps)); }
   int find(int a) {
-    if (a == data_[a]) { return a; }
-    return data_[a] = find(data_[a]);
+    if (a == ps[a]) { return a; }
+    return ps[a] = find(ps[a]);
+  }
+  void merge(int dst, int src) {
+    ps[find(src)] = find(dst);
   }
 };
 
@@ -137,18 +139,14 @@ struct Tensor {
   }
 };
 
-// Modulo
+// Modulo integer
 template<ll Modulo>
 struct ModInt {
   using mint = ModInt;
   static constexpr ll modulo = Modulo;
   uint32_t v;
   ModInt() : v{0} {}
-  template<class T> ModInt(T x) {
-    ll y = (ll)x % modulo;
-    if (y < 0) { y += modulo; }
-    v = y;
-  }
+  template<class T> ModInt(T x) { ll y = (ll)x % modulo; if (y < 0) { y += modulo; } v = y; }
   friend istream& operator>>(istream& istr,       mint& self) { return istr >> self.v; }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
   mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
@@ -194,6 +192,103 @@ struct ModInt {
 using mint = ModInt<(ll)1e9 + 7>;
 using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
 
+// Number theoretic transform
+template<class mint>
+void fft(vector<mint>& f, bool inv) {
+  // Precomputation on first run
+  static struct Precopute {
+    int nb_lim = 0;
+    array<mint, 2> generator;
+    array<vector<vector<mint>>, 2> roots; // roots[inv][b][k] = (2^b root)^k
+    vector<mint> inverses;
+    Precopute() {
+      findGenerator();
+      findRoots();
+      findInverses();
+    }
+    void findGenerator() {
+      // Factorize "p - 1"
+      int x = mint::modulo - 1;
+      vector<int> ps;
+      for (int p = 2; p * p <= x; p++) {
+        if (x % p == 0) {
+          while (x % p == 0) { x /= p; }
+          ps.push_back(p);
+        }
+      }
+      if (x > 1) { ps.push_back(x); }
+      // Brute force generator
+      bool ok = 0;
+      for (int g = 2; g < mint::modulo; g++) {
+        ok = 1;
+        for (auto p : ps) {
+          if (mint(g).pow((mint::modulo - 1) / p) == 1) { ok = 0; break; }
+        }
+        if (ok) {
+          generator[0] = g;
+          generator[1] = mint(g).inv();
+          break;
+        }
+      }
+      assert(ok);
+    }
+    void findRoots() {
+      while ((mint::modulo - 1) % (1 << nb_lim) == 0) { nb_lim++; }
+      roots[0].resize(nb_lim);
+      roots[1].resize(nb_lim);
+      FOR(b, 1, nb_lim) {
+        int l = 1 << b;
+        roots[0][b].resize(l / 2);
+        roots[1][b].resize(l / 2);
+        mint u0 = generator[0].pow((mint::modulo - 1) / l);
+        mint u1 = generator[1].pow((mint::modulo - 1) / l);
+        mint z0 = 1, z1 = 1;
+        for (int k = 0; k < l / 2; k++) {
+          roots[0][b][k] = z0;
+          roots[1][b][k] = z1;
+          z0 *= u0; z1 *= u1;
+        }
+      }
+    }
+    void findInverses() {
+      inverses.resize(nb_lim);
+      mint inv2 = mint(2).inv();
+      inverses[1] = inv2;
+      FOR(b, 2, nb_lim) { inverses[b] = inverses[b - 1] * inv2; }
+    }
+  } precompute;
+
+  // Usual FFT
+  int n = f.size();
+  if (n == 1) { return; }
+
+  int nb = 0;
+  while ((1 << nb) < n) { nb++; }
+  assert(nb < precompute.nb_lim);
+
+  FOR(i, 0, n) {
+    int j = reverse32(i) >> (32 - nb);
+    if (i < j) { swap(f[i], f[j]); }
+  }
+
+  for (int lb = 1; lb <= nb; lb++) {
+    int l = 1 << lb;
+    auto& u = precompute.roots[inv][lb];
+    for (int i = 0; i < n; i += l) {
+      for (int k = 0; k < l / 2; k++) {
+        mint x = f[i + k];
+        mint y = f[i + k + l / 2] * u[k];
+        f[i + k]         = x + y;
+        f[i + k + l / 2] = x - y;
+      }
+    }
+  }
+
+  if (inv) {
+    mint n_inv = precompute.inverses[nb];
+    for (auto& x : f) { x *= n_inv; }
+  }
+}
 
 // Order statistics tree (cf. https://codeforces.com/blog/entry/11080 by adamant)
 #include <ext/pb_ds/assoc_container.hpp>
