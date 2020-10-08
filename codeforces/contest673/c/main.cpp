@@ -1,4 +1,6 @@
-// TLE, WIP
+// TLE
+
+// NOTE: TLE but the algorithm doesn't even look correct.
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -61,7 +63,7 @@ void mainCase() {
     ms.erase({x, i});
     dbgv(i, x, ms);
     FOR(b, 0, k) {
-      ull lo = x & ((~0U) << (b + 1));
+      ull lo = x & ((~0U) << (b + 1)); // TODO: probably you need to take higher bits into account
       ull mi = lo | (1U << b);
       ull hi = mi + (1U << b);
       if (x & (1 << b)) {
