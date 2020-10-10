@@ -19,6 +19,7 @@ def find_inline_tests(file):
 def monitor_memory_usage(proc, mem_info):
     # Monkey patch "Popen" instance to read /proc/<pid>/status before process exiting
     # (cf. https://github.com/python/cpython/blob/3.8/Lib/subprocess.py#L1772)
+    # TODO: sometimes we get a weird number especially when running debug build (something like "21474904184 kB")
     method_name = "_remaining_time" # This seems to be a good choice since it's called during "select" loop
     proc_file = f"/proc/{proc.pid}/status"
     old_method = getattr(proc, method_name)
@@ -67,7 +68,7 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
 
 def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate):
     compiler = "clang++"
-    default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
+    default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces -fcolor-diagnostics"
     command = f"{compiler} {default_option}"
 
     if debug:

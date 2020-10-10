@@ -146,7 +146,8 @@ struct ModInt {
   static constexpr ll modulo = Modulo;
   uint32_t v;
   ModInt() : v{0} {}
-  template<class T> ModInt(T x) { ll y = (ll)x % modulo; if (y < 0) { y += modulo; } v = y; }
+  template<class T, class = enable_if_t<is_integral_v<T>>>
+  ModInt(T x) { ll y = (ll)x % modulo; if (y < 0) { y += modulo; } v = y; }
   friend istream& operator>>(istream& istr,       mint& self) { return istr >> self.v; }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
   mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
