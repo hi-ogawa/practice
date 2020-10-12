@@ -16,7 +16,7 @@ fi
 
 echo ":: Creating... [$FILE]"
 mkdir -p $(dirname $FILE)
-cp -f $TEMPLATE_MAIN $FILE
+cp -i $TEMPLATE_MAIN $FILE
 perl -pi -e "s#{{FILE}}#$FILE#" $FILE
 
 if [ -n "$URL" ]; then
