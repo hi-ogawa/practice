@@ -3,8 +3,12 @@ def readline_ints():
   return list(map(int, sys.stdin.readline().strip().split()))
 
 
-def main(name, directed, zero_based):
-  n, m = readline_ints()
+def main(name, directed, zero_based, tree):
+  if tree:
+    n = readline_ints()[0]
+    m = n - 1
+  else:
+    n, m = readline_ints()
   edges = [readline_ints() for _ in range(m)]
 
   if zero_based:
@@ -36,6 +40,7 @@ def main_cli():
   parser.add_argument("--name", type=str, default="G")
   parser.add_argument("--directed", action="store_true", default=False)
   parser.add_argument("--zero-based", action="store_true", default=False)
+  parser.add_argument("--tree", action="store_true", default=False)
   main(**parser.parse_args().__dict__)
 
 
