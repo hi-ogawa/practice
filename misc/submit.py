@@ -6,6 +6,7 @@ CF_URL = 'https://codeforces.com'
 
 gHeaders = {
   "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
+  "accept-encoding": "gzip, deflate",
   "cookie": ""
 }
 
@@ -18,11 +19,15 @@ def load_cookie():
 
 
 def do_request(url, form_params=None):
-  import urllib.request, urllib.parse, urllib.error
+  import urllib.request, urllib.parse, urllib.error, zlib
   data = urllib.parse.urlencode(form_params).encode() if form_params else None
   req = urllib.request.Request(url, headers=gHeaders, data=data)
   try:
-    return urllib.request.urlopen(req).read().decode()
+    f = urllib.request.urlopen(req)
+    resp = f.read()
+    if f.headers.get('content-encoding') == 'gzip':
+      resp = zlib.decompress(resp, 16 + zlib.MAX_WBITS)
+    return resp.decode()
   except urllib.error.HTTPError as err:
     print(f":: REQUEST ERROR [{url}]")
     print(err.read().decode())
@@ -71,7 +76,7 @@ def main(file, problem):
     action = 'submitSolutionFormSubmitted')
   do_request(CF_URL + '/problemset/submit', form_params)
 
-  print(':: Monitoring verdict...')
+  print(f":: Monitoring verdict... [{CF_URL + '/problemset/status?my=on'}]")
   import time
   while True:
     res = get_verdict()
