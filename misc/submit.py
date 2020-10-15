@@ -15,6 +15,7 @@ def load_cookie():
   import subprocess
   command = "python misc/cookie_chrome.py codeforces.com --format=header"
   proc = subprocess.run(command.split(), check=True, capture_output=True)
+  assert proc.returncode == 0
   gHeaders['cookie'] = proc.stdout.strip()
 
 
@@ -51,12 +52,25 @@ def get_verdict():
   td_problem = re.search('<td class="status-small" data-problemId(.*?)</td>', tr, re.DOTALL).group(0)
   submission_id = re.search('data-submission-id="(.*?)"', tr).group(1)
   problem = re.search('<a href="(.*?)">(.*?)</a>', td_problem, re.DOTALL).group(2).strip()
-  verdict_match = re.search('submissionVerdict="(.*?)"', tr)
-  verdict = verdict_match.group(1) if verdict_match else '[NOT READY]'
+  status_match = re.search('submissionVerdict="(.*?)"', tr)
+  status = status_match.group(1) if status_match else '----'
+  detail_match = re.search('<span class="submissionVerdictWrapper"(.*?)>(.*?)</span>', tr)
+  detail = re.sub('<(.*?)>', '', detail_match.group(2)) if detail_match else '----'
   time = re.search('<td class="time-consumed-cell">(.*?)</td>', tr, re.DOTALL).group(1).strip().replace('&nbsp;', '')
   memory = re.search('<td class="memory-consumed-cell">(.*?)</td>', tr, re.DOTALL).group(1).strip().replace('&nbsp;', '')
   waiting = re.search('waiting="(.*?)"', tr).group(1) == 'true'
-  return dict(id=submission_id, problem=problem, verdict=verdict, time=time, memory=memory, waiting=waiting)
+  return dict(
+    id=submission_id, problem=problem, status=status, detail=detail,
+    time=time, memory=memory, waiting=waiting)
+
+
+def notify_verdict(verdict):
+  import subprocess
+  summary = f"[{verdict['status']}] {verdict['problem']}"
+  body = str(verdict)
+  command = ["notify-send", summary, body]
+  proc = subprocess.run(command, check=True, capture_output=True)
+  assert proc.returncode == 0
 
 
 def main(file, problem):
@@ -81,8 +95,12 @@ def main(file, problem):
   while True:
     res = get_verdict()
     print(res)
-    if not res['waiting']: break;
-    time.sleep(1)
+    if not res['waiting']:
+      notify_verdict(res)
+      break
+    time.sleep(2)
+
+  print(f":: Finished")
 
 
 def main_cli():
