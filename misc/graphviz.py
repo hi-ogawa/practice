@@ -12,7 +12,7 @@ def main(name, directed, zero_based, tree):
   edges = [readline_ints() for _ in range(m)]
 
   if zero_based:
-    edges = [[x - 1, y - 1] for x, y in edges]
+    edges = [[x - 1, y - 1, *extra] for x, y, *extra in edges]
 
   #
   # Example
@@ -27,8 +27,9 @@ def main(name, directed, zero_based, tree):
 
   res = f"{typ} {name}" + " {\n"
   res += "  node [];" + "".join(f" {i + int(not zero_based)};" for i in range(n)) + "\n"
-  for x, y in edges:
-    res += f"  {x} {sep} {y};\n"
+  for x, y, *extra in edges:
+    label = ', '.join(map(str, extra))
+    res += f"  {x} {sep} {y} [ label = \"{label}\" ];\n"
   res += "}"
 
   print(res)
