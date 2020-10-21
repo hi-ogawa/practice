@@ -35,26 +35,28 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// Modulo integer
 template<ll Modulo>
 struct ModInt {
   using mint = ModInt;
   static constexpr ll modulo = Modulo;
-  int v;
+  uint32_t v;
   ModInt() : v{0} {}
-  template<class T> ModInt(T t) : v{(int)((ll)t % modulo)} {}
-  friend istream& operator>>(istream& istr, mint& self)       { return istr >> self.v; }
+  template<class T, class = enable_if_t<is_integral_v<T>>>
+  ModInt(T x) { ll y = (ll)x % modulo; if (y < 0) { y += modulo; } v = y; }
+  friend istream& operator>>(istream& istr,       mint& self) { return istr >> self.v; }
   friend ostream& operator<<(ostream& ostr, const mint& self) { return ostr << self.v; }
-
-  mint& operator+=(mint o) { v = v + o.v; while (v >= modulo) { v -= modulo; }; return *this; }
-  mint& operator-=(mint o) { return *this += (modulo - o.v); }
-  mint& operator*=(mint o) { v = ((ll)v * o.v) % modulo; return *this; }
-  mint& operator/=(mint o) { return *this *= o.inv(); }
+  mint& operator+=(const mint& y) { v += y.v; while (v >= modulo) { v -= modulo; }; return *this; }
+  mint& operator-=(const mint& y) { return *this += (modulo - y.v); }
+  mint& operator*=(const mint& y) { v = (ll)v * y.v % modulo; return *this; }
+  mint& operator/=(const mint& y) { return *this *= y.inv(); }
   friend mint operator+(const mint& x, const mint& y) { return mint(x) += y; }
   friend mint operator-(const mint& x, const mint& y) { return mint(x) -= y; }
   friend mint operator*(const mint& x, const mint& y) { return mint(x) *= y; }
   friend mint operator/(const mint& x, const mint& y) { return mint(x) /= y; }
   friend bool operator==(const mint& x, const mint& y) { return x.v == y.v; }
   friend bool operator!=(const mint& x, const mint& y) { return x.v != y.v; }
+  mint operator-() const { return mint() - *this; }
   mint inv() const { return pow(modulo - 2); }
   mint pow(ll e) const {
     mint x = *this, res = 1;
@@ -64,37 +66,9 @@ struct ModInt {
     }
     return res;
   }
-
-  // Generator
-  static inline mint generator[2];
-  static void findGenerator() {
-    // Factorize "modulo - 1"
-    ll x = modulo - 1;
-    vector<int> ps;
-    for (int p = 2; p * p <= x; p++) {
-      if (x % p == 0) {
-        ps.push_back(p);
-        while (x % p == 0) { x /= p; }
-      }
-    }
-    if (x > 1) { ps.push_back(x); }
-    // Brute force generator
-    for (int y = 2; y < modulo; y++) {
-      bool ok = 1;
-      for (auto p : ps) {
-        if (mint(y).pow((modulo - 1) / p) == 1) { ok = 0; break; }
-      }
-      if (ok) {
-        generator[0] = mint(y);
-        generator[1] = mint(y).inv();
-        return;
-      }
-    }
-    assert(0);
-  }
 };
 
-// FFT
+// Number theoretic transform
 uint32_t reverse32(uint32_t x) {
   x = ((x & 0x55555555U) <<  1) | ((x & 0xaaaaaaaaU) >>  1); // 0101 = 0x5, 1010 = 0xa
   x = ((x & 0x33333333U) <<  2) | ((x & 0xccccccccU) >>  2); // 0011 = 0x3, 1100 = 0xc
@@ -106,59 +80,98 @@ uint32_t reverse32(uint32_t x) {
 
 template<class mint>
 void fft(vector<mint>& f, bool inv) {
-  // Precompute roots and their powers
-  static bool first_run = true;
-  static array<vector<vector<mint>>, 2> roots; // roots[inv][b][k] = (2^b root)^k
-  static vector<mint> pow2_invs;
-  constexpr int nb_max = 20;
-  if (first_run) {
-    first_run = false;
-    mint::findGenerator();
-    pow2_invs.resize(nb_max + 1);
-    roots[0].resize(nb_max + 1);
-    roots[1].resize(nb_max + 1);
-    for (int b = 1; b <= nb_max; b++) {
-      int l = 1 << b;
-      pow2_invs[b] = mint(1 << b).inv();
-      roots[0][b].resize(l / 2);
-      roots[1][b].resize(l / 2);
-      mint u0 = mint::generator[0].pow((mint::modulo - 1) / l);
-      mint u1 = mint::generator[1].pow((mint::modulo - 1) / l);
-      mint z0 = 1, z1 = 1;
-      for (int k = 0; k < l / 2; k++) {
-        roots[0][b][k] = z0;
-        roots[1][b][k] = z1;
-        z0 *= u0;
-        z1 *= u1;
+  // Precomputation on first run
+  static struct Precopute {
+    int nb_lim = 0;
+    array<mint, 2> generator;
+    array<vector<vector<mint>>, 2> roots; // roots[inv][b][k] = (2^b root)^k
+    vector<mint> inverses;
+    Precopute() {
+      findGenerator();
+      findRoots();
+      findInverses();
+    }
+    void findGenerator() {
+      // Factorize "p - 1"
+      int x = mint::modulo - 1;
+      vector<int> ps;
+      for (int p = 2; p * p <= x; p++) {
+        if (x % p == 0) {
+          while (x % p == 0) { x /= p; }
+          ps.push_back(p);
+        }
+      }
+      if (x > 1) { ps.push_back(x); }
+      // Brute force generator
+      bool ok = 0;
+      for (int g = 2; g < mint::modulo; g++) {
+        ok = 1;
+        for (auto p : ps) {
+          if (mint(g).pow((mint::modulo - 1) / p) == 1) { ok = 0; break; }
+        }
+        if (ok) {
+          generator[0] = g;
+          generator[1] = mint(g).inv();
+          break;
+        }
+      }
+      assert(ok);
+    }
+    void findRoots() {
+      while ((mint::modulo - 1) % (1 << nb_lim) == 0) { nb_lim++; }
+      roots[0].resize(nb_lim);
+      roots[1].resize(nb_lim);
+      FOR(b, 1, nb_lim) {
+        int l = 1 << b;
+        roots[0][b].resize(l / 2);
+        roots[1][b].resize(l / 2);
+        mint u0 = generator[0].pow((mint::modulo - 1) / l);
+        mint u1 = generator[1].pow((mint::modulo - 1) / l);
+        mint z0 = 1, z1 = 1;
+        for (int k = 0; k < l / 2; k++) {
+          roots[0][b][k] = z0;
+          roots[1][b][k] = z1;
+          z0 *= u0; z1 *= u1;
+        }
       }
     }
-  }
+    void findInverses() {
+      inverses.resize(nb_lim);
+      mint inv2 = mint(2).inv();
+      inverses[1] = inv2;
+      FOR(b, 2, nb_lim) { inverses[b] = inverses[b - 1] * inv2; }
+    }
+  } precompute;
 
+  // Usual FFT
   int n = f.size();
-  assert(n <= (1 << nb_max));
   if (n == 1) { return; }
 
   int nb = 0;
   while ((1 << nb) < n) { nb++; }
+  assert(nb < precompute.nb_lim);
+
   FOR(i, 0, n) {
     int j = reverse32(i) >> (32 - nb);
     if (i < j) { swap(f[i], f[j]); }
   }
+
   for (int lb = 1; lb <= nb; lb++) {
     int l = 1 << lb;
-    auto& u = roots[inv][lb];
+    auto& u = precompute.roots[inv][lb];
     for (int i = 0; i < n; i += l) {
       for (int k = 0; k < l / 2; k++) {
-        auto x = f[i + k];
-        auto y = f[i + k + l / 2] * u[k];
+        mint x = f[i + k];
+        mint y = f[i + k + l / 2] * u[k];
         f[i + k]         = x + y;
         f[i + k + l / 2] = x - y;
       }
     }
   }
+
   if (inv) {
-    mint inv_n = pow2_invs[nb];
-    for (auto& x : f) { x *= inv_n; }
+    mint n_inv = precompute.inverses[nb];
+    for (auto& x : f) { x *= n_inv; }
   }
 }
 
@@ -258,7 +271,7 @@ int main() {
 }
 
 /*
-python misc/run.py library_checker/convolution_mod_1000000007/main.cpp --check
+python misc/run.py library_checker/convolution_mod_1000000007/main_v4.cpp --check
 
 %%%% begin
 4 5

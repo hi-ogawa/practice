@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,68 +35,32 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
-  vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  int n, m; // [1, 5000]
+  cin >> n >> m;
+  vector<array<int, 2>> ls(n);
+  cin >> ls;
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
+  // Segment costs
+  vector<vector<ll>> costs(n, vector<ll>(n + 1));
+  // TODO
+
+  // DP divide conquer
+  vector<vector<ll>> dp(m + 1, vector<ll>(n));
+
+  function<void(int, int, int, int)> runDP = [](
+      int i, int j0, int j1, int k0, int k1) {
+    // int j = (j0 + j1) / 2;
+    // j0, j
+    // j, j1
+    // runDP(i);
   };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
-
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
-
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
-
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
-    }
-
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
+  FOR(i, 2, m + 1) {
+    runDP(i, 0, n, 0, n);
   }
 
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
-  }
-
-  for (auto x : res) { cout << x << endl; }
+  ll res = dp[m][n - 1];
+  cout << res << endl;
 }
 
 int main() {
@@ -106,17 +70,35 @@ int main() {
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py hackerrank/challenges/mining/main.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
+3 1
+20 1
+30 1
+40 1
 %%%%
-2
-1
-2
+20
+%%%% end
+
+%%%% begin
+3 1
+11 3
+12 2
+13 1
+%%%%
+4
+%%%% end
+
+%%%% begin
+6 2
+10 15
+12 17
+16 18
+18 13
+30 10
+32 1
+%%%%
+182
 %%%% end
 */

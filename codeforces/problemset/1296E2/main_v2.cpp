@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,68 +35,64 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
-  vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  int n; // [1, 2x10^5]
+  cin >> n;
+  string s;
+  cin >> s;
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
-  };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
+  const int k = 26;
+  vector<list<int>> ps(k);
+  FOR(i, 0, n) {
+    ps[s[i] - 'a'].push_back(i);
+  }
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
+  list<int> ls(n);
+  iota(ALL(ls), 0);
+  reverse(ALL(ls));
 
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
-
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
-
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
+  // Resolve inversion from small characters on the tail
+  vector<int> res(n, -1);
+  function<void(int, int, int)> dfs = [&](int t, int i, int c) {
+    for (; it != ls.end(); ) {
+      int j = *it;
+      assert(res[j] == -1);
+      int tj = s[j] - 'a';
+      if (tj <= t) {
+        res[j] = c;
+        it = ls.erase(it);
+        continue;
+      }
+      // tj > t
+      res[j] = c + 1;
+      it = ls.erase(it);
+      dfs(it, tj, c + 1);
     }
+  };
 
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
+  for (auto it = ls.begin(); it != ls.end(); ) {
+    int i = *it;
+    assert(res[i] == -1);
+    res[i] = 0;
+    it = ls.erase(it);
+    int t = s[i] - 'a';
+    dfs(it, t, 0);
   }
 
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
+  if (DEBUG) {
+    FOR(i, 0, n) {
+      cout << setfill(' ') << setw(2) << (int)(s[i] - 'a') << " \n"[i == n - 1];
+    }
+    FOR(i, 0, n) {
+      cout << setfill(' ') << setw(2) << res[i] << " \n"[i == n - 1];
+    }
+    return;
   }
 
-  for (auto x : res) { cout << x << endl; }
+  int res2 = *max_element(ALL(res));
+  cout << (res2 + 1) << endl;
+  FOR(i, 0, n) {
+    cout << (res[i] + 1) << " \n"[i == n - 1];
+  }
 }
 
 int main() {
@@ -106,17 +102,55 @@ int main() {
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py codeforces/problemset/1296E2/main_v2.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
+23
+zywmerhahxlqsjekpqsdqxn
+%%%%
+%%%% end
+
+%%%% begin
+28
+zywmerhahxlqsjekpqsdqxnjiduy
+%%%%
+%%%% end
+
+%%%% begin
+200
+zywmerhahxlqsjekpqsdqxnjiduyjrytswiweohctztgpiorwimhjmdfofqynyggcrtzslbyvkuvqrsgwyacyvcuathplliwwshusluiqwuhutnzwvuchfedhwwfdzizltdxibtsaocpnqezstblgkfdcvfsjjyzwalkksumsaljqljmmkcyejwwdkolmcgmodoiclte
+%%%%
+%%%% end
+
+%%%% begin
+9
+abacbecfd
 %%%%
 2
-1
+1 1 2 1 2 1 2 1 2
+%%%% end
+
+%%%% begin
+8
+aaabbcbb
+%%%%
 2
+1 2 1 2 1 2 1 1
+%%%% end
+
+%%%% begin
+7
+abcdedc
+%%%%
+3
+1 1 1 1 1 2 3
+%%%% end
+
+%%%% begin
+5
+abcde
+%%%%
+1
+1 1 1 1 1
 %%%% end
 */

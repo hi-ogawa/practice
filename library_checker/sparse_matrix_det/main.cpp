@@ -1,4 +1,4 @@
-// AC
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -63,36 +63,74 @@ struct ModInt {
 
 using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
 
+// Compressed sparse row format (see scipy.sparse.csr_matrix for the convention)
+struct MatrixCSR {
+  int n, nz;
+  vector<int> indices, indptr;
+  vector<mint> data;
+
+  MatrixCSR(int _n, vector<array<int, 3>>& coo) {
+    n = _n;
+    nz = coo.size();
+    indices.resize(n + 1);
+    indptr.resize(nz);
+    data.resize(nz);
+    sort(ALL(coo));
+    int i0 = 0, p = 0;
+    for (auto [i, j, d] : coo) {
+      while (i0 < i) { indices[++i0] = p; }
+      indptr[p] = j;
+      data[p] = d;
+      p++;
+    }
+    while (i0 < n) { indices[++i0] = p; }
+    dbg(indices, indptr, data);
+  }
+
+  // TOOD:
+  //   - preprocess to reduce non-zero entry? (e.g. sort rows by non-zero count)
+  //   - I feel worst case there can be n^2 non zero elements...
+  mint determinant() {
+    mint res = 1;
+    vector<int> cnts(n); // Count processed elements for each row
+    auto is_zero = [&](int i, int j) {
+      data[cnts[i]]
+      return cnts[i] == indices[i + 1] ||
+    };
+
+    FOR(i, 0, n) {
+      // Find pivot
+      if (cnts[i] == indices[i + 1]) { // i.e. m[i][i] == 0
+        int p = -1;
+        FOR(k, i + 1, n) {
+          // ps[k]
+          // if ()
+        }
+        if (p == -1) { res = 0; break; } // Singular
+        if (p != )
+        // ps[k]
+      }
+      // Clear rows
+      FOR(k, i + 1, n) {
+        if (cnts[i] < indices[i + 1]) { // i.e. m[k][i] != 0
+          // mint c =
+        }
+      }
+    }
+    return res;
+  }
+};
+
 // Main
 void mainCase() {
-  int n; // [1, 500]
-  cin >> n;
-  vector<vector<mint>> m(n, vector<mint>(n));
-  cin >> m;
+  int n, nz;
+  cin >> n >> nz;
+  vector<array<int, 3>> coo(nz); // Coordinate format
+  cin >> coo;
 
-  mint res = 1;
-  FOR(i, 0, n) {
-    // Find pivot
-    if (m[i][i] == 0) {
-      int p = -1;
-      FOR(k, i + 1, n) {
-        if (m[k][i] != 0) { p = k; break; }
-      }
-      if (p == -1) { res = 0; break; } // Singular
-      // Permute rows m[i][...] and m[p][...]
-      res *= -1;
-      FOR(j, i, n) { swap(m[i][j], m[p][j]); }
-    }
-    res *= m[i][i]; // Diagonal of upper triangle
-    // Clear rows
-    FOR(k, i + 1, n) {
-      mint c = m[k][i] / m[i][i];
-      FOR(j, i, n) {
-        m[k][j] -= c * m[i][j];
-      }
-    }
-  }
-  cout << res << endl;
+  auto csr = MatrixCSR(n, coo);
+  // mint res = csr.determinant();
+  // cout << res << endl;
 }
 
 int main() {
@@ -102,31 +140,21 @@ int main() {
 }
 
 /*
-python misc/run.py library_checker/matrix_det/main.cpp --check
+python misc/run.py library_checker/sparse_matrix_det/main.cpp --check
 
 %%%% begin
-3
-3 1 4
-1 5 9
-2 6 5
+3 3
+0 0 1
+1 1 2
+2 2 3
 %%%%
-998244263
+6
 %%%% end
 
 %%%% begin
-3
-1 2 3
-4 5 6
-7 8 9
+3 1
+0 0 1
 %%%%
 0
-%%%% end
-
-%%%% begin
-2
-0 1
-1 0
-%%%%
-998244352
 %%%% end
 */

@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,70 +33,60 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// Segment tree for bitwise OR
+struct SegmentTree {
+  int n_ = 1;
+  vector<int> data_;
+  SegmentTree(int n) {
+    while (n_ < n) { n_ *= 2; }
+    data_.resize(2 * n_);
+  }
+  void set(int qi, int qv) {
+    int j = qi + n_;
+    data_[j] = qv;
+    while (j > 1) {
+      j /= 2;
+      data_[j] = data_[2 * j] | data_[2 * j + 1];
+    }
+  }
+  int reduce(int ql, int qr) {
+    function<int(int, int, int)> _reduce = [&](int l, int r, int j) -> int {
+      if (r <= ql || qr <= l) { return 0; }
+      if (ql <= l && r <= qr) { return data_[j]; }
+      int v0 = _reduce(l, (l + r) / 2, 2 * j);
+      int v1 = _reduce((l + r) / 2, r, 2 * j + 1);
+      return v0 | v1;
+    };
+    return _reduce(0, n_, 1);
+  }
+};
+
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
-  vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  int n; // [1, 2x10^5]
+  cin >> n;
+  string s;
+  cin >> s;
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
-  };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
+  // Segment tree to find inversion
+  SegmentTree tree(n);
+  FOR(i, 0, n) {
+    tree.set(i, 1 << (s[i] - 'a'));
+  }
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
+  const int k = 26;
+  vector<vector<bool>> adj(k, vector<bool>(k));
 
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
-
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
-
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
+  FOR(i, 1, n) {
+    int x = tree.reduce(0, i);
+    int b0 = s[i] - 'a';
+    FOR(b, b0 + 1, k) {
+      if (x & (1 << b)) {
+        adj[b0][b] = 1;
+      }
     }
-
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
   }
-
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
-  }
-
-  for (auto x : res) { cout << x << endl; }
+  dbg2(adj);
 }
 
 int main() {
@@ -106,17 +96,43 @@ int main() {
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py codeforces/problemset/1296E2/main_v3.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
+4
+dacb
+%%%%
+%%%% end
+
+%%%% begin
+9
+abacbecfd
 %%%%
 2
-1
+1 1 2 1 2 1 2 1 2
+%%%% end
+
+%%%% begin
+8
+aaabbcbb
+%%%%
 2
+1 2 1 2 1 2 1 1
+%%%% end
+
+%%%% begin
+7
+abcdedc
+%%%%
+3
+1 1 1 1 1 2 3
+%%%% end
+
+%%%% begin
+5
+abcde
+%%%%
+1
+1 1 1 1 1
 %%%% end
 */

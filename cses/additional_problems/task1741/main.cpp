@@ -35,8 +35,8 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 // Segment tree for vertical union size (with quite sketchy lazy system)
 struct SegmentTree {
   int depth_ = 0;
-  vector<ll> data_; // non-zero segment size
-  vector<ll> req_; // increment request
+  vector<int> data_; // non-zero segment size
+  vector<int> req_; // increment request
 
   SegmentTree(int n) {
     while ((1 << depth_) < n) { depth_++; }
@@ -48,54 +48,54 @@ struct SegmentTree {
   int right(int j) { return 2 * j + 2; }
   int index(int qi) { return (1 << depth_) - 1 + qi; }
 
-  void merge(ll qv, int j) { // Merge request
+  void merge(int qv, int j) { // Merge request
     req_[j] += qv;
   }
 
   void propagate(int j) { // Propagate request
-    ll v = req_[j];
+    int v = req_[j];
     merge(v, left(j));
     merge(v, right(j));
     req_[j] = 0;
   }
 
   // TODO: probably this relies on the fact that all "add request" is countered by "sub request"
-  ll value(int l, int r, int j) { // Value with resolving request if negative
+  int value(int l, int r, int j) { // Value with resolving request if negative
     if (req_[j] < 0) {
       // TODO: this makes it not really "lazy" segment tree system (i.e. probably not "log(n)" query)
       propagate(j);
-      ll v1 = value(l, (l + r) / 2, left(j));
-      ll v2 = value((l + r) / 2, r, right(j));
+      int v1 = value(l, (l + r) / 2, left(j));
+      int v2 = value((l + r) / 2, r, right(j));
       return data_[j] = v1 + v2;
     }
     return req_[j] > 0 ? (r - l) : data_[j];
   }
 
   // @returns (l, r)-nonzero-size
-  ll _incr(int ql, int qr, ll qv, int l, int r, int j) {
+  int _incr(int ql, int qr, int qv, int l, int r, int j) {
     if (qr <= l || r <= ql) { return value(l, r, j); }
     if (ql <= l && r <= qr) { merge(qv, j); return value(l, r, j); }
     propagate(j);
-    ll v1 = _incr(ql, qr, qv, l, (l + r) / 2, left(j));
-    ll v2 = _incr(ql, qr, qv, (l + r) / 2, r, right(j));
+    int v1 = _incr(ql, qr, qv, l, (l + r) / 2, left(j));
+    int v2 = _incr(ql, qr, qv, (l + r) / 2, r, right(j));
     return data_[j] = v1 + v2;
   }
 
-  void incr(int ql, int qr, ll qv) {
+  void incr(int ql, int qr, int qv) {
     _incr(ql, qr, qv, 0, (1 << depth_), 0);
   }
 
-  // @returns ((ql, qr)-nonzero, (l, r)-nonzero)
-  tuple<ll, ll> _reduce(int ql, int qr, int l, int r, int j) {
-    if (qr <= l || r <= ql) { return {0, value(l, r, j)}; }
-    if (ql <= l && r <= qr) { return {value(l, r, j), value(l, r, j)}; }
+  int _reduce(int ql, int qr, int l, int r, int j) {
+    if (qr <= l || r <= ql) { return 0; }
+    if (ql <= l && r <= qr) { return value(l, r, j); }
     propagate(j);
-    auto [u1, v1] = _reduce(ql, qr, l, (l + r) / 2, left(j));
-    auto [u2, v2] = _reduce(ql, qr, (l + r) / 2, r, right(j));
-    return {u1 + u2, data_[j] = v1 + v2};
+    int v1 = _reduce(ql, qr, l, (l + r) / 2, left(j));
+    int v2 = _reduce(ql, qr, (l + r) / 2, r, right(j));
+    return v1 + v2;
   }
-  ll reduce(int ql, int qr) {
-    return get<0>(_reduce(ql, qr, 0, (1 << depth_), 0));
+
+  int reduce(int ql, int qr) {
+    return _reduce(ql, qr, 0, (1 << depth_), 0);
   }
 };
 

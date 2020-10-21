@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WA
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,68 +35,47 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
-  vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  int n, d, m;
+  cin >> n >> d >> m;
+  vector<ll> ls(n);
+  cin >> ls;
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
-  };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
+  // Partition
+  sort(ALL(ls));
+  auto ls_part = upper_bound(ALL(ls), m);
+  vector<ll> ls1(ls.begin(), ls_part);
+  vector<ll> ls2(ls_part, ls.end());
+  int n1 = ls1.size(), n2 = ls2.size();
+  reverse(ALL(ls2));
+  dbg(ls1);
+  dbg(ls2);
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
+  // Cumsum
+  vector<ll> ps1(n1 + 1), ps2(n2 + 1);
+  FOR(i, 0, n1) { ps1[i + 1] = ps1[i] + ls1[i]; }
+  FOR(i, 0, n2) { ps2[i + 1] = ps2[i] + ls2[i]; }
+  dbg(ps1);
+  dbg(ps2);
 
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
+  if (n2 == 0) { cout << ps1[n1] << endl; return; }
 
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
-
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
-    }
-
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
+  // Replace "c.d" from ls1 with "c" from ls2
+  int c_res = 0;
+  int c1 = min(n1 / d, n2 - 1);
+  FOR(c, 1, c1 + 1) {
+    ll a = ps1[c * d]; // smaller "c.d"
+    ll b = ps2[c + 1] - ps2[1]; // larger "c" except largest
+    if (a >= b) { break; }
+    c_res = c;
   }
+  dbg(c_res);
 
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
-  }
+  // TODO: can do something about "left over ls1" even if not "d" block
 
-  for (auto x : res) { cout << x << endl; }
+  ll res = 0;
+  res += ps1[n1] - ps1[c_res * d];
+  res += ps2[c_res + 1];
+  cout << res << endl;
 }
 
 int main() {
@@ -106,17 +85,19 @@ int main() {
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py codeforces/problemset/1394A/main.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
+5 2 11
+8 10 15 23 5
 %%%%
-2
-1
-2
+48
+%%%% end
+
+%%%% begin
+20 2 16
+20 5 8 2 18 16 2 16 16 1 5 16 2 13 6 16 4 17 21 7
+%%%%
+195
 %%%% end
 */

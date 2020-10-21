@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WA
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,70 +33,60 @@ template<class T, enable_if_t<is_container<T>::value, int> = 0>
 ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin(); it != x.end(); it++) { if (it != x.begin()) { o << ", "; } o << *it; } o << "}"; return o; }
 }
 
+// Z function
+vector<int> makeZ(const string& s) {
+  int n = s.size();
+  vector<int> z(n);
+  FOR(i, 1, n) {
+    while (i + z[i] < n && s[i + z[i]] == s[i]) { z[i]++; }
+  }
+  return z;
+}
+
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
-  vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  int n; // [1, 1000]
+  cin >> n;
+  string s;
+  cin >> s;
+  int m = s.size(); // [1, 100]
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
-  };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
+  const int k = 26; // A..Z
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
+  auto z = makeZ(s);
+  dbg(z);
 
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
-
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
-
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
+  const ll modulo = 1e9 + 7;
+  auto add = [&](ll x, ll y) { return (x + y) % modulo; };
+  auto sub = [&](ll x, ll y) { return add(x, - y + modulo); };
+  auto mul = [&](ll x, ll y) { return (x * y) % modulo; };
+  auto pow = [&](ll x, ll e) {
+    ll y = 1;
+    while (e) {
+      if (e & 1) { y = mul(y, x); }
+      e >>= 1; x = mul(x, x);
     }
+    return y;
+  };
 
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
+  ll res = 0;
+  FOR(i, 0, n - m + 1) {
+    // Count strings having "s" starting from "i"
+    ll pref = pow(k, i);
+    ll suff = pow(k, n - m - i);
+    FOR(j, 1, i + 1) {
+      // Subtract double couting
+      // TODO: this does double subtraction...
+      if (j >= m) {
+        pref = sub(pref, pow(k, i - m));
+      } else if (z[j] == m - j) {
+        pref = sub(pref, pow(k, i - j));
+      }
+    }
+    dbgv(i, n - m - i, pref, suff);
+    res = add(res, mul(pref, suff));
   }
-
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
-  }
-
-  for (auto x : res) { cout << x << endl; }
+  cout << res << endl;
 }
 
 int main() {
@@ -106,17 +96,25 @@ int main() {
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py cses/string_algorithms/task1112/main.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
+4
+AA
 %%%%
-2
-1
-2
+%%%% end
+
+%%%% begin
+6
+AA
+%%%%
+2212651
+%%%% end
+
+%%%% begin
+6
+ABCDB
+%%%%
+52
 %%%% end
 */

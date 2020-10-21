@@ -1,4 +1,4 @@
-// AFTER EDITORIAL, TLE
+// WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -35,88 +35,110 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; for (auto it = x.begin()
 
 // Main
 void mainCase() {
-  int n, nq; // [1, 10^5]
-  cin >> n >> nq;
+  int n, x, y;
+  cin >> n >> x >> y;
   vector<int> ls(n);
-  vector<array<int, 2>> qs(nq);
-  cin >> ls >> qs;
-  for (auto& [_x, y] : qs) { y++; }
+  cin >> ls;
 
-  // int m = sqrt(n);
-  const int m = 512; // sqrt(10 ^ 5) ~ 300
-  auto compare = [&](auto x, auto y) {
-    x[0] /= m; y[0] /= m; return x < y;
-  };
-  vector<int> order(nq);
-  iota(ALL(order), 0);
-  sort(ALL(order), [&](auto x, auto y) { return compare(qs[x], qs[y]); });
+  // n = x + z + w
+  // x : exact match
+  // z : shuffle
+  // w : set to unused color
+  int w = n - y;
+  int z = y - x;
+  int m = z + w;
+  dbgv(n, x, z, w);
 
-  vector<int> res(nq);
-  int l = m, r = m; // [l, r)
-  int max_freq = 0;
-  vector<int> freqs(*max_element(ALL(ls)) + 1);
+  vector<int> cnts(n + 2);
+  for (auto c : ls) { cnts[c]++; }
 
-  FOR(qii, 0, nq) {
-    int qi = order[qii];
-    auto [ql, qr] = qs[qi];
+  set<tuple<int, int>> heap; // (count, color)
+  FOR(i, 0, n + 2) { heap.insert({cnts[i], i}); }
+  dbg(heap);
 
-    // Handle small block later by brute force
-    if (ql / m == qr / m) { continue; }
+  // TODO: trivial case
+  if (x == n) { return; }
 
-    // Otherwise, we can split to [ql, ll) + [ll, qr)
-    int ll = ((ql / m) + 1) * m;
-
-    // Reset state when left block changes
-    if (l < ll) {
-      fill(ALL(freqs), 0); // (hit at most n / m times)
-      max_freq = 0;
-      l = ll; r = ll;
-    }
-
-    // Update state [ll, r) -> [ll, qr)
-    assert(r <= qr);
-    FOR(i, r, qr) { max_freq = max(max_freq, ++freqs[ls[i]]); }
-    r = qr;
-
-    // Add up [ql, ll) by brute force
-    int t = max_freq;
-    FOR(i, ql, ll) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, ll) { freqs[ls[i]]--; }
-    res[qi] = t;
+  // Remove "x" from heap (correct position)
+  FOR(_, 0, x) {
+    auto [cnt, i] = *--heap.end(); heap.erase(--heap.end());
+    heap.insert({cnt - 1, i});
   }
+  dbg(heap);
 
-  // Take care smalls blocks
-  fill(ALL(freqs), 0);
-  FOR(qi, 0, nq) {
-    auto [ql, qr] = qs[qi];
-    if (ql / m != qr / m) { continue; }
-    int t = 0;
-    FOR(i, ql, qr) { t = max(t, ++freqs[ls[i]]); }
-    FOR(i, ql, qr) { freqs[ls[i]]--; }
-    res[qi] = t;
-  }
+  // TODO: Derive possible max shuffle
+  int max_shuffle = 0;
 
-  for (auto x : res) { cout << x << endl; }
+  // // Remove "w" from heap
+  // FOR(_, 0, w) {
+  //   auto [cnt, i] = *--heap.end(); heap.erase(--heap.end());
+  //   heap.insert({cnt - 1, i});
+  // }
+  // dbg(heap);
+
+  // // Check "z" shuffle is possible
+  // bool ok = (z - w) >= 2 * get<0>(*--heap.end());
+  // dbg(ok);
 }
 
 int main() {
   ios_base::sync_with_stdio(0); cin.tie(0);
-  mainCase();
+  // [ Single case ]
+  // mainCase();
+  // return 0;
+  // [ Multiple cases ]
+  int t;
+  cin >> t;
+  FOR(i, 0, t) { mainCase(); }
   return 0;
 }
 
 /*
-python misc/run.py spoj/FREQ2/main_v2.cpp --check
+python misc/run.py codeforces/problemset/1382E/main.cpp --check
 
 %%%% begin
-5 3
-1 2 1 3 3
-0 2
-1 2
-0 4
-%%%%
-2
 1
-2
+6 0 3
+1 2 2 2 2 2
+%%%%
+%%%% end
+
+%%%% begin
+1
+5 3 4
+1 1 2 1 2
+%%%%
+%%%% end
+
+%%%% begin
+7
+5 2 4
+3 1 1 2 5
+5 3 4
+1 1 2 1 2
+4 0 4
+5 5 3 3
+4 1 4
+2 3 2 3
+6 1 2
+3 2 1 1 1 1
+6 2 4
+3 3 2 1 1 1
+6 2 6
+1 1 3 2 1 1
+%%%%
+YES
+3 1 6 1 2
+YES
+3 1 1 1 2
+YES
+3 3 5 5
+NO
+YES
+4 4 4 4 3 1
+YES
+3 1 3 1 7 7
+YES
+2 3 1 1 1 1
 %%%% end
 */
