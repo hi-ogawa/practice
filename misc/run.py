@@ -28,7 +28,7 @@ def monitor_memory_usage(proc, mem_info):
             m = re.search("VmPeak:(.*)", open(proc_file).read())
             if m:
                 mem_info[0] = m.group(1).strip()
-        old_method(*args)
+        return old_method(*args)
     setattr(proc, method_name, new_method.__get__(proc))
 
 
