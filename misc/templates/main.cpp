@@ -4,7 +4,7 @@
 using namespace std;
 
 #define ALL(X) (X).begin(), (X).end()
-#define FOR(I, X, Y) for (int I = (X); I < (Y); I++)
+#define FOR(I, X, Y) for (decltype(Y) I = (X); I < (Y); ++I)
 using ll = int64_t;
 using ull = uint64_t;
 namespace std {
