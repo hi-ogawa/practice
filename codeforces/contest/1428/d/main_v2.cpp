@@ -1,4 +1,4 @@
-// WA
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -33,65 +33,75 @@ void mainCase() {
   vector<int> ls(n); // [0, 3]
   cin >> ls;
 
-  array<vector<int>, 4> src, dst;
+  //
+  // Try to pair "src" and "dst" (note that one element can be both "src" and "dst")
+  //   "1"
+  //
+  //   "2" -> "1"
+  //
+  //   "3" -> "1"
+  //       -> "2"
+  //       -> '3
+  //
+
+  vector<array<int, 2>> events; // (x, 0/1/2)
   FOR(i, 0, n) {
-    src[ls[i]].push_back(i);
+    events.push_back({i, ls[i]});
   }
-  dst = src;
+  sort(ALL(events));
+  reverse(ALL(events));
 
   int row = n - 1;
-  vector<array<int, 2>> res;
-  map<int, int> res_map;
+  map<int, vector<int>> res;
+  array<vector<int>, 4> dst;
+  bool ok = 1;
 
-  auto solve = [&]() -> bool {
-    FOR(i, 1, 4) { reverse(ALL(src[i])); }
-
-    // Handle "1"
-    for (auto i : src[1]) {
-      res.push_back({row, i});
-      res_map[i] = row;
+  for (auto [x, t] : events) {
+    dbg(x, t);
+    if (t == 1) {
+      if (row < 0) { ok = 0; break; }
+      res[x].push_back(row);
       row--;
+      dst[1].push_back(x);
     }
 
-    // TODO: "2" cannot always take right most "1" available (e.g. when "2 1 3 1")
-
-    // Handle "2" -> "1"
-    for (auto i : src[2]) {
-      if (dst[1].empty()) { return 0; }
-      int j = dst[1].back(); dst[1].pop_back();
-      if (j <= i) { return 0; }
-      assert(res_map.count(j));
-      int r = res_map[j];
-      res.push_back({r, i});
-      res_map[i] = r;
+    if (t == 2) {
+      // Find 1 on the right
+      if (dst[1].empty()) { ok = 0; break; }
+      int x2 = dst[1].back(); dst[1].pop_back();
+      int r = res[x2].back();
+      res[x].push_back(r);
+      dst[2].push_back(x);
     }
 
-    // Handle "3" -> "1", "2", "3"
-    set<int> dst_rest;
-    for (auto i : dst[1]) { dst_rest.insert(i); }
-    for (auto i : dst[2]) { dst_rest.insert(i); }
-
-    for (auto i : src[3]) {
-      if (dst_rest.empty()) { return 0; }
-      int j = *dst_rest.rbegin(); dst_rest.erase(j);
-      if (j <= i) { return 0; }
-      if (row < 0) { return 0; }
-      res.push_back({row, i});
-      res.push_back({row, j});
+    if (t == 3) {
+      // Find 1/2/3 on the right
+      int x2 = -1;
+      for (auto i : {2, 3, 1}) {
+        if (!dst[i].empty()) {
+          x2 = dst[i].back(); dst[i].pop_back();
+          break;
+        }
+      }
+      if (x2 == -1) { ok = 0; break; }
+      if (row < 0) { ok = 0; break; }
+      res[x].push_back(row);
+      res[x2].push_back(row);
       row--;
-      dst_rest.insert(i);
+      dst[3].push_back(x);
     }
-
-    return 1;
-  };
-
-  bool ok = solve();
+  }
   if (!ok) { cout << -1 << "\n"; return; }
 
-  cout << res.size() << "\n";
-  for (auto [x, y] : res) {
-    x++; y++;
-    cout << x << " " << y << "\n";
+  int k = 0;
+  for (auto& [x, ys] : res) {
+    k += ys.size();
+  }
+  cout << k << "\n";
+  for (auto& [x, ys] : res) {
+    for (auto y : ys) {
+      cout << (y + 1) << " " << (x + 1) << "\n";
+    }
   }
 }
 
@@ -102,13 +112,18 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/contest/1428/d/main.cpp
+python misc/run.py codeforces/contest/1428/d/main_v2.cpp
 
 %%%% begin
 4
 2 1 3 1
 %%%%
-???
+4
+2 1
+2 2
+3 3
+4 4
+3 4
 %%%% end
 
 %%%% begin

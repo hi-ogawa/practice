@@ -1,4 +1,4 @@
-// WA
+// AFTER EDITORIAL, WIP
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -28,71 +28,35 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 
 // Main
 void mainCase() {
-  int n; // [1, 10^5]
-  cin >> n;
-  vector<int> ls(n); // [0, 3]
+  int n, k; // [1, 10^5]
+  cin >> n >> k;
+  vector<int> ls(n); // [1, 10^6]
   cin >> ls;
 
-  array<vector<int>, 4> src, dst;
-  FOR(i, 0, n) {
-    src[ls[i]].push_back(i);
-  }
-  dst = src;
+  ll res = 0;
+  for (auto x : ls) { res += (ll)x * x; }
 
-  int row = n - 1;
-  vector<array<int, 2>> res;
-  map<int, int> res_map;
-
-  auto solve = [&]() -> bool {
-    FOR(i, 1, 4) { reverse(ALL(src[i])); }
-
-    // Handle "1"
-    for (auto i : src[1]) {
-      res.push_back({row, i});
-      res_map[i] = row;
-      row--;
-    }
-
-    // TODO: "2" cannot always take right most "1" available (e.g. when "2 1 3 1")
-
-    // Handle "2" -> "1"
-    for (auto i : src[2]) {
-      if (dst[1].empty()) { return 0; }
-      int j = dst[1].back(); dst[1].pop_back();
-      if (j <= i) { return 0; }
-      assert(res_map.count(j));
-      int r = res_map[j];
-      res.push_back({r, i});
-      res_map[i] = r;
-    }
-
-    // Handle "3" -> "1", "2", "3"
-    set<int> dst_rest;
-    for (auto i : dst[1]) { dst_rest.insert(i); }
-    for (auto i : dst[2]) { dst_rest.insert(i); }
-
-    for (auto i : src[3]) {
-      if (dst_rest.empty()) { return 0; }
-      int j = *dst_rest.rbegin(); dst_rest.erase(j);
-      if (j <= i) { return 0; }
-      if (row < 0) { return 0; }
-      res.push_back({row, i});
-      res.push_back({row, j});
-      row--;
-      dst_rest.insert(i);
-    }
-
-    return 1;
+  auto getSplitCost = [&](ll x, ll s) -> ll {
+    ll q = x / s, r = x % s;
+    return (q * q) * (s - r) + (q + 1) * (q + 1) * r;
   };
 
-  bool ok = solve();
-  if (!ok) { cout << -1 << "\n"; return; }
+  auto getNextGain = [&](ll x, ll s) -> ll {
+    return getSplitCost(x, s) - getSplitCost(x, s + 1);
+  };
 
-  cout << res.size() << "\n";
-  for (auto [x, y] : res) {
-    x++; y++;
-    cout << x << " " << y << "\n";
+  // Maximize gain of total (k - n) splits
+  multiset<array<ll, 3>> gains; // (next-gain, x, split)
+  for (auto x : ls) {
+    gains.insert({getNextGain(x, 1), x, 1});
   }
+  FOR(i, 0, k - n) {
+    auto [g, x, s] = *--gains.end(); gains.erase(--gains.end());
+    res -= g;
+    s++;
+    gains.insert({getNextGain(x, s), x, s});
+  }
+  cout << res << "\n";
 }
 
 int main() {
@@ -102,38 +66,19 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/contest/1428/d/main.cpp
+python misc/run.py codeforces/contest/1428/e/main.cpp
 
 %%%% begin
-4
-2 1 3 1
-%%%%
-???
-%%%% end
-
-%%%% begin
-6
-2 0 3 0 1 1
-%%%%
-5
-2 1
-2 5
-3 3
 3 6
-5 6
+5 3 1
+%%%%
+15
 %%%% end
 
 %%%% begin
-1
-0
+1 4
+19
 %%%%
-0
-%%%% end
-
-%%%% begin
-6
-3 2 2 2 1 1
-%%%%
--1
+91
 %%%% end
 */
