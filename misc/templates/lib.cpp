@@ -302,27 +302,63 @@ using ordered_set = __gnu_pbds::tree<
 // Segment tree for sum
 struct SegmentTree {
   int n = 1;
-  vector<int> data;
+  using Node = int;
+  static inline Node kZero = 0;
+  vector<Node> data;
+
   SegmentTree(int _n) {
     while (n < _n) { n *= 2; }
-    data.resize(2 * n);
+    data.assign(2 * n, kZero);
   }
-  void set(int qi, int qv) {
-    if (qi >= n) { return; }
+
+  Node join(const Node& lhs, const Node& rhs) {
+    return lhs + rhs;
+  }
+
+  void set(int qi, const Node& qv) {
     int j = qi + n;
     data[j] = qv;
     while (j > 1) {
       j /= 2;
-      data[j] = data[2 * j] + data[2 * j + 1];
+      data[j] = join(data[2 * j], data[2 * j + 1]);
     }
   }
-  int reduce(int ql, int qr) {
-    function<int(int, int, int)> rec = [&](int l, int r, int j) -> int {
-      if (qr <= l || r <= ql) { return 0; }
+
+  // Iterative (cf. Al.Cash https://codeforces.com/blog/entry/18051)
+  Node reduce(int ql, int qr) {
+    Node res = kZero;
+    int jl = ql + n, jr = qr + n;
+    for (; jl < jr; jl /= 2, jr /= 2) {
+      if (jl % 2) { res = join(res, data[jl++]); }
+      if (jr % 2) { res = join(res, data[--jr]); }
+    }
+    return res;
+  }
+
+  // Recursive
+  Node reduce(int ql, int qr) {
+    function<Node(int, int, int)> rec = [&](int l, int r, int j) -> Node {
+      if (qr <= l || r <= ql) { return kZero; }
       if (ql <= l && r <= qr) { return data[j]; }
-      int m = (l + r) / 2;
-      return rec(l, m, 2 * j) + rec(m, r, 2 * j + 1);
+      return rec(l, (l + r) / 2, 2 * j) + rec((l + r) / 2, r, 2 * j + 1);
     };
     return rec(0, n, 1);
   }
 };
+
+
+// Printing 128 bit integer
+namespace std {
+  ostream& operator<<(ostream& ostr, __int128 x) {
+    if (x == 0) { return ostr << 0; }
+    bool neg = x < 0;
+    if (neg) { x = -x; }
+    string res;
+    while (x > 0) {
+      res += (x % 10) + '0';
+      x /= 10;
+    }
+    reverse(ALL(res));
+    return ostr << (neg ? "-" : "") << res;
+  }
+}
