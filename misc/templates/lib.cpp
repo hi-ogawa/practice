@@ -311,6 +311,15 @@ struct SegmentTree {
     data.assign(2 * n, kZero);
   }
 
+  ostream& print(ostream& ostr) const {
+    for (int k = 1; k <= n; k *= 2) {
+      for (int i = 0; i < k; i++) {
+        ostr << data[i + k] << " \n"[i == k - 1];
+      }
+    }
+    return ostr;
+  }
+
   Node join(const Node& lhs, const Node& rhs) {
     return lhs + rhs;
   }
