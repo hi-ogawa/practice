@@ -4,7 +4,7 @@
 
 CF_URL = 'https://codeforces.com'
 
-gHeaders = {
+g_headers = {
   "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
   "accept-encoding": "gzip, deflate",
   "cookie": ""
@@ -16,13 +16,13 @@ def load_cookie():
   command = "python misc/cookie_chrome.py codeforces.com --format=header"
   proc = subprocess.run(command.split(), check=True, capture_output=True)
   assert proc.returncode == 0
-  gHeaders['cookie'] = proc.stdout.strip()
+  g_headers['cookie'] = proc.stdout.strip()
 
 
 def do_request(url, form_params=None):
   import urllib.request, urllib.parse, urllib.error, zlib
   data = urllib.parse.urlencode(form_params).encode() if form_params else None
-  req = urllib.request.Request(url, headers=gHeaders, data=data)
+  req = urllib.request.Request(url, headers=g_headers, data=data)
   try:
     f = urllib.request.urlopen(req)
     resp = f.read()
@@ -73,7 +73,7 @@ def notify_verdict(verdict):
   assert proc.returncode == 0
 
 
-def main(file, problem):
+def main(file, problem, language):
   print(':: Loading cookie...')
   load_cookie()
 
@@ -86,7 +86,7 @@ def main(file, problem):
   form_params.update(
     source = source,
     submittedProblemCode = problem,
-    programTypeId = '54', # GNU G++17 7.3.0
+    programTypeId = language,
     action = 'submitSolutionFormSubmitted')
   do_request(CF_URL + '/problemset/submit', form_params)
 
@@ -103,11 +103,19 @@ def main(file, problem):
   print(f":: Finished")
 
 
+LANGUAGES = {
+  54: "GNU G++17 7.3.0",
+  61: "GNU G++17 9.2.0 (64 bit, msys 2)",
+  31: "Python 3.7.2"
+}
+
+
 def main_cli():
   import sys, argparse
   parser = argparse.ArgumentParser()
   parser.add_argument("file", type=str)
   parser.add_argument("--problem", type=str, required=True)
+  parser.add_argument("--language", type=str, default="54", help=str(LANGUAGES))
   sys.exit(main(**parser.parse_args().__dict__))
 
 
