@@ -1,9 +1,24 @@
+#
+# Download tests from online judges
+#
+
+def get_cookie(hostname):
+    import subprocess
+    command = f"python misc/cookie_chrome.py {hostname} --format=header"
+    proc = subprocess.run(command.split(), check=True, capture_output=True)
+    assert proc.returncode == 0
+    return proc.stdout.strip()
+
+
 def get_request(url):
-    import urllib.request
-    req = urllib.request.Request(url)
-    req.add_header('User-agent', 'Mozilla/5.0')
-    with urllib.request.urlopen(req) as f:
-        return f.read().decode('utf-8')
+    from urllib.request import Request, urlopen
+    from urllib.parse import urlparse
+    hostname = urlparse(url).hostname
+    cookie = get_cookie(hostname)
+    user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"
+    req = Request(url, headers={"cookie": cookie, "user-agent": user_agent})
+    with urlopen(req) as f:
+        return f.read().decode()
 
 
 def get_request_browserless(url):
