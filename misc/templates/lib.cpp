@@ -2,7 +2,7 @@
 // Disjoint set union
 struct Dsu {
   vector<int> ps;
-  Dsu(int n) { ps.resize(n); iota(ALL(ps)); }
+  Dsu(int n) { ps.resize(n); iota(ALL(ps), 0); }
   int find(int a) {
     if (a == ps[a]) { return a; }
     return ps[a] = find(ps[a]);
