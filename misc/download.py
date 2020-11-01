@@ -86,6 +86,13 @@ def parse_library_checker(content):
     return list(zip(ls[0::2], ls[1::2]))
 
 
+def parse_cses(content):
+    import re
+    it = re.finditer('<code>(.*?)</code>', content, re.DOTALL)
+    ls = [''.join(m.group(1).split('<br />')).strip() for m in it]
+    return list(zip(ls[0::2], ls[1::2]))
+
+
 def get_tests(url):
     import re
     if re.search('codeforces\.com', url):
@@ -103,6 +110,9 @@ def get_tests(url):
     elif re.search('judge\.yosupo\.jp', url):
         content = get_request(url)
         tests = parse_library_checker(content)
+    elif re.search('cses\.fi', url):
+        content = get_request(url)
+        tests = parse_cses(content)
     else:
         raise RuntimeError('Unknown url')
     return tests
