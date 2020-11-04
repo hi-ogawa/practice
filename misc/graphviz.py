@@ -3,13 +3,28 @@ def readline_ints():
   return list(map(int, sys.stdin.readline().strip().split()))
 
 
-def main(name, directed, zero_based, tree):
-  if tree:
+def convert_parents_to_edges(parents):
+  n = len(parents)
+  edges = []
+  for v in range(n):
+    vp, *extra = parents[v]
+    if vp > 0:
+      edges.append([vp, v + 1])
+  return edges
+
+
+def main(name, directed, zero_based, tree, parent):
+  if tree or parent:
     n = readline_ints()[0]
     m = n - 1
   else:
     n, m = readline_ints()
-  edges = [readline_ints() for _ in range(m)]
+
+  if parent:
+    parents = [readline_ints() for _ in range(n)]
+    edges = convert_parents_to_edges(parents)
+  else:
+    edges = [readline_ints() for _ in range(m)]
 
   if zero_based:
     edges = [[x - 1, y - 1, *extra] for x, y, *extra in edges]
@@ -42,6 +57,7 @@ def main_cli():
   parser.add_argument("--directed", action="store_true", default=False)
   parser.add_argument("--zero-based", action="store_true", default=False)
   parser.add_argument("--tree", action="store_true", default=False)
+  parser.add_argument("--parent", action="store_true", default=False)
   main(**parser.parse_args().__dict__)
 
 
