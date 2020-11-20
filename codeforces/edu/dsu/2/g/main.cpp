@@ -26,64 +26,65 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 #define dbg2(X)
 #endif
 
-// DSU
 struct Dsu {
   vector<int> parents;
-  set<int> segs;
-
   Dsu(int n) {
     parents.assign(n, 0);
     iota(ALL(parents), 0);
-    FOR(i, 0, n) { segs.insert(i); }
   }
-
-  int find(int i) {
-    // i = repr(i);
-    if (i == parents[i]) { return i; }
-    return parents[i] = find(parents[i]);
+  int find(int x) {
+    if (x == parents[x]) { return x; }
+    return parents[x] = find(parents[x]);
   }
-
-  void merge(int i, int j) {
-    parents[find(i)] = find(j);
-  }
-
-  void mergeRange(int i, int j) {
-    auto it = segs.lower_bound(i);
-    auto it_j = segs.lower_bound(j);
-    while (it != it_j) {
-      merge(*it, *it_j);
-      it = segs.erase(it);
-    }
+  void merge(int x, int y) {
+    parents[find(x)] = find(y);
   }
 };
 
 // Main
 void mainCase() {
-  int n; // [1, 2e5]
-  cin >> n;
-  int nq; // [1, 5e5]
-  cin >> nq;
-  vector<array<int, 3>> qs(nq);
-  cin >> qs;
+  int n, m; // n \in [1, 1500], m \in [1, 4 x 10^5]
+  cin >> n >> m;
+  vector<array<int, 3>> edges(m); // weight \in [0, 10^4]
+  cin >> edges;
+  sort(ALL(edges), [](auto x, auto y) { return x[2] < y[2]; });
+  for (auto& [x, y, w] : edges) { x--; y--; }
 
-  Dsu dsu(n);
+  dbg(edges);
 
-  for (auto [t, x, y] : qs) {
-    x--; y--;
-
-    if (t == 1) {
-      dsu.merge(x, y);
+  // f(w) = 1 \iff some spanning tree with max(weight) <= w
+  auto evaluate = [&](int w_lim) -> bool {
+    Dsu dsu(n);
+    int cnt = 0;
+    for (auto [x, y, w] : edges) {
+      if (w > w_lim) { break; }
+      x = dsu.find(x);
+      y = dsu.find(y);
+      if (x != y) {
+        dsu.merge(x, y);
+        cnt++;
+      }
     }
+    dbg(w_lim, cnt);
+    return cnt == n - 1;
+  };
 
-    if (t == 2) {
-      dsu.mergeRange(x, y);
+  // min { w | f(w) = 1 }
+  auto search = [&]() -> int {
+    int x0 = -1, x1 = 1e4; // (x0, x1]
+    while (x0 + 1 < x1) {
+      int x = (x0 + x1 + 1) / 2;
+      if (evaluate(x)) {
+        x1 = x;
+      } else {
+        x0 = x;
+      }
     }
+    return x1;
+  };
 
-    if (t == 3) {
-      bool res = dsu.find(x) == dsu.find(y);
-      cout << (res ? "YES" : "NO") << "\n";
-    }
-  }
+  auto res = search();
+  cout << res << "\n";
 }
 
 int main() {
@@ -93,19 +94,13 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/edu/dsu/2/c/main.cpp
+python misc/run.py codeforces/edu/dsu/2/g/main.cpp
 
 %%%% begin
-8 6
-3 2 5
+3 2
 1 2 5
-3 2 5
-2 4 7
-2 1 2
-3 1 7
+1 3 10
 %%%%
-NO
-YES
-YES
+10
 %%%% end
 */

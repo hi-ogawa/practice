@@ -26,63 +26,89 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 #define dbg2(X)
 #endif
 
-// DSU
 struct Dsu {
   vector<int> parents;
-  set<int> segs;
-
   Dsu(int n) {
     parents.assign(n, 0);
     iota(ALL(parents), 0);
-    FOR(i, 0, n) { segs.insert(i); }
   }
-
-  int find(int i) {
-    // i = repr(i);
-    if (i == parents[i]) { return i; }
-    return parents[i] = find(parents[i]);
+  int find(int x) {
+    if (x == parents[x]) { return x; }
+    return parents[x] = find(parents[x]);
   }
-
-  void merge(int i, int j) {
-    parents[find(i)] = find(j);
-  }
-
-  void mergeRange(int i, int j) {
-    auto it = segs.lower_bound(i);
-    auto it_j = segs.lower_bound(j);
-    while (it != it_j) {
-      merge(*it, *it_j);
-      it = segs.erase(it);
-    }
+  void merge(int x, int y) {
+    parents[find(x)] = find(y);
   }
 };
 
 // Main
 void mainCase() {
-  int n; // [1, 2e5]
-  cin >> n;
-  int nq; // [1, 5e5]
-  cin >> nq;
-  vector<array<int, 3>> qs(nq);
-  cin >> qs;
+  int n, m; // [1, 10^5]
+  cin >> n >> m;
+  ll s; // [0, 10^18]
+  cin >> s;
+  vector<array<ll, 3>> edges(m);
+  cin >> edges;
+  for (auto& [x, y, w] : edges) { x--; y--; }
 
+  vector<int> order(m);
+  iota(ALL(order), 0);
+  sort(ALL(order), [&](auto x, auto y) { return edges[x][2] > edges[y][2]; });
+
+  //
+  // CLAIM.
+  //   G' ⊆ G: connected
+  //     maximize |edges(G)| - |edges(G')|
+  //       s.t. weight(G) - weight(G') ≤ s
+  //
+  //   \iff
+  //
+  //   G' ⊆ G: connected
+  //     minimize |edges(G')|
+  //       s.t. weight(G') ≥ weight(G) - s
+  //
+
+  ll w_total = 0;
+  for (auto [x, y, w] : edges) {
+    w_total += w;
+  }
+  ll w_lim = max((ll)0, w_total - s);
+
+  // Max spanning tree
+  vector<int> used(m);
   Dsu dsu(n);
-
-  for (auto [t, x, y] : qs) {
-    x--; y--;
-
-    if (t == 1) {
+  ll w_cur = 0;
+  FOR(o, 0, m) {
+    int i = order[o];
+    auto [x, y, w] = edges[i];
+    x = dsu.find(x);
+    y = dsu.find(y);
+    if (x != y) {
       dsu.merge(x, y);
+      used[i] = 1;
+      w_cur += w;
     }
+  }
 
-    if (t == 2) {
-      dsu.mergeRange(x, y);
-    }
+  // Add remaining edges
+  FOR(o, 0, m) {
+    int i = order[o];
+    if (w_cur >= w_lim) { break; }
+    if (used[i]) { continue; }
+    auto [x, y, w] = edges[i];
+    used[i] = 1;
+    w_cur += w;
+  }
 
-    if (t == 3) {
-      bool res = dsu.find(x) == dsu.find(y);
-      cout << (res ? "YES" : "NO") << "\n";
-    }
+  vector<int> res;
+  FOR(i, 0, m) {
+    if (!used[i]) { res.push_back(i); }
+  }
+
+  int k = res.size();
+  cout << k << "\n";
+  FOR(i, 0, k) {
+    cout << (res[i] + 1) << " \n"[i == k - 1];
   }
 }
 
@@ -93,19 +119,19 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/edu/dsu/2/c/main.cpp
+python misc/run.py codeforces/edu/dsu/2/h/main.cpp
 
 %%%% begin
-8 6
-3 2 5
-1 2 5
-3 2 5
-2 4 7
-2 1 2
-3 1 7
+6 7 10
+1 2 3
+1 3 3
+2 3 3
+3 4 1
+4 5 5
+5 6 4
+4 6 5
 %%%%
-NO
-YES
-YES
+2
+1 6
 %%%% end
 */

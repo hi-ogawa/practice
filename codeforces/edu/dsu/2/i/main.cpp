@@ -26,61 +26,61 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 #define dbg2(X)
 #endif
 
-// DSU
 struct Dsu {
   vector<int> parents;
-  set<int> segs;
+  vector<int> data;
+  vector<vector<int>> adj;
 
   Dsu(int n) {
-    parents.assign(n, 0);
+    parents.resize(n);
     iota(ALL(parents), 0);
-    FOR(i, 0, n) { segs.insert(i); }
+    data.resize(n);
+    adj.resize(n);
+    FOR(i, 0, n) { adj[i].push_back(i); }
   }
 
-  int find(int i) {
-    // i = repr(i);
-    if (i == parents[i]) { return i; }
-    return parents[i] = find(parents[i]);
+  int find(int x) {
+    if (x == parents[x]) { return x; }
+    return parents[x] = find(parents[x]);
   }
 
-  void merge(int i, int j) {
-    parents[find(i)] = find(j);
-  }
+  void merge(int x, int y) {
+    int xr = find(x);
+    int yr = find(y);
+    if (xr == yr) { return; }
+    if (adj[xr].size() > adj[yr].size()) { swap(x, y); swap(xr, yr); }
 
-  void mergeRange(int i, int j) {
-    auto it = segs.lower_bound(i);
-    auto it_j = segs.lower_bound(j);
-    while (it != it_j) {
-      merge(*it, *it_j);
-      it = segs.erase(it);
+    int flip = data[x] == data[y];
+    for (auto z : adj[xr]) {
+      adj[yr].push_back(z);
+      data[z] ^= flip;
     }
+    parents[xr] = yr;
+    adj[xr].clear();
   }
 };
 
 // Main
 void mainCase() {
-  int n; // [1, 2e5]
-  cin >> n;
-  int nq; // [1, 5e5]
-  cin >> nq;
+  int n, nq; // [1, 2 x 10^5]
+  cin >> n >> nq;
   vector<array<int, 3>> qs(nq);
   cin >> qs;
 
   Dsu dsu(n);
 
+  int shift = 0;
   for (auto [t, x, y] : qs) {
-    x--; y--;
+    x = (x + shift) % n;
+    y = (y + shift) % n;
 
-    if (t == 1) {
+    if (t == 0) {
       dsu.merge(x, y);
     }
 
-    if (t == 2) {
-      dsu.mergeRange(x, y);
-    }
-
-    if (t == 3) {
-      bool res = dsu.find(x) == dsu.find(y);
+    if (t == 1) {
+      auto res = dsu.data[x] == dsu.data[y];
+      if (res) { shift++; }
       cout << (res ? "YES" : "NO") << "\n";
     }
   }
@@ -93,19 +93,18 @@ int main() {
 }
 
 /*
-python misc/run.py codeforces/edu/dsu/2/c/main.cpp
+python misc/run.py codeforces/edu/dsu/2/i/main.cpp
 
 %%%% begin
-8 6
-3 2 5
-1 2 5
-3 2 5
-2 4 7
-2 1 2
-3 1 7
+3 5
+0 1 2
+0 2 3
+1 1 2
+1 1 3
+1 1 3
 %%%%
 NO
 YES
-YES
+NO
 %%%% end
 */
