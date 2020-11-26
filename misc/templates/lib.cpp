@@ -14,12 +14,12 @@ struct Dsu {
 
 // Fenwick tree for sum
 struct FenwickTree {
-  int n_;
-  vector<int> data_;
-  FenwickTree(int n) { n_ = n; data_.resize(n); }
+  int n;
+  vector<int> data;
+  FenwickTree(int n) : n{n} { data.resize(n); }
   void incr(int i, int v) {
-    while (i < n_) {
-      data_[i] += v;
+    while (i < n) {
+      data[i] += v;
       i = (i | (i + 1));
     }
   }
@@ -27,10 +27,13 @@ struct FenwickTree {
     int i = r - 1;
     int res = 0;
     while (i >= 0) {
-      res += data_[i];
+      res += data[i];
       i = (i & (i + 1)) - 1;
     }
     return res;
+  }
+  int reduce(int l, int r) {
+    return reduce(r) - reduce(l);
   }
 };
 
@@ -190,8 +193,9 @@ struct ModInt {
   }
 };
 
-using mint = ModInt<(ll)1e9 + 7>;
-using mint = ModInt<998244353>; // = 1 + 2^23 x 7 x 17
+const ll modulo = 1e9 + 7;
+const ll modulo = 998244353; // = 1 + 2^23 x 7 x 17
+using mint = ModInt<modulo>;
 
 // Number theoretic transform
 template<class mint>
@@ -370,4 +374,19 @@ namespace std {
     reverse(ALL(res));
     return ostr << (neg ? "-" : "") << res;
   }
+}
+
+// Y combinator (cf. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0200r0.html)
+template<class FuncT>
+struct y_combinator_result {
+  FuncT f;
+  template<class T>
+  explicit y_combinator_result(T&& f) : f{forward<T>(f)} {}
+  template<class ...Ts>
+  decltype(auto) operator()(Ts&& ...args) { return f(ref(*this), forward<Ts>(args)...); }
+};
+
+template<class FuncT>
+decltype(auto) y_combinator(FuncT&& f) {
+  return y_combinator_result<decay_t<FuncT>>(forward<FuncT>(f));
 }
