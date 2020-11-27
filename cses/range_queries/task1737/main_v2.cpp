@@ -26,7 +26,6 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 #define dbg2(X)
 #endif
 
-// Persistent segment tree exploiting usual c++ feature (default copy constructor and shared pointer)
 struct SegmentTree {
   using T = ll;
   int n = 1;
@@ -36,33 +35,38 @@ struct SegmentTree {
     array<shared_ptr<Node>, 2> cs;
     T data = 0;
 
-    void set(int qi, T qv) {
-      assert(l <= qi && qi < r);
-      if (l + 1 == r) { data = qv; return; } // Leaf case
-
-      // Propagate to a child
-      int m = (l + r) / 2;
-      auto& c = cs[m <= qi];
-      if (!c) {
-        // Create new
-        c = make_shared<Node>();
-        c->l = (qi < m) ? l : m;
-        c->r = (qi < m) ? m : r;
-      } else {
-        // Create copy if there are other users
-        if (c.use_count() > 1) {
+    void ensureChildren() {
+      FOR(i, 0, 2) {
+        auto& c = cs[i];
+        if (c.use_count() == 0) { // Create node
+          c = make_shared<Node>();
+          int m = (l + r) / 2;
+          c->l = i ? l : m;
+          c->r = i ? m : r;
+        }
+        if (c.use_count() >= 2) { // Copy node if there are other users
           c = make_shared<Node>(*c);
         }
       }
-      c->set(qi, qv);
+    }
 
-      data = (cs[0] ? cs[0]->data : 0) + (cs[1] ? cs[1]->data : 0);
+    void set(int qi, T qv) {
+      if (qi < l || r <= qi) { return; }
+      if (l + 1 == r) { data = qv; return; } // Leaf case
+      ensureChildren();
+      cs[0]->set(qi, qv);
+      cs[1]->set(qi, qv);
+      data = cs[0]->data + cs[1]->data;
     }
 
     T reduce(int ql, int qr) {
       if (qr <= l || r <= ql) { return 0; }
       if (ql <= l && r <= qr) { return data; }
-      return (cs[0] ? cs[0]->reduce(ql, qr) : 0) + (cs[1] ? cs[1]->reduce(ql, qr) : 0);
+      T res = 0;
+      FOR(i, 0, 2) {
+        if (cs[i]) { res += cs[i]->reduce(ql, qr); }
+      }
+      return res;
     }
   };
 
@@ -128,7 +132,7 @@ int main() {
 }
 
 /*
-python misc/run.py cses/range_queries/task1737/main.cpp
+python misc/run.py cses/range_queries/task1737/main_v2.cpp
 
 %%%% begin
 5 6
