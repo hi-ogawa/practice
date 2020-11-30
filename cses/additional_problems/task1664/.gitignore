@@ -1,0 +1,4 @@
+# wget -O cses/additional_problems/task1664/input_01.txt https://cses.fi/file/277af9877dd1976f181c5e9a6b3091afb0f964c66cbddfd60089fdc231566889/1/1/
+# wget -O cses/additional_problems/task1664/output_01.txt https://cses.fi/file/61d735401c23e8295a439e3de504f8b339477acbe4d8142aee108cf7eb55eb91/2/1/
+input*.txt
+output*.txt
