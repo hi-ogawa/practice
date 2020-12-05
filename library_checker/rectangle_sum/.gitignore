@@ -1,0 +1,4 @@
+test*.txt
+
+# python library_checker/rectangle_sum/generate.py 200000 200001 200000 200001 0 > library_checker/rectangle_sum/input_max_00.txt
+input*.txt
