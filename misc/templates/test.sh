@@ -8,7 +8,7 @@ python misc/run.py $DIR/main.cpp --no-run || exit 1
 
 for ((i = 1; ; i++)); do
   echo $i
-  python $DIR/generate.py $i > $DIR/test-in.txt || exit 1
+  python $DIR/generate.py 10 20 10 20 $i > $DIR/test-in.txt || exit 1
   # TIME_BEGIN=$(date +%s.%N)
   ./build/main < $DIR/test-in.txt > $DIR/test-out.txt || break
   # TIME_END=$(date +%s.%N)

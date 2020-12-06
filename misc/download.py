@@ -107,7 +107,7 @@ def get_tests(url):
     elif re.search('codechef\.com', url):
         content = get_request_browserless(url)
         tests = parse_codechef(content)
-    elif re.search('judge\.yosupo\.jp', url):
+    elif re.search('old\.yosupo\.jp', url):
         content = get_request(url)
         tests = parse_library_checker(content)
     elif re.search('cses\.fi', url):

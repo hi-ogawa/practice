@@ -50,8 +50,17 @@ vector<int> makeZ(const string& s) {
   return z;
 }
 
-// 64bit hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
-ull hash64(ull x) {
+// 32/64bit hash by Chris Wellons https://nullprogram.com/blog/2018/07/31/
+uint32_t hash32(uint32_t x) {
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return x;
+};
+
+uint64_t hash64(uint64_t x) {
   x ^= x >> 30;
   x *= 0xbf58476d1ce4e5b9ULL;
   x ^= x >> 27;
@@ -303,16 +312,51 @@ using ordered_set = __gnu_pbds::tree<
   __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
 
-// Segment tree for sum
+// Segment tree for range sum
 struct SegmentTree {
-  int n = 1;
-  using Node = int;
-  static inline Node kZero = 0;
-  vector<Node> data;
+  using T = int;
+  static inline T zero = 0;
+  static T join(T lhs, T rhs) { return lhs + rhs; }
 
-  SegmentTree(int _n) {
-    while (n < _n) { n *= 2; }
-    data.assign(2 * n, kZero);
+  int n = 1;
+  vector<T> data;
+
+  SegmentTree(int n_orig) {
+    while (n < n_orig) { n *= 2; }
+    data.assign(2 * n, zero);
+  }
+
+  void set(int qi, T qv) {
+    int j = qi + n;
+    data[j] = qv;
+    while (j > 1) {
+      j /= 2;
+      data[j] = join(data[2 * j], data[2 * j + 1]);
+    }
+  }
+
+  // Iterative (cf. Al.Cash https://codeforces.com/blog/entry/18051)
+  T reduce(int ql, int qr) {
+    T res = zero;
+    int jl = ql + n, jr = qr + n;
+    for (; jl < jr; jl /= 2, jr /= 2) {
+      if (jl % 2) { res = join(res, data[jl++]); }
+      if (jr % 2) { res = join(res, data[--jr]); }
+    }
+    return res;
+  }
+
+  // Recursive
+  T reduce(int ql, int qr) {
+    function<T(int, int, int)> rec = [&](int l, int r, int j) -> T {
+      if (qr <= l || r <= ql) { return zero; }
+      if (ql <= l && r <= qr) { return data[j]; }
+      T res = zero;
+      res = join(res, rec(l, m, 2 * j));
+      res = join(res, rec(m, r, 2 * j + 1));
+      return res;
+    };
+    return rec(0, n, 1);
   }
 
   ostream& print(ostream& ostr) const {
@@ -323,12 +367,25 @@ struct SegmentTree {
     }
     return ostr;
   }
+};
 
-  Node join(const Node& lhs, const Node& rhs) {
-    return lhs + rhs;
+// Segment tree for range increment and range sum
+struct SegmentTree {
+  using T = int;
+  static inline T zero = 0;
+  static T join(T lhs, T rhs) { return lhs + rhs; }
+
+  int n = 1;
+  vector<T> data, lazy;
+
+  SegmentTree(int n_orig) {
+    while (n < n_orig) { n *= 2; }
+    data.assign(2 * n, zero);
+    lazy.assign(2 * n, zero);
   }
 
-  void set(int qi, const Node& qv) {
+  // Only for initialization
+  void set(int qi, T qv) {
     int j = qi + n;
     data[j] = qv;
     while (j > 1) {
@@ -337,28 +394,58 @@ struct SegmentTree {
     }
   }
 
-  // Iterative (cf. Al.Cash https://codeforces.com/blog/entry/18051)
-  Node reduce(int ql, int qr) {
-    Node res = kZero;
-    int jl = ql + n, jr = qr + n;
-    for (; jl < jr; jl /= 2, jr /= 2) {
-      if (jl % 2) { res = join(res, data[jl++]); }
-      if (jr % 2) { res = join(res, data[--jr]); }
-    }
-    return res;
+  array<int, 2> toRange(int j) {
   }
 
-  // Recursive
-  Node reduce(int ql, int qr) {
-    function<Node(int, int, int)> rec = [&](int l, int r, int j) -> Node {
-      if (qr <= l || r <= ql) { return kZero; }
+  T value(int j) {
+    if (lazy[j] == 0) { return data[j]; }
+    auto [l, r] = toRange(j);
+    return data[j] + (r - l) * lazy[j];
+  }
+
+  void push(int j) {
+    if (lazy[j] == 0) { return; }
+    data[j] = value(j);
+    lazy[2 * j] += lazy[j];
+    lazy[2 * j + 1] += lazy[j];
+    lazy[j] = 0;
+  }
+
+  void incr(int ql, int qr, T qv) {
+    function<T(int, int, int)> rec = [&](int l, int r, int j) -> T {
+      if (qr <= l || r <= ql) { return value(j); }
+      if (ql <= l && r <= qr) { lazy[j] += qv; return value(j); }
+      push(j);
+      T res = zero;
+      res = join(res, rec(l, m, 2 * j));
+      res = join(res, rec(m, r, 2 * j + 1));
+      return data[j] = res;
+    };
+    rec(0, n, 1);
+  }
+
+  T reduce(int ql, int qr) {
+    function<T(int, int, int)> rec = [&](int l, int r, int j) -> T {
+      if (qr <= l || r <= ql) { return zero; }
       if (ql <= l && r <= qr) { return data[j]; }
-      return rec(l, (l + r) / 2, 2 * j) + rec((l + r) / 2, r, 2 * j + 1);
+      push(j);
+      T res = zero;
+      res = join(res, rec(l, m, 2 * j));
+      res = join(res, rec(m, r, 2 * j + 1));
+      return res;
     };
     return rec(0, n, 1);
   }
-};
 
+  ostream& print(ostream& ostr) const {
+    for (int k = 1; k <= n; k *= 2) {
+      for (int i = 0; i < k; i++) {
+        ostr << data[i + k] << "(" << lazy[i + k] << ")" << " \n"[i == k - 1];
+      }
+    }
+    return ostr;
+  }
+};
 
 // Printing 128 bit integer
 namespace std {
@@ -389,4 +476,92 @@ struct y_combinator_result {
 template<class FuncT>
 decltype(auto) y_combinator(FuncT&& f) {
   return y_combinator_result<decay_t<FuncT>>(forward<FuncT>(f));
+}
+
+// Binary search
+//   min { x ∈ [x0, x1) | y ≤ f(x) } (f : increasing)
+//   max { x ∈ (x1, x0] | f(x) ≥ y } (f : decreasing) (reverse = 1)
+template<class T, class U, class FuncT>
+T binarySearch(T x0, T x1, U y, FuncT f, bool reverse = 0) {
+  int s = reverse ? -1 : 1;
+  T count = s * (x1 - x0);
+  while (count > 0) {
+    T step = count / 2;
+    T x = x0 + s * step;
+    if (f(x) < y) {
+      x0 = x + s;
+      count -= (step + 1);
+    } else {
+      count = step;
+    }
+  }
+  return x0;
+}
+
+// Primes
+vector<int> makePrimes(int n) {
+  vector<bool> sieve(n + 1, 1);
+  FOR(p, 2, sqrt(n) + 1) {
+    if (!sieve[p]) { continue; }
+    for (int x = p * p; x <= n; x += p) {
+      sieve[x] = 0;
+    }
+  }
+  vector<int> res;
+  FOR(p, 2, n + 1) {
+    if (sieve[p]) { res.push_back(p); }
+  }
+  return res;
+}
+
+// Euler product sieve
+tuple<vector<int>, vector<int>> makeEulerSieve(int n) {
+  vector<int> ps, lp(n + 1);
+  for (int x = 2; x <= n; x++) {
+    if (lp[x] == 0) { lp[x] = x; ps.push_back(x); }
+    for (auto p : ps) {
+      if (x * p > n || p > lp[x]) { break; }
+      lp[x * p] = p;
+    }
+  }
+  return {move(ps), move(lp)};
+}
+
+// DFS out-time sorting (topological order if DAG)
+vector<int> dfsOutSort(const vector<vector<int>>& adj) {
+  int n = adj.size();
+
+  vector<int> done(n);
+  vector<int> out_time(n);
+  int time = 0;
+  function<void(int)> dfs = [&](int v) {
+    done[v] = 1;
+    for (auto u : adj[v]) {
+      if (done[u]) { continue; }
+      dfs(u);
+    }
+    out_time[v] = time++;
+  };
+
+  FOR(i, 0, n) {
+    if (done[i]) { continue; }
+    dfs(i);
+  }
+
+  vector<int> order(n);
+  iota(ALL(order), 0);
+  sort(ALL(order), [&](auto x, auto y) { return out_time[x] > out_time[y]; });
+  return order;
+}
+
+// Enumerate digits for brute force solution
+bool nextDigits(vector<int>& ls, int base) {
+  int c = 1;
+  for (auto& x : ls) {
+    x += c;
+    c = x / base;
+    x %= base;
+    if (c == 0) { break; }
+  }
+  return c == 0;
 }

@@ -19,8 +19,8 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 }
 
 #ifdef DEBUG
-#define dbg(...) do { cout << #__VA_ARGS__ ": " << make_tuple(__VA_ARGS__) << endl; } while (0)
-#define dbg2(X) do { cout << #X ":\n"; for (auto& __x : (X)) { cout << __x << endl; } } while (0)
+#define dbg(...) do { cerr << #__VA_ARGS__ ": " << make_tuple(__VA_ARGS__) << endl; } while (0)
+#define dbg2(X) do { cerr << #X ":\n"; for (auto& __x : (X)) { cout << __x << endl; } } while (0)
 #else
 #define dbg(...)
 #define dbg2(X)

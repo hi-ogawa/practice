@@ -35,11 +35,11 @@ def monitor_memory_usage(proc, mem_info):
 def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
-    proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE)
+    proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     mem_info = [None]
     monitor_memory_usage(proc, mem_info)
     try:
-        proc_stdout, proc_stderr = proc.communicate(input=bytes(inp, "utf-8"), timeout=timeout)
+        proc_stdout, *_ = proc.communicate(input=bytes(inp, "utf-8"), timeout=timeout)
     except subprocess.TimeoutExpired:
         proc.kill()
         print(f":: Timeout ({timeout}s). Process killed.")
