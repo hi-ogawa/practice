@@ -28,42 +28,51 @@ ostream& operator<<(ostream& o, const T& x) { o << "{"; auto s = ""; for (auto& 
 #define dbg2(X)
 #endif
 
-// Main
-void mainCase() {
-  ll y; // [0, p)
-  ll p; // [2, 10^9], prime
-  cin >> y >> p;
-  if (y <= 1 || p == 2) { cout << y << "\n"; return; }
+// RNG for searching non quadratic residue
+auto rng = mt19937(0x12345678);
 
-  auto pow = [&](ll x, int e, ll m) -> ll {
-    ll y = 1;
-    while (e > 0) {
-      if (e & 1) { y = (y * x) % m; }
-      e >>= 1;
-      x = (x * x) % m;
-    }
-    return y;
-  };
+// Zp sqrt (cf. library_checker/sqrt_mod/main.cpp)
+struct ZpSqrt {
+  ll p;
+  ll z; // Non quadratic residue z^(p-1)/2 = -1
+  ll q, k; // p = q 2^k + 1
 
-  auto findNonQuadraticResidue = [&](ll p) -> ll {
-    auto rng = mt19937(0x12345678);
-    ll res = -1;
-    FOR(_, 0, 64) { // Fail by the probability of 2^-64
-      ll x = ll(rng()) % p; // Should be almost uniform [0, p)
-      if (pow(x, (p - 1) / 2, p) == p - 1) {
-        res = x;
+  ZpSqrt(ll p) : p{p} {
+    assert(p >= 3); // odd prime
+
+    // p = q 2^k + 1
+    q = p - 1;
+    k = 0;
+    while (q % 2 == 0) { q /= 2; k++; }
+    assert(k >= 1);
+
+    // Find non quadratic residue
+    z = -1;
+    FOR(_, 0, 64) {
+      ll x = ll(rng()) % p;
+      if (pow(x, (p - 1) / 2) == p - 1) {
+        z = x;
         break;
       }
     }
-    assert(res != -1);
-    return res;
-  };
+    assert(z != -1);
+  }
+
+  ll pow(ll x, ll e) {
+    ll y = 1;
+    while (e > 0) {
+      if (e & 1) { y = (y * x) % p; }
+      e >>= 1;
+      x = (x * x) % p;
+    }
+    return y;
+  }
 
   // Find t s.t.
   //   x^(2^(t-1)) = -1
   //   x^(2^t)     = 1
-  auto findPowerOfTwoOrder = [&](ll x, ll p) -> int {
-    int res = -1;
+  ll findPowerOfTwoOrder(ll x) {
+    ll res = -1;
     FOR(t, 0, 64) {
       if (x == 1) { res = t; break; }
       x = (x * x) % p;
@@ -72,55 +81,45 @@ void mainCase() {
     return res;
   };
 
-  // y^(p-1)/2 = +1
-  // z^(p-1)/2 = -1
-  auto solve = [&](ll y, ll z, ll p) -> ll {
-    // assert p is odd prime
+  // x^2 = y
+  ll solve(ll y) {
+    if (y <= 1) { return y; }
 
-    // p = q 2^k + 1  (q: odd and k >= 1)
-    ll q = p - 1;
-    int k = 0;
-    while (q % 2 == 0) { q /= 2; k++; }
-    dbg(p, q, k);
-    assert(k >= 1);
+    // Euler criterion
+    if (pow(y, (p - 1) / 2) != 1) { return -1; }
 
-    // y^(q+1) = b^2 = a y
-    ll a = pow(y, q, p); // a^(2^(k-1)) = y^(q 2^k-1) = y^(p-1)/2 = 1
-    ll b = pow(y, (q + 1) / 2, p);
-    dbg(y, a, b);
+    // y^(p - 1)/2 = y^(q 2^(k-1)) = 1
+    // y^(q + 1) = b^2 = a y
+    ll a = pow(y, q); // a^(2^(k-1)) = y^(p-1)/2 = 1
+    ll b = pow(y, (q + 1) / 2);
 
-    ll inv_sqrt_a = 1;
+    ll res = b; // Accumulate a^(-1/2) during loop
     while (true) {
-      // a^(2^(t-1)) = -1
-      // a^(2^t)     = 1
-      int t = findPowerOfTwoOrder(a, p);
-      dbg(a, t);
-      assert(t < k);
+      ll t = findPowerOfTwoOrder(a);
       if (t == 0) { break; }
-      assert(pow(a, 1 << t, p) == 1);
-      assert(pow(a, 1 << (t - 1), p) == p - 1);
 
       // z^(q 2^(k-t) 2^(t-1)) = z^(p-1)/2 = -1
       // (a z^(q 2^(k-t))^(2^(t-1)) = 1
-      ll w = pow(z, q * (1 << (k - t - 1)), p);
+      ll w = pow(z, q * (1 << (k - t - 1)));
       a = (a * w % p) * w % p;
-      assert(pow(a, 1 << (t - 1), p) == 1);
 
-      inv_sqrt_a = inv_sqrt_a * w % p;
+      res = res * w % p;
     }
+    return res;
+  }
+};
 
-    ll x = b * inv_sqrt_a % p;
-    return x;
-  };
+// Main
+void mainCase() {
+  ll y; // [0, p)
+  ll p; // [2, 10^9], prime
+  cin >> y >> p;
+  if (p == 2) { cout << y << "\n"; return; }
 
-  // Euler's criterion
-  bool ok = pow(y, (p - 1) / 2, p) == 1;
-  if (!ok) { cout << -1 << "\n"; return; }
+  ZpSqrt zp_sqrt(p);
 
-  auto z = findNonQuadraticResidue(p);
-  auto x = solve(y, z, p);
-  assert((x * x) % p == y);
-  cout << x << "\n";
+  ll res = zp_sqrt.solve(y);
+  cout << res << "\n";
 }
 
 int main() {
@@ -132,7 +131,7 @@ int main() {
 }
 
 /*
-python misc/run.py library_checker/sqrt_mod/main.cpp
+python misc/run.py library_checker/sqrt_mod/main_v2.cpp
 
 %%%% begin
 5
