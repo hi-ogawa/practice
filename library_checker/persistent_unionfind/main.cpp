@@ -41,7 +41,7 @@ struct Dsu {
 
   int find(int x) {
     if (x == parents[x]) { return x; }
-    return parents[x] = find(parents[x]);
+    return find(parents[x]);
   }
 
   void merge(int x, int y) {
