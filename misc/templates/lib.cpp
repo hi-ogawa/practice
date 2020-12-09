@@ -151,6 +151,16 @@ struct Tensor {
   }
 };
 
+// High dimentional vector
+template<class T>
+T makeNdVector(T value) { return value; }
+
+template<class ...Ts>
+decltype(auto) makeNdVector(size_t n, Ts ...rest) {
+  auto inner = makeNdVector(rest...);
+  return vector<decltype(inner)>(n, inner);
+}
+
 // Modulo integer
 template<ll Modulo>
 struct ModInt {
