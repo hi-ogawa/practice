@@ -153,11 +153,11 @@ struct Tensor {
 
 // High dimentional vector
 template<class T>
-T makeNdVector(T value) { return value; }
+T NdVector(T value) { return value; }
 
 template<class ...Ts>
-decltype(auto) makeNdVector(size_t n, Ts ...rest) {
-  auto inner = makeNdVector(rest...);
+decltype(auto) NdVector(size_t n, Ts ...rest) {
+  auto inner = NdVector(rest...);
   return vector<decltype(inner)>(n, inner);
 }
 
@@ -347,13 +347,13 @@ struct SegmentTree {
 
   // Iterative (cf. Al.Cash https://codeforces.com/blog/entry/18051)
   T reduce(int ql, int qr) {
-    T res = zero;
     int jl = ql + n, jr = qr + n;
+    T res_l = zero, res_r = zero;
     for (; jl < jr; jl /= 2, jr /= 2) {
-      if (jl % 2) { res = join(res, data[jl++]); }
-      if (jr % 2) { res = join(res, data[--jr]); }
+      if (jl % 2) { res_l = join(res_l, data[jl++]); }
+      if (jr % 2) { res_r = join(data[--jr], res_r); }
     }
-    return res;
+    return join(res_l, res_r);
   }
 
   // Recursive
@@ -575,3 +575,56 @@ bool nextDigits(vector<int>& ls, int base) {
   }
   return c == 0;
 }
+
+// GL math
+template<class T, size_t N>
+struct vec : array<T, N> {
+  vec& operator+=(const vec& y) { for (size_t i = 0; i < N; i++) { (*this)[i] += y[i]; } return *this; }
+  vec& operator-=(const vec& y) { for (size_t i = 0; i < N; i++) { (*this)[i] -= y[i]; } return *this; }
+  vec& operator*=(const vec& y) { for (size_t i = 0; i < N; i++) { (*this)[i] *= y[i]; } return *this; }
+  vec& operator/=(const vec& y) { for (size_t i = 0; i < N; i++) { (*this)[i] /= y[i]; } return *this; }
+  vec& operator+=(T y) { for (size_t i = 0; i < N; i++) { (*this)[i] += y; } return *this; }
+  vec& operator-=(T y) { for (size_t i = 0; i < N; i++) { (*this)[i] -= y; } return *this; }
+  vec& operator*=(T y) { for (size_t i = 0; i < N; i++) { (*this)[i] *= y; } return *this; }
+  vec& operator/=(T y) { for (size_t i = 0; i < N; i++) { (*this)[i] /= y; } return *this; }
+  friend vec operator+(const vec& x, const vec& y) { return vec(x) += y; }
+  friend vec operator-(const vec& x, const vec& y) { return vec(x) -= y; }
+  friend vec operator*(const vec& x, const vec& y) { return vec(x) *= y; }
+  friend vec operator/(const vec& x, const vec& y) { return vec(x) /= y; }
+  friend vec operator+(const vec& x, T y) { return vec(x) += y; }
+  friend vec operator-(const vec& x, T y) { return vec(x) -= y; }
+  friend vec operator*(const vec& x, T y) { return vec(x) *= y; }
+  friend vec operator/(const vec& x, T y) { return vec(x) /= y; }
+};
+
+template<class T, size_t N>
+struct mat : array<array<T, N>, N> {
+  mat() : mat(vec<T, N * N>()) { }
+  mat(const vec<T, N * N>& x) {
+    for (size_t i = 0; i < N; i++)
+      for (size_t j = 0; j < N; j++)
+        (*this)[i][j] = x[i * N + j];
+  }
+  static mat identity() {
+    mat x;
+    for (size_t i = 0; i < N; i++)
+      for (size_t j = 0; j < N; j++)
+        x[i][j] = (i == j);
+    return x;
+  }
+  friend vec<T, N> operator*(const mat& x, const vec<T, N>& y) {
+    vec<T, N> z = {};
+    for (size_t i = 0; i < N; i++)
+      for (size_t j = 0; j < N; j++)
+        z[i] += x[i][j] * y[j];
+    return z;
+  }
+  friend mat operator*(const mat& x, const mat& y) {
+    mat z;
+    for (size_t i = 0; i < N; i++)
+      for (size_t j = 0; j < N; j++)
+        for (size_t k = 0; k < N; k++)
+          z[i][j] += x[i][k] * y[k][j];
+    return z;
+  }
+};
