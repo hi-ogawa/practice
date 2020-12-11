@@ -1,6 +1,4 @@
-// AC
-
-// TODO: Probably, this approach cannot handle non-invertible affine transformation (i.e. a = 0).
+// AFTER EDITORIAL, AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -117,13 +115,6 @@ struct mat : array<array<T, N>, N> {
   }
 };
 
-template<class T>
-mat<T, 2> inverse(const mat<T, 2> x) {
-  auto a = x[0][0], b = x[0][1], c = x[1][0], d = x[1][1];
-  auto det = a * d - b * c;
-  return mat<T, 2>(vec<T, 4>({d, -b, -c, a}) / det);
-}
-
 using vec2 = vec<mint, 2>;
 using mat2 = mat<mint, 2>;
 
@@ -160,94 +151,81 @@ struct SegmentTree {
   }
 };
 
-// Binary lifting for LCA, Distance
-struct BinaryLifting {
-  const vector<vector<int>>& adj;
-  int root;
-  vector<int> depths;
-  vector<vector<int>> table;
-  int n;
-  int b_lim;
+// Heavy light decomposition
+struct HeavyLightDecomposition {
+  vector<int> depths, sizes, parents;
+  vector<int> klasses;
+  vector<int> enc;
 
-  BinaryLifting(const vector<vector<int>>& adj, int root) : adj{adj}, root{root} {
-    n = adj.size();
-    depths.assign(n, 0);
-    b_lim = 0;
-    while ((1 << b_lim) <= n) { b_lim++; }
-    table.assign(b_lim, vector<int>(n));
+  HeavyLightDecomposition(const vector<vector<int>>& adj, int root) {
+    int n = adj.size();
+    depths.assign(n, 0); sizes.assign(n, 0); parents.assign(n, 0);
+    klasses.assign(n, 0);
+    enc.assign(n, 0);
 
+    // DFS for depth, size, parent
     function<void(int, int)> dfs = [&](int v, int vp) {
+      sizes[v] = 1;
       for (auto u : adj[v]) {
         if (u == vp) { continue; }
         depths[u] = depths[v] + 1;
-        table[0][u] = v;
+        parents[u] = v;
         dfs(u, v);
+        sizes[v] += sizes[u];
       }
     };
     dfs(root, -1);
 
-    FOR(b, 1, b_lim) {
-      FOR(i, 0, n) {
-        table[b][i] = table[b - 1][table[b - 1][i]];
+    // DFS for assigning class
+    function<void(int, int, int)> dfs2 = [&](int v, int vp, int klass) {
+      klasses[v] = klass;
+      for (auto u : adj[v]) {
+        if (u == vp) { continue; }
+        dfs2(u, v, (2 * sizes[u] < sizes[v]) ? u : klass);
       }
-    }
-  }
+    };
+    dfs2(root, -1, root);
 
-  int lift(int x, int e) {
-    int b = 0;
-    while (e > 0) {
-      if (e & 1) { x = table[b][x]; }
-      e >>= 1; b++;
-    }
-    return x;
+    // DFS for segment encoding
+    int cnt = 0;
+    function<void(int, int)> dfs3 = [&](int v, int vp) {
+      cnt++;
+      for (auto u : adj[v]) {
+        if (u == vp) { continue; }
+        if (klasses[u] != klasses[v]) { continue; }
+        enc[u] = enc[v] + 1;
+        dfs3(u, v);
+      }
+      for (auto u : adj[v]) {
+        if (u == vp) { continue; }
+        if (klasses[u] == klasses[v]) { continue; }
+        enc[u] = cnt;
+        dfs3(u, v);
+      }
+    };
+    dfs3(root, -1);
   }
 
   int getLCA(int x, int y) {
-    int dx = depths[x], dy = depths[y];
-    if (dx > dy) { swap(x, y); swap(dx, dy); }
-    y = lift(y, dy - dx);
-    if (x == y) { return x; }
-
-    int b = b_lim - 1;
-    while (b >= 0) {
-      int xx = table[b][x], yy = table[b][y];
-      if (xx == yy) { b--; continue; }
-      x = xx; y = yy;
+    while (klasses[x] != klasses[y]) {
+      if (depths[klasses[x]] > depths[klasses[y]]) { swap(x, y); }
+      y = parents[klasses[y]];
     }
-    return table[0][x];
+    if (depths[x] > depths[y]) { swap(x, y); }
+    return x;
   }
 
-  int getDistance(int x, int y) {
-    return depths[x] + depths[y] - 2 * depths[getLCA(x, y)];
-  }
-};
-
-// Miscellaneous DFS data
-struct MiscDfs {
-  const vector<vector<int>>& adj;
-  int root;
-  vector<int> in_times;
-  vector<int> out_times;
-
-  MiscDfs(const vector<vector<int>>& adj, int root) : adj{adj}, root{root} {
-    int n = adj.size();
-    in_times.assign(n, 0);
-    out_times.assign(n, 0);
-
-    int time = 0;
-    vector<int> done(n);
-    function<void(int)> dfs = [&](int v) {
-      done[v] = 1;
-      in_times[v] = time++;
-      for (auto u : adj[v]) {
-        if (done[u]) { continue; }
-        dfs(u);
-      }
-      out_times[v] = time++;
-    };
-    FOR(i, 0, n) {
-      if (!done[i]) { dfs(i); }
+  // Decompose path [x, y] (or (x, y] if "half_open") into closed segments [x1, y1], [x2, y2].., [xk, yk]
+  template<class F>
+  void traverse(int x, int y, F f, bool half_open = false) {
+    // assert x is an ancestor of y
+    while (klasses[x] != klasses[y]) {
+      assert(depths[x] < depths[y]);
+      f(enc[klasses[y]], enc[y]);
+      y = parents[klasses[y]];
     }
+    assert(depths[x] <= depths[y]);
+    f(enc[x] + half_open, enc[y]);
   }
 };
 
@@ -268,26 +246,26 @@ void mainCase() {
     adj[y].push_back(x);
   }
 
-  BinaryLifting bl(adj, 0);
-  MiscDfs md(adj, 0);
+  HeavyLightDecomposition hld(adj, 0);
+  dbg(hld.enc);
+
   SegmentTree tree_lr(2 * n, mat2::identity(), [](mat2 l, mat2 r) { return r * l; });
   SegmentTree tree_rl(2 * n, mat2::identity(), [](mat2 l, mat2 r) { return l * r; });
 
-  auto solve0 = [&](int i, mint a, mint b) {
+  auto solve0 = [&](int i, int a, int b) {
     mat2 m = mat2({a, b, 0, 1});
-    int t0 = md.in_times[i];
-    int t1 = md.out_times[i];
-    tree_lr.set(t0, m);
-    tree_lr.set(t1, inverse(m));
-    tree_rl.set(t0, m);
-    tree_rl.set(t1, inverse(m));
+    tree_lr.set(hld.enc[i], m);
+    tree_rl.set(hld.enc[i], m);
+    ls[i] = {a, b};
   };
 
   auto solve1 = [&](int i, int j, mint x) -> mint {
-    int k = bl.getLCA(i, j);
-    mat2 m_ik = tree_rl.reduce(md.in_times[k]    , md.in_times[i] + 1);
-    mat2 m_kj = tree_lr.reduce(md.in_times[k] + 1, md.in_times[j] + 1);
-    vec2 res = m_kj * (m_ik * vec2({x, 1}));
+    int k = hld.getLCA(i, j);
+    mat2 mj = mat2::identity();
+    hld.traverse(k, j, [&](int x, int y) { mj = mj * tree_lr.reduce(x, y + 1); });
+    mat2 mi = mat2::identity();
+    hld.traverse(k, i, [&](int x, int y) { mi = tree_rl.reduce(x, y + 1) * mi; }, /* half_open */ true);
+    vec2 res = mj * (mi * vec2({x, 1}));
     return res[0];
   };
 
@@ -313,7 +291,7 @@ int main() {
 }
 
 /*
-python misc/run.py library_checker/vertex_set_path_composite/main.cpp
+python misc/run.py library_checker/vertex_set_path_composite/main_v2.cpp
 
 %%%% begin
 5 5
