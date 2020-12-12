@@ -1,6 +1,4 @@
-// WIP, WA
-
-// NOTE: maybe bug in my CRT?
+// AC
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -191,7 +189,7 @@ void polymulCRT(vector<int>& p, vector<int>& q, vector<int>& r, int m) {
   dbgv(m1 * m1_inv2 % m2, m1 * m1_inv3 % m3, m2 * m2_inv3 % m3);
 
   auto add = [&](ll x, ll y, ll m) { return (x + y) % m; };
-  auto sub = [&](ll x, ll y, ll m) { return add(x, m - y, m); };
+  auto sub = [&](ll x, ll y, ll m) { return add(x, m - (y % m), m); };
   auto mul = [&](ll x, ll y, ll m) { return (x * y) % m; };
   auto addeq = [&](ll&x, ll y, ll m) { return x = add(x, y, m); };
 
@@ -258,7 +256,7 @@ int main() {
 }
 
 /*
-python misc/run.py library_checker/convolution_mod_1000000007/main.cpp --check
+python misc/run.py library_checker/convolution_mod_1000000007/main_v4.cpp --check
 
 %%%% begin
 4 5
