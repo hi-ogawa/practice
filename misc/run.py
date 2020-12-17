@@ -32,7 +32,7 @@ def monitor_memory_usage(proc, mem_info):
     setattr(proc, method_name, new_method.__get__(proc))
 
 
-def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
+def test_cpp(exec_file, name, inp, outp, check, timeout, truncate, coverage):
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
     proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
@@ -47,6 +47,16 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
         return
     time_end = timeit.default_timer()
     print(f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}, memory: {mem_info[0]}")
+    if coverage:
+        print(f":: Generating coverage report")
+        info_file = "./build/coverage.info"
+        genhtml_dir = "./build/coverage.genhtml"
+        command1 = f"lcov -c -d . -o {info_file}"
+        command2 = f"genhtml {info_file} -o {genhtml_dir}"
+        subprocess.run(command1, shell=True, check=True, capture_output=True)
+        subprocess.run(command2, shell=True, check=True, capture_output=True)
+        print(f":: Finished [{os.path.abspath(genhtml_dir)}/index.html]")
+        return
     proc_outp = proc_stdout.decode()
     if truncate:
         proc_outp = proc_outp[:truncate] + f" [truncate={truncate}]"
@@ -66,22 +76,30 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate):
     print(proc_outp)
 
 
-def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate):
+def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage):
     compiler = "clang++"
-    default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces -fcolor-diagnostics"
-    command = f"{compiler} {default_option}"
+    default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
+    options = []
 
     if debug:
         pch_file = "./build/pch.hpp.gch-debug"
-        command += " -g -DDEBUG -fsanitize=address -fsanitize=undefined"
+        options.append("-g -DDEBUG -fsanitize=address -fsanitize=undefined")
+    elif coverage:
+        compiler = "g++"  # Use gcc since lcov is not completely compatible with clang
+        no_pch = True
+        options.append(f"-g --coverage")
     else:
         pch_file = "./build/pch.hpp.gch"
-        command += " -O2 -march=native"
+        options.append("-O2 -march=native")
+
+    if compiler == "clang++":
+        options.append("-fcolor-diagnostics")
 
     if not no_pch:
-        command += f" -include-pch {pch_file}"
+        options.append(f"-include-pch {pch_file}")
 
-    command += f" -o {exec_file} {file}"
+    options.append(f"-o {exec_file} {file}")
+    command = " ".join([compiler, default_option] + options)
 
     print(f":: Compiling... [{command}]")
     time_begin = timeit.default_timer()
@@ -112,7 +130,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, trunca
         for i, (inp, outp) in enumerate(inline_tests):
             if not i in selected:
                 continue
-            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout, truncate)
+            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout, truncate, coverage)
         return
 
     if test.startswith("file:"):
@@ -120,7 +138,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, trunca
         infile, outfile = test.split(":") if ":" in test else [test, None]
         inp = open(infile).read()
         outp = open(outfile).read() if outfile else ""
-        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout, truncate)
+        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout, truncate, coverage)
         return
 
     raise RuntimeError(f"Found unsupported test: {test}")
@@ -140,6 +158,7 @@ def main():
     parser.add_argument("--no-run", action="store_true", default=False)
     parser.add_argument("--exec-file", type=str, default="./build/main")
     parser.add_argument("--debug", action="store_true", default=False)
+    parser.add_argument("--coverage", action="store_true", default=False)
     parser.add_argument("--timeout", type=float, default=5)
     parser.add_argument("--truncate", type=int, default=None)
     args = parser.parse_args()
