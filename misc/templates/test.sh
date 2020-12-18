@@ -1,12 +1,13 @@
 #!/bin/bash
 
 DIR=$(dirname $BASH_SOURCE)
+SEED=${1:-0}
 
 python misc/run.py $DIR/main.cpp --no-run || exit 1
 # python misc/run.py $DIR/brute.cpp --no-run --exec-file=./build/brute || exit 1
 # python misc/run.py $DIR/check.cpp --no-run --exec-file=./build/check || exit 1
 
-for ((i = 1; ; i++)); do
+for ((i = $SEED; ; i++)); do
   echo $i
   python $DIR/generate.py 10 20 10 20 $i > $DIR/test-in.txt || exit 1
   # TIME_BEGIN=$(date +%s.%N)
