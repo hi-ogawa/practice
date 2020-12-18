@@ -84,6 +84,7 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, trunca
     if debug:
         pch_file = "./build/pch.hpp.gch-debug"
         options.append("-g -DDEBUG -fsanitize=address -fsanitize=undefined")
+        options.append("--rtlib=compiler-rt -lgcc_s") # Workaround clang's int128 bug (cf. https://bugs.llvm.org/show_bug.cgi?id=16404)
     elif coverage:
         compiler = "g++"  # Use gcc since lcov is not completely compatible with clang
         no_pch = True
