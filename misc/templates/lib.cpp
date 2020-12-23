@@ -314,13 +314,17 @@ void fft(vector<mint>& f, bool inv) {
   }
 }
 
-// Order statistics tree (cf. https://codeforces.com/blog/entry/11080 by adamant)
+// Order statistics tree
 #include <ext/pb_ds/assoc_container.hpp>
 template<class Key, class Compare = less<Key>>
 using ordered_set = __gnu_pbds::tree<
   Key, __gnu_pbds::null_type, Compare,
   __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
+// Probing hash table
+#include <ext/pb_ds/assoc_container.hpp>
+template<class Key, class Value, class Hash = std::hash<Key>>
+using hash_table = __gnu_pbds::gp_hash_table<Key, Value, Hash>;
 
 // Segment tree for range sum
 struct SegmentTree {
