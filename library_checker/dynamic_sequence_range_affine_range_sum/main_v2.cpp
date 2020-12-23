@@ -77,8 +77,6 @@ struct SplayTree {
 
     Node(T v) : v{v} { pull(); }
 
-    ~Node() { for (auto x : to) { if (x) { delete x; } } }
-
     int side() { assert(p); return p->to[1] == this; }
 
     void pull() {
@@ -102,6 +100,7 @@ struct SplayTree {
       rev = 0;
       a = 1;
       b = 0;
+      pull();
     }
 
     T reduce() { return a * v_acc + b * cnt; }
@@ -112,19 +111,19 @@ struct SplayTree {
   };
 
   void setChild(Node* p, Node* t, int i) {
-    if (p) { p->to[i] = t; }
+    if (p) { p->to[i] = t; p->pull(); }
     if (t) { t->p = p; }
   }
 
   void rotate(Node* t) {
     assert(t && t->p);
-    int i = t->side();
     auto p = t->p;
-    setChild(p->p, t, p->p && p->side());
+    auto g = p->p;
+    int i = t->side();
+    int j = g && p->side();
     setChild(p, t->to[!i], i);
-    setChild(t, p, !i);
-    p->pull();
-    t->pull();
+    setChild(t, p,        !i);
+    setChild(g, t,         j);
   }
 
   void splay(Node* t) {
@@ -136,15 +135,13 @@ struct SplayTree {
 
   Node* maximum(Node* t) {
     assert(t);
-    while (t->push(), t->pull(), t->to[1]) {
-      t = t->to[1];
-    }
+    while (t->push(), t->to[1]) { t = t->to[1]; }
     return t;
   }
 
   Node* lowerBound(Node* t, int q_key, int tmp_key = 0) {
     if (!t) { return nullptr; }
-    t->push(); t->pull();
+    t->push();
     int t_key = tmp_key + (t->to[0] ? t->to[0]->cnt : 0);
     if (q_key <= t_key) {
       auto res = lowerBound(t->to[0], q_key, tmp_key);
@@ -159,7 +156,6 @@ struct SplayTree {
     splay(s);
     assert(!s->to[1]);
     setChild(s, tr, 1);
-    s->pull();
     return s;
   }
 
@@ -169,8 +165,8 @@ struct SplayTree {
     if (!s) { return {t, nullptr}; }
     splay(s);
     auto u = s->to[0];
-    if (u) { s->to[0] = u->p = nullptr; }
-    s->pull();
+    setChild(s, nullptr, 0);
+    setChild(nullptr, u, -1);
     return {u, s};
   }
 
@@ -196,7 +192,14 @@ struct SplayTree {
   }
 
   Node* root = nullptr;
-  ~SplayTree() { if (root) { delete root; } }
+  ~SplayTree() {
+    function<void(Node*)> rec = [&](Node* t) {
+      if (!t) { return; }
+      for (auto x : t->to) { rec(x); }
+      delete t;
+    };
+    rec(root);
+  }
 
   template<class F>
   void split3(int l, int r, F f) {
