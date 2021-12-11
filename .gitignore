@@ -4,3 +4,4 @@ build
 *.gcno
 *.gcda
 __pycache__
+.vscode
