@@ -3,3 +3,4 @@ build
 # Inconviniently we cannot choose where gcc outputs coverage files...
 *.gcno
 *.gcda
+__pycache__
