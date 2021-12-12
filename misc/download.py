@@ -10,11 +10,11 @@ def get_cookie(hostname):
     return proc.stdout.strip()
 
 
-def get_request(url):
+def get_request(url, with_cookie=False):
     from urllib.request import Request, urlopen
     from urllib.parse import urlparse
     hostname = urlparse(url).hostname
-    cookie = get_cookie(hostname)
+    cookie = get_cookie(hostname) if with_cookie else ""
     user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"
     req = Request(url, headers={"cookie": cookie, "user-agent": user_agent})
     with urlopen(req) as f:
