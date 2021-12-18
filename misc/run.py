@@ -2,9 +2,7 @@ import re
 import subprocess
 from subprocess import PIPE, STDOUT
 import argparse
-import io
 import timeit
-import sys
 import os.path
 
 
@@ -76,7 +74,7 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate, coverage):
     print(proc_outp)
 
 
-def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage):
+def build_cpp(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file: str, debug: bool, timeout: float, truncate: int, coverage: bool) -> str:
     compiler = "clang++"
     default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
     options = []
@@ -111,11 +109,14 @@ def run_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, trunca
     if proc.returncode != 0:
         print(":: Compile failure")
         print(proc.stdout.decode())
-        return 1
+        raise RuntimeError("Compile failure")
 
     print(f":: Compile success (time: {time_end - time_begin:.4f})")
     if proc.stdout:  # Compile warning if any
         print(proc.stdout.decode())
+
+def run(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file: str, debug: bool, timeout: float, truncate: int, coverage: bool) -> None:
+    build_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage)
 
     if no_run:
         return
@@ -163,7 +164,7 @@ def main():
     parser.add_argument("--timeout", type=float, default=5)
     parser.add_argument("--truncate", type=int, default=None)
     args = parser.parse_args()
-    sys.exit(run_cpp(**args.__dict__))
+    run(**args.__dict__)
 
 
 if __name__ == "__main__":
