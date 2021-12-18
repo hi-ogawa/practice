@@ -1,6 +1,9 @@
 # AC
 
-from sys import stdin, stdout, stderr
+from sys import stdin, stdout
+import os
+
+dbg = os.getenv("DEBUG")
 
 
 class Dsu:
@@ -47,8 +50,9 @@ def main() -> None:
         num_edges_base = n - num_components
         num_edges_left = num_edges - num_edges_base
 
-        print(f"{dsu.sizes = }", file=stderr)
-        print(f"{num_edges = }, {num_edges_base = }, {num_edges_left = }", file=stderr)
+        if dbg:
+            print(f"{dsu.sizes = }")
+            print(f"{num_edges = }, {num_edges_base = }, {num_edges_left = }")
 
         answer = sum(sorted(dsu.sizes)[-num_edges_left - 1 :]) - 1
         stdout.write(f"{answer}\n")
@@ -59,5 +63,43 @@ if __name__ == "__main__":
 
 
 """
-python -m experiment.cf1609d.main < experiment/cf1609d/in.txt
+python misc/run.py experiment/cf1609d/main.py
+
+%%%% begin
+7 6
+1 2
+3 4
+2 4
+7 6
+6 5
+1 7
+%%%%
+1
+1
+3
+3
+3
+6
+%%%% end
+
+%%%% begin
+10 8
+1 2
+2 3
+3 4
+1 4
+6 7
+8 9
+8 10
+1 4
+%%%%
+1
+2
+3
+4
+5
+5
+6
+8
+%%%% end
 """
