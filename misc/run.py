@@ -18,15 +18,17 @@ def monitor_memory_usage(proc, mem_info):
     # Monkey patch "Popen" instance to read /proc/<pid>/status before process exiting
     # (cf. https://github.com/python/cpython/blob/3.8/Lib/subprocess.py#L1772)
     # TODO: sometimes we get a weird number especially when running debug build (something like "21474904184 kB")
-    method_name = "_remaining_time" # This seems to be a good choice since it's called during "select" loop
+    method_name = "_remaining_time"  # This seems to be a good choice since it's called during "select" loop
     proc_file = f"/proc/{proc.pid}/status"
     old_method = getattr(proc, method_name)
+
     def new_method(self, *args):
         if os.path.isfile(proc_file):
             m = re.search("VmPeak:(.*)", open(proc_file).read())
             if m:
                 mem_info[0] = m.group(1).strip()
         return old_method(*args)
+
     setattr(proc, method_name, new_method.__get__(proc))
 
 
@@ -44,7 +46,9 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate, coverage):
         print(proc.stdout.read().decode())
         return
     time_end = timeit.default_timer()
-    print(f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}, memory: {mem_info[0]}")
+    print(
+        f":: exit: {proc.returncode}, time: {time_end - time_begin:.4f}, memory: {mem_info[0]}"
+    )
     if coverage:
         print(f":: Generating coverage report")
         info_file = "./build/coverage.info"
@@ -74,7 +78,18 @@ def test_cpp(exec_file, name, inp, outp, check, timeout, truncate, coverage):
     print(proc_outp)
 
 
-def build_cpp(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file: str, debug: bool, timeout: float, truncate: int, coverage: bool) -> str:
+def build_cpp(
+    file: str,
+    check: bool,
+    test: str,
+    no_pch: bool,
+    no_run: bool,
+    exec_file: str,
+    debug: bool,
+    timeout: float,
+    truncate: int,
+    coverage: bool,
+) -> str:
     compiler = "clang++"
     default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
     options = []
@@ -82,7 +97,9 @@ def build_cpp(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exe
     if debug:
         pch_file = "./build/pch.hpp.gch-debug"
         options.append("-g -DDEBUG -fsanitize=address -fsanitize=undefined")
-        options.append("--rtlib=compiler-rt -lgcc_s") # Workaround clang's int128 bug (cf. https://bugs.llvm.org/show_bug.cgi?id=16404)
+        options.append(
+            "--rtlib=compiler-rt -lgcc_s"
+        )  # Workaround clang's int128 bug (cf. https://bugs.llvm.org/show_bug.cgi?id=16404)
     elif coverage:
         compiler = "g++"  # Use gcc since lcov is not completely compatible with clang
         no_pch = True
@@ -105,7 +122,6 @@ def build_cpp(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exe
     proc = subprocess.run(command, shell=True, stdout=PIPE, stderr=STDOUT)
     time_end = timeit.default_timer()
 
-
     if proc.returncode != 0:
         print(":: Compile failure")
         print(proc.stdout.decode())
@@ -115,8 +131,22 @@ def build_cpp(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exe
     if proc.stdout:  # Compile warning if any
         print(proc.stdout.decode())
 
-def run(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file: str, debug: bool, timeout: float, truncate: int, coverage: bool) -> None:
-    build_cpp(file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage)
+
+def run(
+    file: str,
+    check: bool,
+    test: str,
+    no_pch: bool,
+    no_run: bool,
+    exec_file: str,
+    debug: bool,
+    timeout: float,
+    truncate: int,
+    coverage: bool,
+) -> None:
+    build_cpp(
+        file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage
+    )
 
     if no_run:
         return
@@ -132,7 +162,9 @@ def run(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file
         for i, (inp, outp) in enumerate(inline_tests):
             if not i in selected:
                 continue
-            test_cpp(exec_file, f"inline:{i}", inp, outp, check, timeout, truncate, coverage)
+            test_cpp(
+                exec_file, f"inline:{i}", inp, outp, check, timeout, truncate, coverage
+            )
         return
 
     if test.startswith("file:"):
@@ -140,7 +172,16 @@ def run(file: str, check: bool, test: str, no_pch: bool, no_run: bool, exec_file
         infile, outfile = test.split(":") if ":" in test else [test, None]
         inp = open(infile).read()
         outp = open(outfile).read() if outfile else ""
-        test_cpp(exec_file, f"{infile}, {outfile}", inp, outp, check, timeout, truncate, coverage)
+        test_cpp(
+            exec_file,
+            f"{infile}, {outfile}",
+            inp,
+            outp,
+            check,
+            timeout,
+            truncate,
+            coverage,
+        )
         return
 
     raise RuntimeError(f"Found unsupported test: {test}")
