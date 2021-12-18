@@ -17,6 +17,9 @@ def main() -> None:
     #     main_case()
 
 
+if __name__ == "__main__":
+    main()
+
 """
 python misc/run.py {{FILE}}
 
