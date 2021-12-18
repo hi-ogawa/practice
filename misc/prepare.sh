@@ -3,26 +3,30 @@
 #
 # Example:
 #   bash misc/prepare.sh codeforces/problemset/321C/main.cpp https://codeforces.com/problemset/problem/321/C
+#   bash misc/prepare.sh codeforces/problemset/1609C/main.py https://codeforces.com/contest/1609/problem/C
 #
 
-FILE="${1}"
-URL="${2}"
-TEMPLATE_MAIN="misc/templates/main.cpp"
+# Input
+file_path="$1"
+problem_url="$2"
 
-if [ -z "$FILE" ]; then
-  echo "Usage: bash $BASH_SOURCE <file> <url>"
+if [ "$file_path" = "" ]; then
+  echo "Usage: bash ${BASH_SOURCE[0]} <file> <url>"
   exit 1
 fi
 
-echo ":: Creating... [$FILE]"
-mkdir -p $(dirname $FILE)
-cp -i $TEMPLATE_MAIN $FILE
-perl -pi -e "s#{{FILE}}#$FILE#" $FILE
+file_extension="${file_path##*.}"
+main_template="misc/templates/main.$file_extension"
 
-if [ -n "$URL" ]; then
-  echo ":: Downloading... [$URL]"
-  TESTS=$(python misc/download.py $URL --quiet)
-  perl -pi -e "s/{{TESTS}}/$TESTS/" $FILE
+echo ":: Creating... [$file_path]"
+mkdir -p "$(dirname "$file_path")"
+cp --interactive "$main_template" "$file_path"
+perl -pi -e "s#{{FILE}}#$file_path#" "$file_path"
+
+if [ -n "$problem_url" ]; then
+  echo ":: Downloading... [$problem_url]"
+  tests=$(python misc/download.py "$problem_url" --quiet)
+  perl -pi -e "s/{{TESTS}}/$tests/" "$file_path"
 fi
 
 echo ":: Finished"

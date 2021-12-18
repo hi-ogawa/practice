@@ -45,6 +45,7 @@ def run_test(
 ) -> None:
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
+    # TODO: stderr included in stdout?
     proc = subprocess.Popen(**popen_kwargs, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     mem_info = [None]
     monitor_memory_usage(proc, mem_info)
