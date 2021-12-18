@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # WIP
 
 from sys import stdin
