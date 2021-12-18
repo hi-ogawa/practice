@@ -48,6 +48,9 @@ struct Dsu {
   void merge(int x, int y) {
     x = find(x);
     y = find(y);
+    if (x == y) {
+      return;
+    }
     if (sizes[x] > sizes[y]) {
       swap(x, y);
     }
