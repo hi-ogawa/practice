@@ -4,6 +4,7 @@ from subprocess import PIPE, STDOUT
 import argparse
 import timeit
 import os.path
+from typing import Any
 
 
 def find_inline_tests(file):
@@ -32,10 +33,19 @@ def monitor_memory_usage(proc, mem_info):
     setattr(proc, method_name, new_method.__get__(proc))
 
 
-def test_cpp(exec_file, name, inp, outp, check, timeout, truncate, coverage):
+def run_test(
+    popen_kwargs: dict[str, Any],
+    name,
+    inp,
+    outp,
+    check,
+    timeout,
+    truncate,
+    coverage,
+) -> None:
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
-    proc = subprocess.Popen(exec_file, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    proc = subprocess.Popen(**popen_kwargs, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     mem_info = [None]
     monitor_memory_usage(proc, mem_info)
     try:
@@ -89,7 +99,7 @@ def build_cpp(
     timeout: float,
     truncate: int,
     coverage: bool,
-) -> str:
+) -> dict[str, Any]:
     compiler = "clang++"
     default_option = "-std=c++17 -Wall -Wextra -Wshadow -Wno-missing-braces"
     options = []
@@ -131,6 +141,25 @@ def build_cpp(
     if proc.stdout:  # Compile warning if any
         print(proc.stdout.decode())
 
+    return dict(args=exec_file)
+
+
+def build_py(
+    file: str,
+    check: bool,
+    test: str,
+    no_pch: bool,
+    no_run: bool,
+    exec_file: str,
+    debug: bool,
+    timeout: float,
+    truncate: int,
+    coverage: bool,
+) -> list[str]:
+    args = ["python", file]
+    env = dict(DEBUG="1") if debug else None
+    return dict(args=args, env=env)
+
 
 def run(
     file: str,
@@ -144,8 +173,23 @@ def run(
     truncate: int,
     coverage: bool,
 ) -> None:
-    build_cpp(
-        file, check, test, no_pch, no_run, exec_file, debug, timeout, truncate, coverage
+    if file.endswith(".cpp"):
+        build = build_cpp
+    elif file.endswith(".py"):
+        build = build_py
+    else:
+        raise RuntimeError("Unsuported file: {file}")
+    popen_args = build(
+        file,
+        check,
+        test,
+        no_pch,
+        no_run,
+        exec_file,
+        debug,
+        timeout,
+        truncate,
+        coverage,
     )
 
     if no_run:
@@ -162,8 +206,15 @@ def run(
         for i, (inp, outp) in enumerate(inline_tests):
             if not i in selected:
                 continue
-            test_cpp(
-                exec_file, f"inline:{i}", inp, outp, check, timeout, truncate, coverage
+            run_test(
+                popen_args,
+                f"inline:{i}",
+                inp,
+                outp,
+                check,
+                timeout,
+                truncate,
+                coverage,
             )
         return
 
@@ -172,8 +223,8 @@ def run(
         infile, outfile = test.split(":") if ":" in test else [test, None]
         inp = open(infile).read()
         outp = open(outfile).read() if outfile else ""
-        test_cpp(
-            exec_file,
+        run_test(
+            popen_args,
             f"{infile}, {outfile}",
             inp,
             outp,
