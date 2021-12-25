@@ -2,23 +2,35 @@
 
 from sys import stdin
 import os
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
+from array import array
+from copy import copy
 
 dbg = os.getenv("DEBUG")
 
-# paired
-# unpaired left
-# unpaired right
-T = Tuple[int, int, int]
+# three elements with
+#   - paired
+#   - unpaired left
+#   - unpaired right
+T = Sequence[int]
 
-zero = (0, 0, 0)
+zero = array("l", [0, 0, 0])
 
 
-def mul(x: T, y: T) -> T:
-    xp, xl, xr = x
-    yp, yl, yr = y
-    p = min(xl, yr)
-    return (xp + yp + 2 * p, xl + yl - p, xr + yr - p)
+def imul(x: T, y: T) -> T:
+    p = min(x[1], y[2])
+    x[0] += y[0] + 2 * p
+    x[1] += y[1] - p
+    x[2] += y[2] - p
+    return x
+
+
+def imul_r(x: T, y: T) -> T:
+    p = min(x[1], y[2])
+    y[0] += x[0] + 2 * p
+    y[1] += x[1] - p
+    y[2] += x[2] - p
+    return y
 
 
 class SegmentTree:
@@ -26,17 +38,18 @@ class SegmentTree:
         n = len(s)
         n = 1 << (n.bit_length() + 1)
         self.n = n
-        self.data: List[Tuple[int, int, int]] = [zero] * (2 * n)
+        self.data: List[Tuple[int, int, int]] = [copy(zero) for _ in range(2 * n)]
         for i, c in enumerate(s, n):
-            self.data[i] = (0, int(c == "("), int(c == ")"))
+            self.data[i][1] += int(c == "(")
+            self.data[i][2] += int(c == ")")
 
         for i in reversed(range(1, n)):
-            self.data[i] = mul(self.data[2 * i], self.data[2 * i + 1])
+            self.data[i] = imul(copy(self.data[2 * i]), self.data[2 * i + 1])
 
     def reduce(self, ql: int, qr: int) -> T:
         def rec(l: int, r: int, i: int) -> T:
             if r <= ql or qr <= l:
-                return zero
+                return copy(zero)
 
             if ql <= l and r <= qr:
                 return self.data[i]
@@ -44,25 +57,25 @@ class SegmentTree:
             m = (l + r) // 2
             res_l = rec(l, m, 2 * i)
             res_r = rec(m, r, 2 * i + 1)
-            return mul(res_l, res_r)
+            return imul(copy(res_l), res_r)
 
         return rec(0, self.n, 1)
 
     def reduce_opt(self, ql: int, qr: int) -> T:
         l = ql + self.n
         r = qr + self.n
-        res_l = zero
-        res_r = zero
+        res_l = copy(zero)
+        res_r = copy(zero)
         while l < r:
             if l & 1:
-                res_l = mul(res_l, self.data[l])
+                imul(res_l, self.data[l])
                 l += 1
             if r & 1:
                 r -= 1
-                res_r = mul(self.data[r], res_r)
+                imul_r(self.data[r], res_r)
             l //= 2
             r //= 2
-        return mul(res_l, res_r)
+        return imul(res_l, res_r)
 
 
 def main_case() -> None:
