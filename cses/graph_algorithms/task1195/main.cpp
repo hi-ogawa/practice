@@ -1,4 +1,4 @@
-// AC
+// TLE
 
 #include <bits/stdc++.h>
 using namespace std;

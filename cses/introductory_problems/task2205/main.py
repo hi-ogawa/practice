@@ -1,4 +1,4 @@
-# WIP
+# AC
 
 from sys import stdin
 import os
