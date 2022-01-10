@@ -5,3 +5,4 @@ build
 *.gcda
 __pycache__
 .vscode
+.venv

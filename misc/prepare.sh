@@ -15,13 +15,16 @@ if [ "$file_path" = "" ]; then
   exit 1
 fi
 
+this_dir=$(dirname "${BASH_SOURCE[0]}")
+runpy_path=$(realpath --relative-to="$PWD" "$this_dir/run.py")
 file_extension="${file_path##*.}"
-main_template="misc/templates/main.$file_extension"
+main_template="$this_dir/templates/main.$file_extension"
 
 echo ":: Creating... [$file_path]"
 mkdir -p "$(dirname "$file_path")"
 cp --interactive "$main_template" "$file_path"
 perl -pi -e "s#{{FILE}}#$file_path#" "$file_path"
+perl -pi -e "s#{{RUNPY}}#$runpy_path#" "$file_path"
 
 if [ -n "$problem_url" ]; then
   echo ":: Downloading... [$problem_url]"
