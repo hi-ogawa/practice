@@ -162,6 +162,46 @@ def build_py(
     return dict(args=args, env=env)
 
 
+def build_rs(
+    file: str,
+    check: bool,
+    test: str,
+    no_pch: bool,
+    no_run: bool,
+    exec_file: str,
+    debug: bool,
+    timeout: float,
+    truncate: int,
+    coverage: bool,
+) -> list[str]:
+    compiler = "rustc"
+    compiler_args = []
+    compiler_args += ["-o", exec_file]
+    compiler_args += ["--edition", "2021"]
+    if debug:
+        compiler_args += ["-g"]
+    else:
+        compiler_args += ["-O"]
+    compiler_args += [file]
+    command = " ".join([compiler, *compiler_args])
+
+    print(f":: Compiling... [{command}]")
+    time_begin = timeit.default_timer()
+    proc = subprocess.run(command, shell=True, stdout=PIPE, stderr=STDOUT)
+    time_end = timeit.default_timer()
+
+    if proc.returncode != 0:
+        print(":: Compile failure")
+        print(proc.stdout.decode())
+        raise RuntimeError("Compile failure")
+
+    print(f":: Compile success (time: {time_end - time_begin:.4f})")
+    if proc.stdout:  # Compile warning if any
+        print(proc.stdout.decode())
+
+    return dict(args=exec_file)
+
+
 def run(
     file: str,
     check: bool,
@@ -178,6 +218,8 @@ def run(
         build = build_cpp
     elif file.endswith(".py"):
         build = build_py
+    elif file.endswith(".rs"):
+        build = build_rs
     else:
         raise RuntimeError("Unsuported file: {file}")
     popen_args = build(
