@@ -8,3 +8,7 @@ edition = "2021"
 [[bin]]
 name = "cses-2189"
 path = "cses/geometry/task2189/main.rs"
+
+[[bin]]
+name = "cses-2138-reachable-nodes"
+path = "cses/advanced_techniques/task2138-reachable-nodes/main.rs"
