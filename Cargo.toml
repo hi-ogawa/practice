@@ -12,3 +12,11 @@ path = "cses/geometry/task2189/main.rs"
 [[bin]]
 name = "cses-2138-reachable-nodes"
 path = "cses/advanced_techniques/task2138-reachable-nodes/main.rs"
+
+[[bin]]
+name = "abc260-a"
+path = "atcoder/abc260/a/main.rs"
+
+[[bin]]
+name = "abc260-b"
+path = "atcoder/abc260/b/main.rs"
