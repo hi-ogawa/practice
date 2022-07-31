@@ -18,6 +18,22 @@ name = "cses-2138-reachable-nodes"
 path = "cses/advanced_techniques/task2138-reachable-nodes/main.rs"
 
 [[bin]]
+name = "cses-2420-palindrome-queries"
+path = "cses/string_algorithms/task2420-palindrome-queries/main.rs"
+
+[[bin]]
+name = "cses-2420-palindrome-queries-v2"
+path = "cses/string_algorithms/task2420-palindrome-queries/main_v2.rs"
+
+[[bin]]
+name = "cses-2420-palindrome-queries-v3"
+path = "cses/string_algorithms/task2420-palindrome-queries/main_v3.rs"
+
+[[bin]]
+name = "cses-2420-palindrome-queries-v4"
+path = "cses/string_algorithms/task2420-palindrome-queries/main_v4.rs"
+
+[[bin]]
 name = "abc260-a"
 path = "atcoder/abc260/a/main.rs"
 
