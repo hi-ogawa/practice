@@ -34,6 +34,10 @@ name = "cses-2420-palindrome-queries-v4"
 path = "cses/string_algorithms/task2420-palindrome-queries/main_v4.rs"
 
 [[bin]]
+name = "cses-task2190-line-segment-intersection"
+path = "cses/geometry/task2190-line-segment-intersection/main.rs"
+
+[[bin]]
 name = "abc260-a"
 path = "atcoder/abc260/a/main.rs"
 
