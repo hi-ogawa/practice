@@ -96,3 +96,7 @@ path = "atcoder/abc262/d/main_v2.rs"
 [[bin]]
 name = "cses-mathematics-task2182-divisor-analysis"
 path = "cses/mathematics/task2182-divisor-analysis/main.rs"
+
+[[bin]]
+name = "atcoder-abc263-c-main"
+path = "atcoder/abc263/c/main.rs"
