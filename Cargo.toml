@@ -136,3 +136,27 @@ path = "atcoder/abc262/e/main.rs"
 [[bin]]
 name = "atcoder-abc261-f-main"
 path = "atcoder/abc261/f/main.rs"
+
+[[bin]]
+name = "atcoder-abc264-a-main"
+path = "atcoder/abc264/a/main.rs"
+
+[[bin]]
+name = "atcoder-abc264-b-main"
+path = "atcoder/abc264/b/main.rs"
+
+[[bin]]
+name = "atcoder-abc264-c-main"
+path = "atcoder/abc264/c/main.rs"
+
+[[bin]]
+name = "atcoder-abc264-c-main-v2"
+path = "atcoder/abc264/c/main_v2.rs"
+
+[[bin]]
+name = "atcoder-abc264-d-main"
+path = "atcoder/abc264/d/main.rs"
+
+[[bin]]
+name = "atcoder-abc264-e-main"
+path = "atcoder/abc264/e/main.rs"
