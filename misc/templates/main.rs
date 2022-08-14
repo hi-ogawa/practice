@@ -1,5 +1,7 @@
 // WIP
 
+// {{PROBLEM_URL}}
+
 use std::{fmt::Debug, io, str::FromStr};
 
 fn main_case() -> io::Result<()> {
@@ -25,6 +27,7 @@ python misc/run.py {{FILE}}
 // utils
 //
 
+#[allow(dead_code)]
 fn read_tokens<F: FromStr>() -> io::Result<Vec<F>>
 where
     <F as FromStr>::Err: Debug,

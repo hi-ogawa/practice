@@ -29,7 +29,8 @@ perl -pi -e "s#{{RUNPY}}#$runpy_path#" "$file_path"
 if [ -n "$problem_url" ]; then
   echo ":: Downloading... [$problem_url]"
   tests=$(python misc/download.py "$problem_url" --quiet)
-  perl -pi -e "s/{{TESTS}}/$tests/" "$file_path"
+  perl -pi -e "s#{{TESTS}}#$tests#" "$file_path"
+  perl -pi -e "s#{{PROBLEM_URL}}#$problem_url#" "$file_path"
 fi
 
 echo ":: Finished"
