@@ -54,6 +54,14 @@ name = "abc260-e"
 path = "atcoder/abc260/e/main.rs"
 
 [[bin]]
+name = "abc260-f"
+path = "atcoder/abc260/f/main.rs"
+
+[[bin]]
+name = "abc260-f-v2"
+path = "atcoder/abc260/f/main_v2.rs"
+
+[[bin]]
 name = "abc261-a"
 path = "atcoder/abc261/a/main.rs"
 
