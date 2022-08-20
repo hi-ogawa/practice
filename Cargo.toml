@@ -170,6 +170,10 @@ name = "atcoder-abc264-e-main"
 path = "atcoder/abc264/e/main.rs"
 
 [[bin]]
+name = "atcoder-abc259-b-main"
+path = "atcoder/abc259/b/main.rs"
+
+[[bin]]
 name = "atcoder-abc259-d-main"
 path = "atcoder/abc259/d/main.rs"
 
