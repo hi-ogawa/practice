@@ -9,6 +9,12 @@ edition = "2021"
 name = "template"
 path = "misc/templates/main.rs"
 
+[[test]]
+# run unit test by
+#   cargo test --test template-lib
+name = "template-lib"
+path = "misc/templates/lib.rs"
+
 [[bin]]
 name = "cses-2189"
 path = "cses/geometry/task2189/main.rs"
@@ -304,3 +310,7 @@ path = "atcoder/abc274/e/main.rs"
 [[bin]]
 name = "atcoder-abc275-c-main"
 path = "atcoder/abc275/c/main.rs"
+
+[[bin]]
+name = "atcoder-abc275-e-main"
+path = "atcoder/abc275/e/main.rs"
