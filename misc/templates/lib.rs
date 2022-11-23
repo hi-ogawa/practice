@@ -35,12 +35,73 @@ impl Dsu {
 }
 
 //
+// segment tree
+//
+
+type Value = usize;
+
+fn value_id() -> Value {
+    0
+}
+
+fn value_multiply(lhs: Value, rhs: Value) -> Value {
+    lhs + rhs
+}
+
+struct SegmentTree {
+    n: usize,
+    data: Vec<Value>,
+}
+
+impl SegmentTree {
+    fn new(n_orig: usize) -> Self {
+        let mut n = 1;
+        while n < n_orig {
+            n *= 2;
+        }
+        Self {
+            n,
+            data: vec![value_id(); 2 * n],
+        }
+    }
+
+    fn set(&mut self, qi: usize, v: Value) {
+        let mut j = qi + self.n;
+        self.data[j] = v;
+        while j > 1 {
+            j /= 2;
+            self.data[j] = value_multiply(self.data[2 * j], self.data[2 * j + 1]);
+        }
+    }
+
+    fn reduce(&self, ql: usize, qr: usize) -> Value {
+        let mut jl = ql + self.n;
+        let mut jr = qr + self.n;
+        let mut lhs = value_id();
+        let mut rhs = value_id();
+        while jl < jr {
+            if jl & 1 == 1 {
+                lhs = value_multiply(lhs, self.data[jl]);
+                jl += 1;
+            }
+            if jr & 1 == 1 {
+                jr -= 1;
+                rhs = value_multiply(self.data[jr], rhs);
+            }
+            jl /= 2;
+            jr /= 2;
+        }
+        value_multiply(lhs, rhs)
+    }
+}
+
+//
 // modulo integer (e.g. atcoder/abc262/e/main.rs)
 //
 
 const MODULO: usize = 998244353;
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Default)]
 struct Mint(usize);
 
 impl Mint {
@@ -123,6 +184,23 @@ mod tests {
         assert_eq!(
             (0..n).map(|x| dsu.find(x)).collect::<Vec<usize>>(),
             vec![0, 0, 2, 2, 0]
+        );
+    }
+
+    #[test]
+    fn test_segment_tree() {
+        let mut tree = SegmentTree::new(5);
+        tree.set(0, 1);
+        tree.set(1, 2);
+        tree.set(2, 3);
+        tree.set(3, 5);
+        tree.set(4, 7);
+        assert_eq!(
+            [(0, 3), (1, 4), (2, 5), (3, 6)]
+                .iter()
+                .map(|&(l, r)| tree.reduce(l, r))
+                .collect::<Vec<usize>>(),
+            vec![6, 10, 15, 12]
         );
     }
 }
