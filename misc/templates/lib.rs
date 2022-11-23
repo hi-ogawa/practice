@@ -1,8 +1,38 @@
 // TODO
 // fenwick tree
 // segment tree
-// dsu
 // bit iteration
+
+//
+// disjoint set union (dsu) (e.g. atcoder/abc276/e/main.rs)
+//
+
+struct Dsu {
+    parents: Vec<usize>,
+}
+
+impl Dsu {
+    fn new(n: usize) -> Self {
+        Self {
+            parents: (0..n).collect(),
+        }
+    }
+
+    fn find(&mut self, x: usize) -> usize {
+        let mut p = self.parents[x];
+        if p != x {
+            p = self.find(p);
+            self.parents[x] = p;
+        }
+        p
+    }
+
+    fn merge(&mut self, mut dst: usize, mut src: usize) {
+        dst = self.find(dst);
+        src = self.find(src);
+        self.parents[src] = dst;
+    }
+}
 
 //
 // modulo integer (e.g. atcoder/abc262/e/main.rs)
@@ -81,5 +111,18 @@ mod tests {
     #[test]
     fn test_mint_inverse() {
         assert_eq!(Mint(18181) / Mint(18181), Mint(1));
+    }
+
+    #[test]
+    fn test_dsu() {
+        let n = 5;
+        let mut dsu = Dsu::new(n);
+        dsu.merge(0, 1);
+        dsu.merge(2, 3);
+        dsu.merge(1, 4);
+        assert_eq!(
+            (0..n).map(|x| dsu.find(x)).collect::<Vec<usize>>(),
+            vec![0, 0, 2, 2, 0]
+        );
     }
 }
