@@ -1,4 +1,4 @@
-// RE
+// AC
 
 // https://atcoder.jp/contests/abc277/tasks/abc277_e
 
@@ -15,7 +15,7 @@ fn main_case() -> io::Result<()> {
     //   - old edges E0 and E1 lives in each layer (with distance one)
     //   - switch connecting vertices from one layer to another (with distance zero)
 
-    let (n, m, _k) = read_tokens::<usize>().map(|v| (v[0], v[1], v[2]))?;
+    let (n, m, k) = read_tokens::<usize>().map(|v| (v[0], v[1], v[2]))?;
 
     //
     // construct graph
@@ -32,11 +32,14 @@ fn main_case() -> io::Result<()> {
         adj[v].push((u, 1));
     }
 
-    let switches: Vec<usize> = read_tokens()?;
-    for s in switches {
-        let s = s - 1;
-        adj[s].push((s + n, 0));
-        adj[s + n].push((s, 0));
+    // is k = 0 possible?
+    if k > 0 {
+        let switches: Vec<usize> = read_tokens()?;
+        for s in switches {
+            let s = s - 1;
+            adj[s].push((s + n, 0));
+            adj[s + n].push((s, 0));
+        }
     }
 
     //
