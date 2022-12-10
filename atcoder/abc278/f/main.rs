@@ -1,4 +1,4 @@
-// WA
+// AC
 
 // https://atcoder.jp/contests/abc278/tasks/abc278_f
 
@@ -37,11 +37,36 @@ fn main_case() -> io::Result<()> {
         for x in 0..n {
             if s & (1 << x) != 0 {
                 let t = s & !(1 << x);
-                dp[s][x] = adj[x].iter().any(|&y| (t & (1 << y) != 0) && !dp[t][y]);
+                dp[s][x] = true;
+                for &y in &adj[x] {
+                    if t & (1 << y) != 0 && dp[t][y] {
+                        dp[s][x] = false;
+                    }
+                }
             }
         }
     }
-    // dbg!(&dp);
+
+    #[allow(unused_variables)]
+    let debug_dp = || {
+        for s in 0..(1 << n) {
+            for x in 0..n {
+                if s & (1 << x) == 0 {
+                    continue;
+                }
+                let bits = (0..n)
+                    .map(|y| match (x == y, s & (1 << y) != 0) {
+                        (true, _) => "@",
+                        (_, true) => "#",
+                        (_, false) => "_",
+                    })
+                    .collect::<Vec<_>>()
+                    .join("");
+                println!("{}{}", bits, if dp[s][x] { " (ok)" } else { "" });
+            }
+        }
+    };
+    // debug_dp();
 
     let result = (0..n).any(|x| dp[(1 << n) - 1][x]);
     println!("{}", if result { "First" } else { "Second" });
@@ -56,12 +81,36 @@ fn main() -> io::Result<()> {
 python misc/run.py atcoder/abc278/f/main.rs
 
 %%%% begin
+1
+a
+%%%%
+First
+%%%% end
+
+%%%% begin
+2
+a
+a
+%%%%
+Second
+%%%% end
+
+%%%% begin
+3
+a
+a
+a
+%%%%
+First
+%%%% end
+
+%%%% begin
 3
 a
 b
 c
 %%%%
-Second
+First
 %%%% end
 
 %%%% begin
