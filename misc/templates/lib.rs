@@ -129,6 +129,12 @@ impl std::ops::AddAssign for Mint {
     }
 }
 
+impl std::ops::SubAssign for Mint {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self += -rhs;
+    }
+}
+
 impl std::ops::MulAssign for Mint {
     fn mul_assign(&mut self, rhs: Self) {
         self.0 = (self.0 * rhs.0) % MODULO;
@@ -141,10 +147,25 @@ impl std::ops::DivAssign for Mint {
     }
 }
 
+impl std::ops::Neg for Mint {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        Mint(MODULO - self.0 % MODULO)
+    }
+}
+
 impl std::ops::Add for Mint {
     type Output = Self;
     fn add(mut self, rhs: Self) -> Self::Output {
         self += rhs;
+        self
+    }
+}
+
+impl std::ops::Sub for Mint {
+    type Output = Self;
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        self -= rhs;
         self
     }
 }
