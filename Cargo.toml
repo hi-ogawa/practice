@@ -368,5 +368,17 @@ name = "atcoder-abc279-f-main"
 path = "atcoder/abc279/f/main.rs"
 
 [[bin]]
+name = "atcoder-abc280-d-main"
+path = "atcoder/abc280/d/main.rs"
+
+[[bin]]
+name = "atcoder-abc280-d-main-v1"
+path = "atcoder/abc280/d/main_v1.rs"
+
+[[bin]]
+name = "atcoder-abc280-d-brute"
+path = "atcoder/abc280/d/brute.rs"
+
+[[bin]]
 name = "atcoder-abc280-e-main"
 path = "atcoder/abc280/e/main.rs"
