@@ -2,6 +2,7 @@ import re
 import subprocess
 from subprocess import PIPE, STDOUT
 import argparse
+import sys
 import timeit
 import os.path
 from typing import Any
@@ -46,7 +47,7 @@ def run_test(
     print(f":: Running test ({name})")
     time_begin = timeit.default_timer()
     # TODO: stderr included in stdout?
-    proc = subprocess.Popen(**popen_kwargs, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    proc = subprocess.Popen(**popen_kwargs, stdin=PIPE, stdout=PIPE, stderr=sys.stderr)
     mem_info = [None]
     monitor_memory_usage(proc, mem_info)
     try:
