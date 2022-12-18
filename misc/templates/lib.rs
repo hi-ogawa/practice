@@ -126,6 +126,36 @@ impl SegmentTree {
     }
 }
 
+impl std::fmt::Debug for SegmentTree {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let n = self.n;
+        let d = (n as f64).log2().ceil() as usize;
+
+        // find max width element
+        let w = self
+            .data
+            .iter()
+            .map(|v| format!("{}", v).len())
+            .max()
+            .unwrap();
+
+        writeln!(f, "[")?;
+        for i in 0..=d {
+            let k = 1 << i;
+            for j in 0..k {
+                write!(
+                    f,
+                    "{:<width$}",
+                    self.data[k + j],
+                    width = if j == k - 1 { 0 } else { (w + 1) * (n / k) }
+                )?;
+            }
+            writeln!(f, "")?
+        }
+        writeln!(f, "]")
+    }
+}
+
 //
 // modulo integer (e.g. atcoder/abc262/e/main.rs)
 //
@@ -253,6 +283,16 @@ mod tests {
                 .map(|&(l, r)| tree.reduce(l, r))
                 .collect::<Vec<usize>>(),
             vec![6, 10, 15, 12]
+        );
+        assert_eq!(
+            format!("{:?}", &tree),
+            r"[
+18
+11          7
+3     8     7     0
+1  2  3  5  7  0  0  0
+]
+"
         );
     }
 
