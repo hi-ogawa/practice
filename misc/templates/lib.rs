@@ -1,7 +1,38 @@
 // TODO
 // fenwick tree
-// segment tree
 // bit iteration
+
+//
+// binary search
+//
+
+// min { x \in (x0, x1] | f(x) }
+fn binary_search_min<F: Fn(usize) -> bool>(mut x0: usize, mut x1: usize, f: F) -> usize {
+    assert!(f(x1));
+    while x0 + 1 < x1 {
+        let x = (x0 + x1 + 1) / 2;
+        if f(x) {
+            x1 = x;
+        } else {
+            x0 = x;
+        }
+    }
+    x1
+}
+
+// max { x \in [x0, x1) | f(x) }
+fn binary_search_max<F: Fn(usize) -> bool>(mut x0: usize, mut x1: usize, f: F) -> usize {
+    assert!(f(x0));
+    while x0 + 1 < x1 {
+        let x = (x0 + x1) / 2;
+        if f(x) {
+            x0 = x;
+        } else {
+            x1 = x;
+        }
+    }
+    x0
+}
 
 //
 // disjoint set union (dsu) (e.g. atcoder/abc276/e/main.rs)
@@ -223,5 +254,17 @@ mod tests {
                 .collect::<Vec<usize>>(),
             vec![6, 10, 15, 12]
         );
+    }
+
+    #[test]
+    fn test_lower_bound() {
+        let v = vec![0, 1, 3, 4, 7, 8];
+        assert_eq!(binary_search_min(0, v.len() - 1, |i| v[i] * v[i] > 10), 3);
+    }
+
+    #[test]
+    fn test_upper_bound() {
+        let v = vec![0, 1, 3, 4, 7, 8];
+        assert_eq!(binary_search_max(0, v.len(), |i| v[i] * v[i] < 10), 2);
     }
 }
