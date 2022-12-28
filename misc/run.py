@@ -178,7 +178,7 @@ def build_rs(
     compiler = "rustc"
     compiler_args = []
     compiler_args += ["-o", exec_file]
-    compiler_args += ["--edition", "2021"]
+    compiler_args += ["--edition", "2018"]
     if debug:
         compiler_args += ["-g"]
     else:
