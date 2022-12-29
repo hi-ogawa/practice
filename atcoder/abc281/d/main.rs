@@ -1,4 +1,4 @@
-// WA
+// AC
 
 // https://atcoder.jp/contests/abc281/tasks/abc281_d
 
@@ -18,13 +18,13 @@ fn main_case() -> io::Result<()> {
         let a = ls[i - 1];
         for l in 1..=i {
             for c in 0..d {
-                // cannot use array on edition < 2021 https://doc.rust-lang.org/std/primitive.array.html#editions
-                dp[i][l][c] = vec![
+                dp[i][l][c] = [
                     dp[i - 1][l][c],
-                    dp[i - 1][l - 1][(c + d - a) % d].map(|v| v + a),
+                    dp[i - 1][l - 1][(c + d - (a % d)) % d].map(|v| v + a),
                 ]
-                .into_iter()
+                .iter()
                 .flatten()
+                .copied()
                 .max();
             }
         }
