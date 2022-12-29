@@ -3,8 +3,7 @@
 use std::{cmp::min_by_key, fmt::Debug, io, str::FromStr};
 
 fn main_case() -> io::Result<()> {
-    let (n, l, r) = read_tokens::<isize>().map(|v| (v[0], v[1], v[2]))?;
-    let n: usize = n.try_into().unwrap();
+    let (n, l, r) = read_tokens::<isize>().map(|v| (v[0] as usize, v[1], v[2]))?;
     let ls = read_tokens::<isize>()?;
 
     let mut cumsum = vec![0; n + 1];
