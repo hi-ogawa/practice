@@ -1,22 +1,19 @@
-Math and Programming Practice
+# math and programming practice
 
-```bash
-# Lint *.py
-pip install -r requirements.txt
-shopt -s globstar
-flake8 **/*.py
-black **/*.py
+## helper scripts
 
-# Lint *.js
-npm install
-npx eslint '**/*.js' --fix --format unix
+- `misc/run.py`
+- `misc/prepare.sh`
+- `misc/templates`
+  - `main.cpp`, `main.rs`, `main.py`
+  - `lib.cpp`, `lib.rs`
 
-# Lint *.cpp
-shopt -s globstar
-clang-format **/*.cpp -i --style="{BasedOnStyle: Google, ReflowComments: false}"
+## example usage
 
-# Build precompiled headers (cf. misc/run.py)
-echo '#include <bits/stdc++.h>' > ./build/pch.hpp
-clang++ -std=c++17 -O2 -march=native ./build/pch.hpp -o ./build/pch.hpp.gch
-clang++ -std=c++17 -g -DDEBUG -fsanitize=address -fsanitize=undefined ./build/pch.hpp -o ./build/pch.hpp.gch-debug
+```sh
+# create a file "atcoder/abc268/d/main.rs" based on "misc/templates/main.rs" and download test data from https://atcoder.jp/contests/abc268/tasks/abc268_d
+bash misc/prepare.sh atcoder/abc268/d/main.rs https://atcoder.jp/contests/abc268/tasks/abc268_d
+
+# compile and run inline tests
+python misc/run.py atcoder/abc268/d/main.rs --check
 ```
