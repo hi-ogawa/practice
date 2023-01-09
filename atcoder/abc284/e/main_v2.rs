@@ -1,19 +1,18 @@
-// AFTER EDITORIAL, AC
+// WIP
 
 // https://atcoder.jp/contests/abc284/tasks/abc284_e
 
 fn main_case() {
     // ~ 10^6
-    let (n, m) = {
-        let v = read_tokens::<usize>();
-        (v[0], v[1])
-    };
+    let [n, m] = vec_to_array(read_tokens::<usize>());
 
     let mut adj: Vec<Vec<usize>> = vec![vec![]; n];
     for _ in 0..m {
-        let e: Vec<usize> = read_tokens();
-        adj[e[0] - 1].push(e[1] - 1);
-        adj[e[1] - 1].push(e[0] - 1);
+        let [mut u, mut v] = vec_to_array(read_tokens::<usize>());
+        u -= 1;
+        v -= 1;
+        adj[u].push(v);
+        adj[v].push(u);
     }
 
     // Prop.
@@ -57,7 +56,7 @@ fn main() {
 }
 
 /*
-python misc/run.py atcoder/abc284/e/main.rs
+python misc/run.py atcoder/abc284/e/main_v2.rs
 
 %%%% begin
 4 2

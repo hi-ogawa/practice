@@ -2,7 +2,6 @@ node_modules
 build
 # rust/cargo artifacts
 target
-Cargo.lock
 # Inconviniently we cannot choose where gcc outputs coverage files...
 *.gcno
 *.gcda
