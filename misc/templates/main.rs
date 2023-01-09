@@ -2,19 +2,14 @@
 
 // {{PROBLEM_URL}}
 
-use std::{fmt::Debug, io, str::FromStr};
+fn main_case() {}
 
-fn main_case() -> io::Result<()> {
-    Ok(())
-}
-
-fn main() -> io::Result<()> {
-    main_case()
-    // let t: usize = read_tokens()?[0];
+fn main() {
+    main_case();
+    // let t: usize = read_tokens()[0];
     // for _ in 0..t {
-    //     main_case()?
+    //     main_case();
     // }
-    // Ok(())
 }
 
 /*
@@ -28,18 +23,13 @@ python misc/run.py {{FILE}}
 //
 
 #[allow(dead_code)]
-fn read_tokens<F: FromStr>() -> io::Result<Vec<F>>
+fn read_tokens<T: std::str::FromStr>() -> Vec<T>
 where
-    <F as FromStr>::Err: Debug,
+    <T as std::str::FromStr>::Err: std::fmt::Debug,
 {
     let mut line = String::new();
-    io::stdin().read_line(&mut line)?;
-    let mut result: Vec<F> = Vec::new();
-    for token in line.trim().split(" ") {
-        let value: F = token
-            .parse()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{:?}", e)))?;
-        result.push(value);
-    }
-    Ok(result)
+    std::io::stdin().read_line(&mut line).unwrap();
+    line.split_whitespace()
+        .map(|s| s.parse().unwrap())
+        .collect()
 }
