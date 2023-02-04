@@ -3,6 +3,35 @@
 // bit iteration
 
 //
+// recursive mutable closure macro
+//
+
+// TODO: currently signature (argument and return type) needs to be hard-coded
+// TODO: RefCell/as_ptr might be undefined behavior
+macro_rules! recursive_closure {
+    ($N:ident, $E:expr) => {
+        |x| {
+            use std::cell::RefCell;
+
+            struct Recurser<'a> {
+                run: RefCell<&'a mut dyn FnMut(&Recurser, usize)>,
+            }
+
+            let mut recurser_impl = |recurser: &Recurser, x: usize| {
+                let $N = |y: usize| (unsafe { &mut *recurser.run.as_ptr() })(recurser, y);
+                $E(x)
+            };
+
+            let recurser = Recurser {
+                run: RefCell::new(&mut recurser_impl),
+            };
+
+            (unsafe { &mut *recurser.run.as_ptr() })(&recurser, x)
+        }
+    };
+}
+
+//
 // binary search
 //
 
@@ -306,5 +335,22 @@ mod tests {
     fn test_upper_bound() {
         let v = vec![0, 1, 3, 4, 7, 8];
         assert_eq!(binary_search_max(0, v.len(), |i| v[i] * v[i] < 10), 2);
+    }
+
+    #[test]
+    fn test_recursive_closure() {
+        let n = 5;
+        let adj: Vec<Vec<usize>> = vec![vec![1, 2], vec![2], vec![4], vec![1], vec![0]];
+        let mut visited = vec![false; n];
+        let mut dfs = recursive_closure!(dfs, |x: usize| {
+            visited[x] = true;
+            for &y in &adj[x] {
+                if !visited[y] {
+                    dfs(y);
+                }
+            }
+        });
+        dfs(0);
+        assert_eq!(visited, vec![true, true, true, false, true]);
     }
 }
