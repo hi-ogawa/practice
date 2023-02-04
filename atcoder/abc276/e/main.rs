@@ -145,7 +145,7 @@ where
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
     let mut result: Vec<F> = Vec::new();
-    for token in line.trim().split(" ") {
+    for token in line.trim().split(' ') {
         let value: F = token
             .parse()
             .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{:?}", e)))?;
