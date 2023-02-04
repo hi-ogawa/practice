@@ -4,7 +4,7 @@
 
 // experimenting with recursive mutable clousure in rust
 
-use std::{cell::RefCell, collections::HashMap};
+use std::collections::HashMap;
 
 fn main_case() {
     // ~ 10^5
@@ -39,43 +39,52 @@ fn main_case() {
     let mut visited = vec![false; n];
     let mut entered = vec![false; n];
 
-    // TODO: macro?
-    let mut dfs = |x: usize| -> Option<()> {
-        struct Dfs<'a> {
-            run: RefCell<&'a mut dyn FnMut(&Dfs, usize) -> Option<()>>,
+    let mut dfs = recursive_closure!(recurse, |x: usize| -> Option<()> {
+        if visited[x] {
+            return Some(());
         }
-
-        let mut dfs_impl = |dfs: &Dfs, x: usize| -> Option<()> {
-            if visited[x] {
-                return Some(());
+        visited[x] = true;
+        entered[x] = true;
+        if let Some(y) = adj[x] {
+            if entered[y] {
+                return None;
             }
-            visited[x] = true;
-            entered[x] = true;
-            for &y in &adj[x] {
-                if entered[y] {
-                    return None;
-                }
-                if !visited[y] {
-                    // TODO: is this undefined behavior? barely not?
-                    // - https://doc.rust-lang.org/std/cell/
-                    // - https://doc.rust-lang.org/std/cell/struct.UnsafeCell.html
-                    // - https://internals.rust-lang.org/t/as-ptr-vs-as-mut-ptr/9940/8
-                    (unsafe { &mut *dfs.run.as_ptr() })(dfs, y)?
-                }
+            if !visited[y] {
+                recurse(y)?
             }
-            entered[x] = false;
-            Some(())
-        };
-
-        let dfs = Dfs {
-            run: RefCell::new(&mut dfs_impl),
-        };
-
-        (unsafe { &mut *dfs.run.as_ptr() })(&dfs, x)
-    };
+        }
+        entered[x] = false;
+        Some(())
+    });
 
     let result = (0..n).map(|x| dfs(x)).all(|x| x.is_some());
     println!("{}", if result { "Yes" } else { "No" });
+}
+
+// TODO: function signature is still hard-coded
+// TODO: instantiation of closure on each call might be expensive
+#[macro_export]
+macro_rules! recursive_closure {
+    ($N:ident, $E:expr) => {
+        |x| {
+            use std::cell::RefCell;
+
+            struct Recurser<'a> {
+                run: RefCell<&'a mut dyn FnMut(&Recurser, usize) -> Option<()>>,
+            }
+
+            let mut recurser_impl = |recurser: &Recurser, x: usize| {
+                let $N = |y: usize| (unsafe { &mut *recurser.run.as_ptr() })(recurser, y);
+                $E(x)
+            };
+
+            let recurser = Recurser {
+                run: RefCell::new(&mut recurser_impl),
+            };
+
+            (unsafe { &mut *recurser.run.as_ptr() })(&recurser, x)
+        }
+    };
 }
 
 fn main() {
@@ -83,7 +92,7 @@ fn main() {
 }
 
 /*
-python misc/run.py atcoder/abc285/d/main_v3.rs
+python misc/run.py atcoder/abc285/d/main_v4.rs
 
 %%%% begin
 2
