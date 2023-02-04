@@ -10,7 +10,7 @@ fn main_case() -> io::Result<()> {
 
     // factorize
     let factors = factorize(k);
-    assert!(factors.len() > 0);
+    assert!(!factors.is_empty());
     // dbg!(&factors);
 
     // solve for each factor and take maximum

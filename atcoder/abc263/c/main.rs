@@ -16,7 +16,7 @@ fn main_case() -> io::Result<()> {
     Ok(())
 }
 
-fn solve<F: Fn(&Vec<usize>) -> ()>(s: usize, k: usize, i: usize, result: &mut Vec<usize>, f: &F) {
+fn solve<F: Fn(&Vec<usize>)>(s: usize, k: usize, i: usize, result: &mut Vec<usize>, f: &F) {
     if (s.count_ones() as usize) < k {
         return;
     }

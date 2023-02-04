@@ -44,7 +44,7 @@ fn main_case() -> io::Result<()> {
             tree2.set(order_inv[i + m], ls[i + m]);
         }
     }
-    println!("");
+    println!();
 
     Ok(())
 }

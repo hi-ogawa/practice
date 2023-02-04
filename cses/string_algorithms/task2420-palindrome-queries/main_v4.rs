@@ -9,7 +9,7 @@ const MODULO: usize = 7 + 1e9 as usize;
 
 static mut BASE_POWERS: Vec<usize> = Vec::new();
 
-fn precompute_base_powers() -> () {
+fn precompute_base_powers() {
     unsafe {
         let n = 2 * 100_000;
         BASE_POWERS = vec![0; n + 1];
@@ -48,7 +48,7 @@ impl SegmentTree {
         }
     }
 
-    fn set(&mut self, qi: usize, qv: usize) -> () {
+    fn set(&mut self, qi: usize, qv: usize) {
         let mut k = self.n + qi;
         self.data[k] = (qv, qv, 1);
         while k > 1 {

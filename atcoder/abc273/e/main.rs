@@ -45,7 +45,7 @@ fn main_case() -> io::Result<()> {
         print!("{}", result);
         history.push(next);
     }
-    println!("");
+    println!();
 
     Ok(())
 }

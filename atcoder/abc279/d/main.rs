@@ -7,7 +7,6 @@ use std::{fmt::Debug, io, str::FromStr};
 fn main_case() -> io::Result<()> {
     // ~ 10^18
     let (a, b) = read_tokens::<usize>().map(|v| (v[0], v[1]))?;
-    a as f64;
 
     // f(x) = a (x + 1)^(-1/2) + b x
     let f = |x: usize| -> f64 {

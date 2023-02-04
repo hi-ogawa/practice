@@ -43,7 +43,7 @@ fn main_case() -> io::Result<()> {
             }
             print!(" {}", current.len());
         }
-        println!("");
+        println!();
 
         current = counts.clone();
     }

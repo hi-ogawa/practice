@@ -25,7 +25,7 @@ fn main() -> io::Result<()> {
             visited: &'a mut Vec<bool>,
             adj: &'a Vec<Vec<usize>>,
         }
-        fn dfs(x: usize, env: &mut Env) -> () {
+        fn dfs(x: usize, env: &mut Env) {
             for &y in env.adj[x].iter() {
                 if env.visited[y] {
                     continue;

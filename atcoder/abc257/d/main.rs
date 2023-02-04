@@ -13,6 +13,7 @@ struct F64ord(f64);
 
 impl Eq for F64ord {}
 
+#[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for F64ord {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
@@ -46,7 +47,7 @@ fn main_case() -> io::Result<()> {
         let mut heap: BTreeSet<(F64ord, usize)> = BTreeSet::new(); // (distance, vertex)
         heap.insert((F64ord(0.0), start));
 
-        while heap.len() > 0 {
+        while !heap.is_empty() {
             let &(d, i) = heap.iter().next().unwrap();
             result[i] = d.0;
             heap.remove(&(d, i));

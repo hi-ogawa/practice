@@ -48,7 +48,7 @@ fn main_case() -> io::Result<()> {
         for head in heads {
             print!("{}", if head { 'H' } else { 'T' });
         }
-        println!("");
+        println!();
     }
 
     Ok(())

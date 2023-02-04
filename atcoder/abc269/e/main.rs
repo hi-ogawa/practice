@@ -18,7 +18,7 @@ fn main_case() -> io::Result<()> {
         read_tokens::<usize>().map(|v| v[0])
     };
 
-    let answer = |i: usize| -> () {
+    let answer = |i: usize| {
         println!("! {} {}", i + 1, 1);
     };
 

@@ -41,7 +41,7 @@ fn main_case() -> io::Result<()> {
             }
             print!("{}", dists[i][j]);
         }
-        println!("");
+        println!();
     }
     Ok(())
 }

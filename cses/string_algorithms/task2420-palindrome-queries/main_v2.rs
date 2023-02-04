@@ -35,7 +35,7 @@ impl SegmentTree {
         }
     }
 
-    fn set(&mut self, qi: usize, qv: usize) -> () {
+    fn set(&mut self, qi: usize, qv: usize) {
         let mut k = self.n + qi;
         self.data[k] = (qv, qv, 1);
         while k > 1 {
