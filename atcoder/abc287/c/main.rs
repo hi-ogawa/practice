@@ -31,7 +31,7 @@ fn main_solve() -> bool {
 
     // check connected
     let mut visited = vec![false; n];
-    recursive_closure!(dfs, |x: usize| {
+    recursive_closure!(dfs, |x: usize| -> () {
         visited[x] = true;
         for &y in &adj[x] {
             if !visited[y] {
@@ -48,24 +48,26 @@ fn main() {
 
 #[macro_export]
 macro_rules! recursive_closure {
-    ($N:ident, $E:expr) => {
-        |x| {
+    ($ID_RECURSE:ident, |$( $ID_ARGS:ident: $TYPE_ARGS:ty ),+| -> $TYPE_RETURN:ty $EXPR_BODY:block) => {
+        |$( $ID_ARGS: $TYPE_ARGS ),*| {
             use std::cell::RefCell;
 
-            struct Recurser<'a> {
-                run: RefCell<&'a mut dyn FnMut(&Recurser, usize)>,
+            struct __Recurser<'a> {
+                __run: RefCell<&'a mut dyn FnMut(&__Recurser, $( $TYPE_ARGS ),*) -> $TYPE_RETURN>,
             }
 
-            let mut recurser_impl = |recurser: &Recurser, x: usize| {
-                let $N = |y: usize| (unsafe { &mut *recurser.run.as_ptr() })(recurser, y);
-                $E(x)
+            let mut __recurser_impl = |__recurser: &__Recurser, $( $ID_ARGS: $TYPE_ARGS ),*| {
+                let $ID_RECURSE = |$( $ID_ARGS: $TYPE_ARGS ),*| {
+                    (unsafe { &mut *__recurser.__run.as_ptr() })(__recurser, $( $ID_ARGS ),*)
+                };
+                $EXPR_BODY
             };
 
-            let recurser = Recurser {
-                run: RefCell::new(&mut recurser_impl),
+            let __recurser = __Recurser {
+                __run: RefCell::new(&mut __recurser_impl),
             };
 
-            (unsafe { &mut *recurser.run.as_ptr() })(&recurser, x)
+            (unsafe { &mut *__recurser.__run.as_ptr() })(&__recurser, $( $ID_ARGS ),*)
         }
     };
 }

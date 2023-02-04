@@ -6,27 +6,31 @@
 // recursive mutable closure macro
 //
 
-// TODO: currently signature (argument and return type) needs to be hard-coded
-// TODO: RefCell/as_ptr might be undefined behavior
+// cf. atcoder/abc285/d/main_v3.rs
+// TODO: RefCell/as_ptr is this undefined behavior?
+// TODO: each call requires setting up closure scope
+// TODO: signature annotation might not be flexible compared to genuine closure syntax
 macro_rules! recursive_closure {
-    ($N:ident, $E:expr) => {
-        |x| {
+    ($ID_RECURSE:ident, |$( $ID_ARGS:ident: $TYPE_ARGS:ty ),+| -> $TYPE_RETURN:ty $EXPR_BODY:block) => {
+        |$( $ID_ARGS: $TYPE_ARGS ),*| {
             use std::cell::RefCell;
 
-            struct Recurser<'a> {
-                run: RefCell<&'a mut dyn FnMut(&Recurser, usize)>,
+            struct __Recurser<'a> {
+                __run: RefCell<&'a mut dyn FnMut(&__Recurser, $( $TYPE_ARGS ),*) -> $TYPE_RETURN>,
             }
 
-            let mut recurser_impl = |recurser: &Recurser, x: usize| {
-                let $N = |y: usize| (unsafe { &mut *recurser.run.as_ptr() })(recurser, y);
-                $E(x)
+            let mut __recurser_impl = |__recurser: &__Recurser, $( $ID_ARGS: $TYPE_ARGS ),*| {
+                let $ID_RECURSE = |$( $ID_ARGS: $TYPE_ARGS ),*| {
+                    (unsafe { &mut *__recurser.__run.as_ptr() })(__recurser, $( $ID_ARGS ),*)
+                };
+                $EXPR_BODY
             };
 
-            let recurser = Recurser {
-                run: RefCell::new(&mut recurser_impl),
+            let __recurser = __Recurser {
+                __run: RefCell::new(&mut __recurser_impl),
             };
 
-            (unsafe { &mut *recurser.run.as_ptr() })(&recurser, x)
+            (unsafe { &mut *__recurser.__run.as_ptr() })(&__recurser, $( $ID_ARGS ),*)
         }
     };
 }
@@ -338,11 +342,11 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_closure() {
+    fn test_recursive_closure_mutable() {
         let n = 5;
         let adj: Vec<Vec<usize>> = vec![vec![1, 2], vec![2], vec![4], vec![1], vec![0]];
         let mut visited = vec![false; n];
-        let mut dfs = recursive_closure!(dfs, |x: usize| {
+        let mut dfs = recursive_closure!(dfs, |x: usize| -> () {
             visited[x] = true;
             for &y in &adj[x] {
                 if !visited[y] {
@@ -352,5 +356,18 @@ mod tests {
         });
         dfs(0);
         assert_eq!(visited, vec![true, true, true, false, true]);
+    }
+
+    #[test]
+    fn test_recursive_closure_multiple_arguments() {
+        // ackermann
+        let f = recursive_closure!(f, |m: usize, n: usize| -> usize {
+            match (m, n) {
+                (0, _) => n + 1,
+                (_, 0) => f(m - 1, 1),
+                _ => f(m - 1, f(m, n - 1)),
+            }
+        });
+        assert_eq!(f(3, 4), 125);
     }
 }
