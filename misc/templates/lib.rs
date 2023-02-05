@@ -3,6 +3,81 @@
 // bit iteration
 
 //
+// recursive closure without macro
+//
+// - cons
+//   - single argument (can workaround by tuple)
+//   - explicitly `call`
+//
+
+struct RecursiveClosure<F>(std::cell::RefCell<F>);
+
+impl<F> RecursiveClosure<F> {
+    fn new<Arg, Ret>(f: F) -> Self
+    where
+        F: FnMut(&dyn Callable<Arg, Ret>, Arg) -> Ret,
+    {
+        RecursiveClosure(std::cell::RefCell::new(f))
+    }
+}
+
+trait Callable<Arg, Ret> {
+    fn call(&self, arg: Arg) -> Ret;
+}
+
+impl<Arg, Ret, F> Callable<Arg, Ret> for RecursiveClosure<F>
+where
+    F: FnMut(&dyn Callable<Arg, Ret>, Arg) -> Ret,
+{
+    fn call(&self, arg: Arg) -> Ret {
+        (unsafe { &mut *self.0.as_ptr() })(self, arg)
+    }
+}
+
+// "simpler" implementation tends to hit either
+//  - https://github.com/rust-lang/rust/issues/46062
+//  - https://github.com/rust-lang/rust-analyzer/issues/8740
+/* e.g.
+
+struct RecursiveClosureV2<F>(RefCell<F>);
+
+impl<F> RecursiveClosureV2<F> {
+    fn new<Arg, Ret>(f: F) -> RecursiveClosureV2<F>
+    where
+        F: FnMut(&dyn Fn(Arg) -> Ret, Arg) -> Ret,
+    {
+        RecursiveClosureV2(RefCell::new(f))
+    }
+
+    fn call<Arg, Ret>(&self, arg: Arg) -> Ret
+    where
+        F: FnMut(&dyn Fn(Arg) -> Ret, Arg) -> Ret,
+    {
+        (unsafe { &mut *self.0.as_ptr() })(&|arg| self.call(arg), arg)
+    }
+}
+
+struct RecursiveClosureV3<F>(RefCell<F>);
+
+impl<F> RecursiveClosureV3<F> {
+    fn new<Arg, Ret>(f: F) -> RecursiveClosureV3<F>
+    where
+        F: FnMut(&RecursiveClosureV3<F>, Arg) -> Ret,
+    {
+        RecursiveClosureV3(RefCell::new(f))
+    }
+
+    fn call<Arg, Ret>(&self, arg: Arg) -> Ret
+    where
+        F: FnMut(&RecursiveClosureV3<F>, Arg) -> Ret,
+    {
+        (unsafe { &mut *self.0.as_ptr() })(self, arg)
+    }
+}
+
+*/
+
+//
 // recursive mutable closure macro
 //
 
@@ -369,5 +444,35 @@ mod tests {
             }
         });
         assert_eq!(f(3, 4), 125);
+    }
+
+    #[test]
+    fn test_recursive_closure_v2_mutable() {
+        let n = 5;
+        let adj: Vec<Vec<usize>> = vec![vec![1, 2], vec![2], vec![4], vec![1], vec![0]];
+        let mut visited = vec![false; n];
+        let dfs = RecursiveClosure::new(|dfs, x: usize| {
+            visited[x] = true;
+            for &y in &adj[x] {
+                if !visited[y] {
+                    dfs.call(y);
+                }
+            }
+        });
+        dfs.call(0);
+        assert_eq!(visited, vec![true, true, true, false, true]);
+    }
+
+    #[test]
+    fn test_recursive_closure_v2_multiple_arguments() {
+        // ackermann
+        let f = RecursiveClosure::new(|f, (m, n): (usize, usize)| -> usize {
+            match (m, n) {
+                (0, _) => n + 1,
+                (_, 0) => f.call((m - 1, 1)),
+                _ => f.call((m - 1, f.call((m, n - 1)))),
+            }
+        });
+        assert_eq!(f.call((3, 4)), 125);
     }
 }
