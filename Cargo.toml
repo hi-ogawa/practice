@@ -516,6 +516,10 @@ name = "atcoder-abc288-c-main"
 path = "atcoder/abc288/c/main.rs"
 
 [[bin]]
+name = "atcoder-abc288-d-main"
+path = "atcoder/abc288/d/main.rs"
+
+[[bin]]
 name = "atcoder-abc289-d-main"
 path = "atcoder/abc289/d/main.rs"
 
