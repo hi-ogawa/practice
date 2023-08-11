@@ -264,6 +264,44 @@ impl std::fmt::Debug for SegmentTree {
     }
 }
 
+// Fenwick tree for sum
+struct FenwickTree {
+    n: usize,
+    data: Vec<usize>,
+}
+
+impl FenwickTree {
+    fn new(n: usize) -> Self {
+        Self {
+            n,
+            data: vec![0; n + 1], // use 1-based index internally since zero-based index doesn't go well with usize
+        }
+    }
+
+    fn incr(&mut self, i: usize, x: usize) {
+        let mut k = i + 1;
+        while k <= self.n {
+            self.data[k] += x;
+            k = (k | (k - 1)) + 1;
+        }
+    }
+
+    // [0, i)
+    fn reduce_prefix(&self, mut i: usize) -> usize {
+        let mut result = 0;
+        while i > 0 {
+            result += self.data[i];
+            i = i & (i - 1);
+        }
+        result
+    }
+
+    // [l, r)
+    fn reduce(&self, l: usize, r: usize) -> usize {
+        self.reduce_prefix(r) - self.reduce_prefix(l)
+    }
+}
+
 //
 // modulo integer (e.g. atcoder/abc262/e/main.rs)
 //
@@ -386,7 +424,7 @@ mod tests {
         tree.set(3, 5);
         tree.set(4, 7);
         assert_eq!(
-            [(0, 3), (1, 4), (2, 5), (3, 6)]
+            [(0, 3), (1, 4), (2, 5), (3, 5)]
                 .iter()
                 .map(|&(l, r)| tree.reduce(l, r))
                 .collect::<Vec<usize>>(),
@@ -401,6 +439,23 @@ mod tests {
 1  2  3  5  7  0  0  0
 ]
 "
+        );
+    }
+
+    #[test]
+    fn test_fenwick_tree() {
+        let mut tree = FenwickTree::new(5);
+        tree.incr(0, 1);
+        tree.incr(1, 2);
+        tree.incr(2, 3);
+        tree.incr(3, 5);
+        tree.incr(4, 7);
+        assert_eq!(
+            [(0, 3), (1, 4), (2, 5), (3, 5)]
+                .iter()
+                .map(|&(l, r)| tree.reduce(l, r))
+                .collect::<Vec<usize>>(),
+            vec![6, 10, 15, 12]
         );
     }
 
