@@ -1,11 +1,7 @@
 node_modules
 build
-# rust/cargo artifacts
+# rust/cargo
 target
-Cargo.lock
-# Inconviniently we cannot choose where gcc outputs coverage files...
+# gcc coverage
 *.gcno
 *.gcda
-__pycache__
-.vscode
-.venv
