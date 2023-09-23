@@ -2,14 +2,9 @@
 
 // {{PROBLEM_URL}}
 
-fn main_case() {}
-
 fn main() {
-    main_case();
-    // let t: usize = read_tokens()[0];
-    // for _ in 0..t {
-    //     main_case();
-    // }
+    let [t] = read_array();
+    for _ in 0..t {}
 }
 
 /*
@@ -23,13 +18,16 @@ python misc/run.py {{FILE}}
 //
 
 #[allow(dead_code)]
-fn read_tokens<T: std::str::FromStr>() -> Vec<T>
-where
-    <T as std::str::FromStr>::Err: std::fmt::Debug,
-{
+fn read_vec<T: std::str::FromStr>() -> Vec<T> {
     let mut line = String::new();
     std::io::stdin().read_line(&mut line).unwrap();
     line.split_whitespace()
-        .map(|s| s.parse().unwrap())
+        .map(|s| s.parse().ok().unwrap())
         .collect()
+}
+
+#[allow(dead_code)]
+fn read_array<T: std::str::FromStr, const LEN: usize>() -> [T; LEN] {
+    use std::convert::TryInto;
+    read_vec::<T>().try_into().ok().unwrap()
 }
