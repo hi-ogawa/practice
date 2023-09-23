@@ -1,14 +1,13 @@
-// WIP
+// AC
 
 // https://atcoder.jp/contests/abc308/tasks/abc308_d
 
 use std::collections::VecDeque;
 
 fn main() {
-    let v: Vec<usize> = read_tokens();
-    let (h, w) = (v[0], v[1]);
+    let [h, w] = read_array();
     let ls: Vec<Vec<char>> = (0..h)
-        .map(|_| read_tokens::<String>()[0].chars().collect())
+        .map(|_| read_vec::<String>()[0].chars().collect())
         .collect();
 
     // reachability when available edges are simply
@@ -104,13 +103,16 @@ Yes
 //
 
 #[allow(dead_code)]
-fn read_tokens<T: std::str::FromStr>() -> Vec<T>
-where
-    <T as std::str::FromStr>::Err: std::fmt::Debug,
-{
+fn read_vec<T: std::str::FromStr>() -> Vec<T> {
     let mut line = String::new();
     std::io::stdin().read_line(&mut line).unwrap();
     line.split_whitespace()
-        .map(|s| s.parse().unwrap())
+        .map(|s| s.parse().ok().unwrap())
         .collect()
+}
+
+#[allow(dead_code)]
+fn read_array<T: std::str::FromStr, const LEN: usize>() -> [T; LEN] {
+    use std::convert::TryInto;
+    read_vec::<T>().try_into().ok().unwrap()
 }
