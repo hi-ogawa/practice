@@ -3,7 +3,7 @@
 // {{PROBLEM_URL}}
 
 fn main() {
-    let [t] = read_array();
+    let t: usize = read_vec()[0];
     for _ in 0..t {}
 }
 
@@ -28,6 +28,7 @@ fn read_vec<T: std::str::FromStr>() -> Vec<T> {
 
 #[allow(dead_code)]
 fn read_array<T: std::str::FromStr, const LEN: usize>() -> [T; LEN] {
+    #[allow(unused_imports)]
     use std::convert::TryInto;
     read_vec::<T>().try_into().ok().unwrap()
 }
