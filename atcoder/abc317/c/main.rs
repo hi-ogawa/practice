@@ -3,7 +3,7 @@
 // https://atcoder.jp/contests/abc317/tasks/abc317_c
 
 fn main() {
-    // n ~ `0`
+    // n ~ 10
     let [n, m]: [usize; 2] = read_array();
     let mut adj: Vec<Vec<Option<usize>>> = vec![vec![None; n]; n];
     for _ in 0..m {
@@ -28,11 +28,8 @@ fn main() {
                 if s & (1 << j) != 0 {
                     continue;
                 }
-                if let Some(c) = adj[i][j] {
-                    let t = s | (1 << j);
-                    let next = dp[s][i].map(|prev| prev + c);
-                    dp[t][j] = dp[t][j].max(next);
-                }
+                let s2 = s | (1 << j);
+                dp[s2][j] = dp[s2][j].max(add_opion(dp[s][i], adj[i][j]));
             }
         }
     }
@@ -44,6 +41,10 @@ fn main() {
         .max()
         .unwrap();
     println!("{}", result);
+}
+
+fn add_opion(x: Option<usize>, y: Option<usize>) -> Option<usize> {
+    x.and_then(|x| y.map(|y| x + y))
 }
 
 /*
