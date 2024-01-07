@@ -1,7 +1,3 @@
-// TODO
-// fenwick tree
-// bit iteration
-
 //
 // recursive closure without macro
 //
@@ -303,6 +299,64 @@ impl FenwickTree {
 }
 
 //
+// https://en.cppreference.com/w/cpp/algorithm/next_permutation
+//
+
+fn next_permutation(v: &mut Vec<usize>) -> bool {
+    //
+    // 1. find suffix s.t.
+    //
+    // ... x  <  y1 >= .. >= yk >= .. >= yn
+    //
+    // where k = max { i | y_i > x }
+    //
+    // 2. by swapping (x, yk),
+    //
+    // ... yk <= y1 >= .. >= x  >= .. >= yn
+    //
+    // 3. by reversing (y1, ..., yn)
+    //
+    // ... yk <= yn <= .. <= x  <= .. <= r1
+    //
+
+    // 1.0. find descending suffix
+    let n = v.len();
+    let i = (1..n).rev().find(|&i| v[i - 1] < v[i]);
+    if i.is_none() {
+        return false;
+    }
+
+    // 1.1. find y_k > x
+    let i = i.unwrap();
+    let j = i + v[i..n].partition_point(|&y| y > v[i - 1]) - 1;
+
+    // 2.
+    v.swap(i - 1, j);
+
+    // 3.
+    for d in 0..((n - i) / 2) {
+        v.swap(i + d, n - 1 - d);
+    }
+    true
+}
+
+//
+// bit iterator
+//
+
+fn bit_iterator(mut s: usize) -> impl Iterator<Item = usize> {
+    std::iter::from_fn(move || {
+        if s == 0 {
+            None
+        } else {
+            let next = s.trailing_zeros();
+            s = s & (s - 1);
+            Some(next as usize)
+        }
+    })
+}
+
+//
 // modulo integer (e.g. atcoder/abc262/e/main.rs)
 //
 
@@ -529,5 +583,34 @@ mod tests {
             }
         });
         assert_eq!(f.call((3, 4)), 125);
+    }
+
+    #[test]
+    fn test_next_permutation() {
+        let mut perm: Vec<usize> = (0..3).collect();
+        let mut perms: Vec<Vec<usize>> = vec![];
+        loop {
+            perms.push(perm.clone());
+            if !next_permutation(&mut perm) {
+                break;
+            }
+        }
+        assert_eq!(
+            perms,
+            vec![
+                vec![0, 1, 2],
+                vec![0, 2, 1],
+                vec![1, 0, 2],
+                vec![1, 2, 0],
+                vec![2, 0, 1],
+                vec![2, 1, 0],
+            ]
+        )
+    }
+
+    #[test]
+    fn test_bit_iterator() {
+        assert_eq!(bit_iterator(0).collect::<Vec<_>>(), vec![]);
+        assert_eq!(bit_iterator(0b0101).collect::<Vec<_>>(), vec![0, 2]);
     }
 }
