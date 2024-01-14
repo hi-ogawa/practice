@@ -18,7 +18,7 @@ fn main() {
     // greedily pick first one to expire
     let mut t = 0;
     let mut result = 0;
-    let mut remainings = Multiset::new();
+    let mut remainings: Multiset<usize> = Multiset::new();
 
     loop {
         if let Some(group) = groups.get(&t) {
@@ -55,24 +55,23 @@ fn main() {
     println!("{}", result);
 }
 
-// TODO: generalize?
 #[derive(Debug)]
-struct Multiset {
-    map: BTreeMap<usize, usize>,
+struct Multiset<K> {
+    map: BTreeMap<K, usize>,
 }
 
-impl Multiset {
+impl<K: Ord> Multiset<K> {
     fn new() -> Self {
         Self {
             map: BTreeMap::new(),
         }
     }
 
-    fn insert(&mut self, v: usize) {
+    fn insert(&mut self, v: K) {
         *self.map.entry(v).or_default() += 1;
     }
 
-    fn first(&mut self) -> Option<&usize> {
+    fn first(&mut self) -> Option<&K> {
         self.map.first_key_value().map(|kv| kv.0)
     }
 
