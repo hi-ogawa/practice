@@ -110,29 +110,29 @@ macro_rules! recursive_closure {
 // binary search
 //
 
-// min { x \in (x0, x1] | f(x) }
+// min { x \in [x0, x1] | f(x) }
 fn binary_search_min<F: Fn(usize) -> bool>(mut x0: usize, mut x1: usize, f: F) -> usize {
     assert!(f(x1));
-    while x0 + 1 < x1 {
-        let x = (x0 + x1 + 1) / 2;
+    while x0 < x1 {
+        let x = (x0 + x1) / 2;
         if f(x) {
             x1 = x;
         } else {
-            x0 = x;
+            x0 = x + 1;
         }
     }
     x1
 }
 
-// max { x \in [x0, x1) | f(x) }
+// max { x \in [x0, x1] | f(x) }
 fn binary_search_max<F: Fn(usize) -> bool>(mut x0: usize, mut x1: usize, f: F) -> usize {
     assert!(f(x0));
-    while x0 + 1 < x1 {
-        let x = (x0 + x1) / 2;
+    while x0 < x1 {
+        let x = (x0 + x1 + 1) / 2;
         if f(x) {
             x0 = x;
         } else {
-            x1 = x;
+            x1 = x - 1;
         }
     }
     x0
@@ -517,12 +517,16 @@ mod tests {
     fn test_lower_bound() {
         let v = vec![0, 1, 3, 4, 7, 8];
         assert_eq!(binary_search_min(0, v.len() - 1, |i| v[i] * v[i] > 10), 3);
+        assert_eq!(binary_search_min(0, 1, |i| v[i] >= 0), 0);
+        assert_eq!(binary_search_min(0, 1, |i| v[i] >= 1), 1);
     }
 
     #[test]
     fn test_upper_bound() {
         let v = vec![0, 1, 3, 4, 7, 8];
-        assert_eq!(binary_search_max(0, v.len(), |i| v[i] * v[i] < 10), 2);
+        assert_eq!(binary_search_max(0, v.len() - 1, |i| v[i] * v[i] < 10), 2);
+        assert_eq!(binary_search_max(0, 1, |i| v[i] < 1), 0);
+        assert_eq!(binary_search_max(0, 1, |i| v[i] < 2), 1);
     }
 
     #[test]
