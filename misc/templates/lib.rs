@@ -517,13 +517,16 @@ mod tests {
     fn test_lower_bound() {
         let v = vec![0, 1, 3, 4, 7, 8];
         assert_eq!(binary_search_min(0, v.len() - 1, |i| v[i] * v[i] > 10), 3);
-        assert_eq!(binary_search_min(0, 1, |_i| true), 0);
+        assert_eq!(binary_search_min(0, 1, |i| v[i] >= 0), 0);
+        assert_eq!(binary_search_min(0, 1, |i| v[i] >= 1), 1);
     }
 
     #[test]
     fn test_upper_bound() {
         let v = vec![0, 1, 3, 4, 7, 8];
         assert_eq!(binary_search_max(0, v.len() - 1, |i| v[i] * v[i] < 10), 2);
+        assert_eq!(binary_search_max(0, 1, |i| v[i] < 1), 0);
+        assert_eq!(binary_search_max(0, 1, |i| v[i] < 2), 1);
     }
 
     #[test]
