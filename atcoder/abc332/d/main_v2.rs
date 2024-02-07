@@ -1,10 +1,8 @@
-// WA
+// AC
 
 // https://atcoder.jp/contests/abc332/tasks/abc332_d
 
 use std::collections::{BTreeMap, VecDeque};
-
-// I thought this is equivalent but somehow not enumerating properly?
 
 fn main() {
     // ~ 5
@@ -16,6 +14,7 @@ fn main() {
     // thus #(possible configurations) = h! w!
 
     // BFS to get distance
+    //   O(n!^2 n n^2) ~ 10^7
     let mut distance: BTreeMap<Vec<Vec<usize>>, usize> = BTreeMap::new();
     let mut queue: VecDeque<Vec<Vec<usize>>> = VecDeque::new();
     distance.insert(grid1.clone(), 0);
@@ -25,17 +24,18 @@ fn main() {
             println!("{}", distance[&v]);
             return;
         }
-        for i in 0..(h - 1) {
-            for j in 0..(w - 1) {
-                let mut u = v.clone();
-                u.swap(i, i + 1);
-                for row in &mut u {
-                    row.swap(j, j + 1);
-                }
-                if distance.get(&u).is_none() {
-                    distance.insert(u.clone(), distance[&v] + 1);
-                    queue.push_back(u.clone());
-                }
+        for (i1, i2, j1, j2) in (0..(h - 1))
+            .map(|i| (i, i + 1, 0, 0))
+            .chain((0..(w - 1)).map(|j| (0, 0, j, j + 1)))
+        {
+            let mut u = v.clone();
+            u.swap(i1, i2);
+            for row in &mut u {
+                row.swap(j1, j2);
+            }
+            if distance.get(&u).is_none() {
+                distance.insert(u.clone(), distance[&v] + 1);
+                queue.push_back(u.clone());
             }
         }
     }
