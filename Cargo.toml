@@ -870,3 +870,7 @@ path = "atcoder/abc333/e/main.rs"
 [[bin]]
 name = "atcoder-abc334-e-main"
 path = "atcoder/abc334/e/main.rs"
+
+[[bin]]
+name = "atcoder-abc335-e-main"
+path = "atcoder/abc335/e/main.rs"
