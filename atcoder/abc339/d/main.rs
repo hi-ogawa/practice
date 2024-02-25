@@ -2,7 +2,7 @@
 
 // https://atcoder.jp/contests/abc339/tasks/abc339_d
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 fn main() {
     // ~ 60
@@ -36,22 +36,24 @@ fn main() {
         }
     };
 
+    let enc = |[[a, b], [c, d]]: Node| -> usize { a + n * (b + n * (c + n * d)) };
+
     // BFS
-    let mut distances: HashMap<Node, usize> = HashMap::new();
+    let mut distances: Vec<Option<usize>> = vec![None; enc([[n; 2]; 2])];
     let mut queue: VecDeque<Node> = VecDeque::new();
-    distances.insert(init, 0);
+    distances[enc(init)] = Some(0);
     queue.push_back(init);
     while let Some(v) = queue.pop_front() {
         if v[0] == v[1] {
-            println!("{}", distances[&v]);
+            println!("{}", distances[enc(v)].unwrap());
             return;
         }
         for u in [[-1, 0], [1, 0], [0, -1], [0, 1]]
             .iter()
             .map(|&diff| [get_move(v[0], diff), get_move(v[1], diff)])
         {
-            if !distances.contains_key(&u) {
-                distances.insert(u, distances[&v] + 1);
+            if distances[enc(u)].is_none() {
+                distances[enc(u)] = Some(distances[enc(v)].unwrap() + 1);
                 queue.push_back(u);
             }
         }
