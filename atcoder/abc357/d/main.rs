@@ -1,4 +1,4 @@
-// WA
+// AC
 
 // https://atcoder.jp/contests/abc357/tasks/abc357_d
 
@@ -9,7 +9,8 @@ fn main() {
 
     // Vn = n * (1 + 10^k + ... + 10^(k (n - 1)))
     //    = n * (10^(k n) - 1) / (10^k - 1)
-    let result = Mint(n) * (Mint(10).pow(k).pow(n) - Mint(1)) / (Mint(10).pow(k) - Mint(1));
+    let result =
+        Mint(n % MODULO) * (Mint(10).pow(k).pow(n) - Mint(1)) / (Mint(10).pow(k) - Mint(1));
     println!("{}", result.0);
 }
 
