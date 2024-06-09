@@ -95,22 +95,22 @@ def parse_cses(content):
 
 def get_tests(url):
     import re
-    if re.search('codeforces\.com', url):
+    if re.search('codeforces.com', url):
         content = get_request(url)
         tests = parse_codeforces(content)
-    elif re.search('atcoder\.jp', url):
+    elif re.search('atcoder.jp', url):
         content = get_request(url)
         tests = parse_atcoder(content)
-    elif re.search('hackerrank\.com', url):
+    elif re.search('hackerrank.com', url):
         content = get_request(url)
         tests = parse_hackerrank(content)
-    elif re.search('codechef\.com', url):
+    elif re.search('codechef.com', url):
         content = get_request_browserless(url)
         tests = parse_codechef(content)
-    elif re.search('old\.yosupo\.jp', url):
+    elif re.search('old.yosupo.jp', url):
         content = get_request(url)
         tests = parse_library_checker(content)
-    elif re.search('cses\.fi', url):
+    elif re.search('cses.fi', url):
         content = get_request(url)
         tests = parse_cses(content)
     else:
