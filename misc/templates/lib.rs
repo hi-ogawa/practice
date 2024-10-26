@@ -447,6 +447,59 @@ impl std::ops::Div for Mint {
     }
 }
 
+//
+// multiset
+//
+
+#[derive(Debug)]
+struct Multiset<K> {
+    map: std::collections::BTreeMap<K, usize>,
+}
+
+impl<K: Ord> Multiset<K> {
+    fn new() -> Self {
+        Self {
+            map: std::collections::BTreeMap::new(),
+        }
+    }
+
+    fn insert(&mut self, v: K) {
+        *self.map.entry(v).or_default() += 1;
+    }
+
+    fn first(&mut self) -> Option<&K> {
+        self.map.first_key_value().map(|kv| kv.0)
+    }
+
+    fn last(&mut self) -> Option<&K> {
+        self.map.last_key_value().map(|kv| kv.0)
+    }
+
+    fn pop_first(&mut self) {
+        if let Some(mut entry) = self.map.first_entry() {
+            let v = entry.get_mut();
+            assert!(*v > 0);
+            if *v > 1 {
+                *v -= 1;
+            } else {
+                entry.remove();
+            }
+        }
+    }
+
+    fn pop_last(&mut self) {
+        if let Some(mut entry) = self.map.last_entry() {
+            let v = entry.get_mut();
+            assert!(*v > 0);
+            if *v > 1 {
+                *v -= 1;
+            } else {
+                entry.remove();
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -616,5 +669,30 @@ mod tests {
     fn test_bit_iterator() {
         assert_eq!(bit_iterator(0).collect::<Vec<_>>(), vec![]);
         assert_eq!(bit_iterator(0b0101).collect::<Vec<_>>(), vec![0, 2]);
+    }
+
+    #[test]
+    fn test_multiset() {
+        let mut set: Multiset<usize> = Multiset::new();
+        assert_eq!(set.first(), None);
+        assert_eq!(set.last(), None);
+        set.insert(1);
+        set.insert(1);
+        set.insert(2);
+        set.insert(3);
+        assert_eq!(set.first(), Some(&1));
+        assert_eq!(set.last(), Some(&3));
+        set.pop_last();
+        assert_eq!(set.first(), Some(&1));
+        assert_eq!(set.last(), Some(&2));
+        set.pop_first();
+        assert_eq!(set.first(), Some(&1));
+        assert_eq!(set.last(), Some(&2));
+        set.pop_first();
+        assert_eq!(set.first(), Some(&2));
+        assert_eq!(set.last(), Some(&2));
+        set.pop_first();
+        assert_eq!(set.first(), None);
+        assert_eq!(set.last(), None);
     }
 }
