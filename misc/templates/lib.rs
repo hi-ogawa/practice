@@ -463,18 +463,31 @@ impl<K: Ord> Multiset<K> {
         }
     }
 
-    fn insert(&mut self, v: K) {
-        *self.map.entry(v).or_default() += 1;
+    fn insert(&mut self, k: K) {
+        *self.map.entry(k).or_default() += 1;
     }
 
-    fn first(&mut self) -> Option<&K> {
+    // TODO: test
+    fn remove(&mut self, k: &K) {
+        if let Some(v) = self.map.get_mut(k) {
+            assert!(*v > 0);
+            if *v > 1 {
+                *v -= 1;
+            } else {
+                self.map.remove(&k);
+            }
+        }
+    }
+
+    fn first(&self) -> Option<&K> {
         self.map.first_key_value().map(|kv| kv.0)
     }
 
-    fn last(&mut self) -> Option<&K> {
+    fn last(&self) -> Option<&K> {
         self.map.last_key_value().map(|kv| kv.0)
     }
 
+    // TODO: can we return `Option<&K>`
     fn pop_first(&mut self) {
         if let Some(mut entry) = self.map.first_entry() {
             let v = entry.get_mut();
@@ -688,10 +701,10 @@ mod tests {
         set.pop_first();
         assert_eq!(set.first(), Some(&1));
         assert_eq!(set.last(), Some(&2));
-        set.pop_first();
+        set.remove(&1);
         assert_eq!(set.first(), Some(&2));
         assert_eq!(set.last(), Some(&2));
-        set.pop_first();
+        set.remove(&2);
         assert_eq!(set.first(), None);
         assert_eq!(set.last(), None);
     }

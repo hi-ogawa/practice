@@ -926,3 +926,7 @@ path = "atcoder/abc376/e/main_v2.rs"
 [[bin]]
 name = "atcoder-abc376-e-main-v3"
 path = "atcoder/abc376/e/main_v3.rs"
+
+[[bin]]
+name = "atcoder-abc377-d-main"
+path = "atcoder/abc377/d/main.rs"
